@@ -618,7 +618,7 @@ input[type=file]{display:none;}
     <div id="form-cad">
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div><div class="campo-label">Nome completo</div><input class="campo-input" id="cad-nome" type="text" placeholder="Seu nome" autocomplete="name"/></div>
-        <div><div class="campo-label">WhatsApp</div><input class="campo-input" id="cad-fone" type="tel" placeholder="(19) 99999-9999"/></div>
+        <div><div class="campo-label">WhatsApp</div><input class="campo-input" id="cad-fone" type="tel" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)"/></div>
         <div><div class="campo-label">CPF *</div><input class="campo-input" id="cad-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)"/></div>
         <div><div class="campo-label">Senha *</div><input class="campo-input" id="cad-senha" type="password" placeholder="Crie uma senha (mín. 4 dígitos)" autocomplete="new-password"/></div>
         <div class="seg-box">
@@ -661,7 +661,7 @@ input[type=file]{display:none;}
     </div>
     <div id="form-ent" style="display:none;">
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div><div class="campo-label">WhatsApp</div><input class="campo-input" id="ent-fone" type="tel" placeholder="(19) 99999-9999"/></div>
+        <div><div class="campo-label">WhatsApp</div><input class="campo-input" id="ent-fone" type="tel" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)"/></div>
         <div><div class="campo-label">Senha</div><input class="campo-input" id="ent-senha" type="password" placeholder="Sua senha" autocomplete="current-password"/></div>
         <button class="btn-p" onclick="entrar()">Entrar</button>
         <button class="btn-link" onclick="abrirRecuperar()" style="background:none;border:none;color:var(--dourado);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px;">Esqueci minha senha</button>
@@ -922,7 +922,7 @@ input[type=file]{display:none;}
     <div style="font-size:18px;font-weight:900;color:#fff;text-align:center;margin-bottom:8px;">🔐 Recuperar senha</div>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px;">Informe seu WhatsApp e responda a pergunta de segurança</div>
     <div id="rec-passo1">
-      <div style="margin-bottom:11px;"><div class="campo-label">WhatsApp</div><input class="campo-input" id="rec-fone" type="tel" placeholder="(19) 99999-9999"/></div>
+      <div style="margin-bottom:11px;"><div class="campo-label">WhatsApp</div><input class="campo-input" id="rec-fone" type="tel" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)"/></div>
       <button class="btn-p" onclick="recBuscar()" style="width:100%;">Continuar</button>
     </div>
     <div id="rec-passo2" style="display:none;">
@@ -1098,7 +1098,7 @@ input[type=file]{display:none;}
     <div style="font-size:18px;font-weight:900;color:#fff;text-align:center;margin-bottom:18px;">Editar Perfil</div>
     <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:14px;">
       <div><div class="campo-label">Nome completo</div><input id="ed-nome-mot" class="campo-input" type="text" placeholder="Seu nome"/></div>
-      <div><div class="campo-label">WhatsApp</div><input id="ed-fone-mot" class="campo-input" type="tel" placeholder="(19) 99999-9999"/></div>
+      <div><div class="campo-label">WhatsApp</div><input id="ed-fone-mot" class="campo-input" type="tel" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)"/></div>
       <div><div class="campo-label">CPF</div><input id="ed-cpf-mot" class="campo-input" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)"/></div>
       <div><div class="campo-label">Tipo de veículo</div>
         <select class="campo-input" id="ed-veiculo-mot">
@@ -1505,6 +1505,23 @@ function hashSenha(s){
   let h2=52711;for(let i=str.length-1;i>=0;i--){h2=((h2<<5)+h2+str.charCodeAt(i))>>>0;}
   return "h"+h.toString(36)+h2.toString(36);
 }
+// ── TELEFONE ──
+function soDigitos(s){return(s||"").replace(/\D/g,"");}
+function mascaraTelefone(el){
+  let v=el.value.replace(/\D/g,"").slice(0,11);
+  if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{0,4})/,"($1) $2-$3");
+  else if(v.length>5)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");
+  else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,"($1) $2");
+  else if(v.length>0)v=v.replace(/(\d{0,2})/,"($1");
+  el.value=v.trim().replace(/-$/,"").replace(/\)\s*$/,")");
+}
+function formatarTelefoneExibicao(v){
+  const d=soDigitos(v);
+  if(d.length===11)return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  if(d.length===10)return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return v||"";
+}
+
 // ── CPF ──
 function mascaraCPF(el){
   let v=el.value.replace(/\D/g,"").slice(0,11);
@@ -1529,7 +1546,7 @@ function altTab(modo){
 }
 async function cadastrar(){
   const nome=document.getElementById("cad-nome").value.trim();
-  const fone=document.getElementById("cad-fone").value.trim();
+  const fone=soDigitos(document.getElementById("cad-fone").value);
   const cpfVal=(document.getElementById("cad-cpf")?.value||"").trim();
   const senha=(document.getElementById("cad-senha")?.value||"").trim();
   const pergunta=(document.getElementById("cad-pergunta")?.value||"").trim();
@@ -1563,7 +1580,7 @@ async function cadastrar(){
   }catch(e){loading(false);toast("Erro: "+e.message);}
 }
 async function entrar(){
-  const fone=document.getElementById("ent-fone").value.trim();
+  const fone=soDigitos(document.getElementById("ent-fone").value);
   const senha=(document.getElementById("ent-senha")?.value||"").trim();
   if(!fone){toast("Informe seu WhatsApp");return;}
   if(!senha){toast("Informe sua senha");return;}
@@ -1602,7 +1619,7 @@ function abrirRecuperar(){
   recUserDoc=null;
 }
 async function recBuscar(){
-  const fone=document.getElementById("rec-fone").value.trim();
+  const fone=soDigitos(document.getElementById("rec-fone").value);
   if(!fone){toast("Informe seu WhatsApp");return;}
   loading(true);
   try{
@@ -1908,7 +1925,7 @@ async function mostrarPedido(entrega){
     }
   }catch(e){}
   const tc=dadosRest?.totalPedidos||0;
-  const {nivel,grad}=nivelPorEntregas(tc);
+  const {nivel,grad}=nivelPorCorridas(tc);
   g("ped-nivel").textContent=nivel;
   const ring=g("ped-av-ring");if(ring)ring.style.setProperty("--nivel-grad",grad);
   g("ped-idade").style.display="none"; // idade não se aplica a restaurante
@@ -2047,7 +2064,7 @@ async function entrarTelaEntrega(){
   const pgtoIcones={Dinheiro:"💵",Pix:"📱",Débito:"💳",Crédito:"💳"};
   let txtPgto=(pgtoIcones[entregaAtiva.formaPgto]||"💰")+" "+(entregaAtiva.formaPgto||"Não informado");
   if(entregaAtiva.formaPgto==="Dinheiro"&&entregaAtiva.trocoPara)txtPgto+=" · Troco p/ "+entregaAtiva.trocoPara;
-  g("entrega-pgto-info").textContent=txtPgto;
+  g("corrida-pgto-info").textContent=txtPgto;
 
   // Valor total já vem definido pelo restaurante (subtotal + taxa de entrega, se houver)
   const valorTotal=entregaAtiva.valorTotal||entregaAtiva.valorPedido;
@@ -2059,7 +2076,7 @@ async function entrarTelaEntrega(){
   if(btn){btn.textContent="📍 Cheguei ao restaurante";btn.className="btn-etapa-unica";}
   pararContadorEspera();
 
-  mostrarTela("tela-entrega-mot");
+  mostrarTela("tela-corrida-mot");
   iniciarMapaEntregaMot();
   escutarEntregaAtivaMot(entregaAtiva.id);
   escutarNotifChatMot(entregaAtiva.id);
@@ -2358,9 +2375,9 @@ async function concluirEntrega(){
     localStorage.setItem("ejm_user",JSON.stringify(user));
 
     const cIdConcluida=entregaAtiva.id,nomeConcluido=entregaAtiva.clienteNome;
-    somCorridaConcluida();
+    somEntregaConcluida();
     pararContadorEspera();
-    if(unsubCorridaAtivaMot){unsubCorridaAtivaMot();unsubCorridaAtivaMot=null;}
+    if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
     if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
     if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
     entregaAtiva=null;
@@ -2419,7 +2436,7 @@ function escutarEntregaAtivaMot(id){
 let mapaEntregaMot=null,marcDestinoMot=null;
 function iniciarMapaEntregaMot(){
   if(!mapaEntregaMot){
-    mapaEntregaMot=L.map("mapa-entrega-mot",{zoomControl:true,attributionControl:false});
+    mapaEntregaMot=L.map("mapa-corrida-mot",{zoomControl:true,attributionControl:false});
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18}).addTo(mapaEntregaMot);
   }
   setTimeout(()=>mapaEntregaMot.invalidateSize(),200);
@@ -2485,18 +2502,18 @@ function selEstrelaMot(n){
   document.querySelectorAll(".estrela-mot").forEach((e,i)=>e.classList.toggle("on",i<n));
 }
 async function enviarAvalMot(){
-  if(!_avalMotCorridaId)return;
+  if(!_avalMotEntregaId)return;
   const comentario=document.getElementById("aval-mot-comentario").value.trim();
   loading(true);
   try{
-    await db.collection("ej_pedidos").doc(_avalMotCorridaId).update({
+    await db.collection("ej_pedidos").doc(_avalMotEntregaId).update({
       avaliacaoMotoboy:_avalMotNota,
       comentarioMotoboy:comentario||null
     });
     // Atualiza o último comentário recebido pelo passageiro (se houver corrida + clienteId)
     if(comentario){
       try{
-        const cSnap=await db.collection("ej_pedidos").doc(_avalMotCorridaId).get();
+        const cSnap=await db.collection("ej_pedidos").doc(_avalMotEntregaId).get();
         const cData=cSnap.data();
         if(cData?.clienteId&&!cData.clienteId.startsWith("anon_")){
           await db.collection("ej_restaurantes").doc(cData.clienteId).update({ultimoComentario:comentario});
@@ -2657,7 +2674,7 @@ function atualizarPerfil(){
   else g("perf-initial").textContent="🚗";
 
   const tc=user.totalEntregas||0;
-  const {nivel,grad}=nivelPorEntregas(tc);
+  const {nivel,grad}=nivelPorCorridas(tc);
   if(g("perf-nivel"))g("perf-nivel").textContent="Motoboy "+nivel.split(" ")[1];
   const ring=g("perf-av-ring");
   if(ring)ring.style.setProperty("--nivel-grad",grad);
@@ -2671,7 +2688,7 @@ function atualizarPerfil(){
   }
 
   if(g("pi-nome"))g("pi-nome").textContent=user.nome||"--";
-  if(g("pi-fone"))g("pi-fone").textContent=user.fone||"--";
+  if(g("pi-fone"))g("pi-fone").textContent=user.fone?formatarTelefoneExibicao(user.fone):"--";
   if(g("pi-cpf"))g("pi-cpf").textContent=user.cpf||"Não informado";
   const vMap={carro:"🚗 Carro",moto:"🏍️ Moto",van:"🚐 Van"};
   if(g("pi-veiculo"))g("pi-veiculo").textContent=vMap[user.veiculo]||user.veiculo||"--";
@@ -2697,14 +2714,14 @@ function abrirEditarPerfilMot(){
   if(!user)return;
   document.getElementById("modal-editar-mot").classList.add("show");
   document.getElementById("ed-nome-mot").value=user.nome||"";
-  document.getElementById("ed-fone-mot").value=user.fone||"";
+  document.getElementById("ed-fone-mot").value=user.fone?formatarTelefoneExibicao(user.fone):"";
   document.getElementById("ed-cpf-mot").value=user.cpf||"";
   document.getElementById("ed-veiculo-mot").value=user.veiculo||"carro";
   document.getElementById("ed-placa-mot").value=user.placa||"";
 }
 async function salvarPerfilMot(){
   const nome=document.getElementById("ed-nome-mot").value.trim();
-  const fone=document.getElementById("ed-fone-mot").value.trim();
+  const fone=soDigitos(document.getElementById("ed-fone-mot").value);
   const cpf=document.getElementById("ed-cpf-mot").value.trim();
   const veiculo=document.getElementById("ed-veiculo-mot").value;
   const placa=document.getElementById("ed-placa-mot").value.trim().toUpperCase();
