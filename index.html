@@ -1140,6 +1140,10 @@ input[type=file]{display:none;}
     <div class="config-toggle" id="cfg-notif" onclick="toggleConfigPref('notif')"></div>
   </div>
 
+  <div class="perf-sec-tit">App de navegação</div>
+  <div style="margin:0 16px 12px;font-size:11px;color:var(--muted);">Escolha qual app abre quando você toca em "Navegar" durante uma entrega.</div>
+  <div id="lista-nav-apps" style="margin:0 16px;display:flex;flex-direction:column;gap:9px;"></div>
+
   <div style="height:24px;"></div>
 </div>
 
@@ -2353,17 +2357,51 @@ function pararContadorEspera(){
 }
 
 // ── NAVEGAÇÃO ──
+// ── APP DE NAVEGAÇÃO PREFERIDO ──
+const NAV_APPS=[
+  {id:"google",nome:"Google Maps",icon:"🗺️"},
+  {id:"waze",nome:"Waze",icon:"🚗"},
+  {id:"apple",nome:"Apple Maps",icon:"📍"}
+];
+function getConfigNavApp(){return localStorage.getItem("ejm_pref_navapp")||"google";}
+function setConfigNavApp(app){
+  localStorage.setItem("ejm_pref_navapp",app);
+  renderConfigNavApps();
+  if(getConfigPref("vibra",true)&&navigator.vibrate)navigator.vibrate(15);
+}
+function renderConfigNavApps(){
+  const el=document.getElementById("lista-nav-apps");
+  if(!el)return;
+  const atual=getConfigNavApp();
+  el.innerHTML=NAV_APPS.map(a=>`
+    <div class="config-card-item" style="cursor:pointer;margin:0;" onclick="setConfigNavApp('${a.id}')">
+      <div class="config-card-icon">${a.icon}</div>
+      <div class="config-card-info"><div class="config-card-nome">${a.nome}</div></div>
+      <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${atual===a.id?"var(--dourado)":"var(--border)"};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${atual===a.id?'<div style="width:11px;height:11px;border-radius:50%;background:var(--dourado);"></div>':''}
+      </div>
+    </div>`).join("");
+}
 function abrirNavegacao(){
   if(!entregaAtiva)return;
-  // Enquanto não iniciou a corrida (ainda buscando o passageiro), navega até o PASSAGEIRO.
-  // Depois de "no_carro" (corrida iniciada), navega até o DESTINO final.
+  // Enquanto não iniciou a corrida (ainda buscando o restaurante), navega até o RESTAURANTE.
+  // Depois de "no_carro" (corrida iniciada), navega até o DESTINO final do cliente.
+  let lat=null,lng=null,textoEndereco=null;
   if(statusAtual==="no_carro"){
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(entregaAtiva.destino)}&travelmode=driving`,"_blank");
-  }else if(entregaAtiva.origemLat&&entregaAtiva.origemLng){
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${entregaAtiva.origemLat},${entregaAtiva.origemLng}&travelmode=driving`,"_blank");
+    lat=entregaAtiva.destinoLat;lng=entregaAtiva.destinoLng;textoEndereco=entregaAtiva.destino;
   }else{
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(entregaAtiva.destino)}&travelmode=driving`,"_blank");
+    lat=entregaAtiva.origemLat;lng=entregaAtiva.origemLng;textoEndereco=entregaAtiva.restauranteEndereco||entregaAtiva.destino;
   }
+  const app=getConfigNavApp();
+  let url;
+  if(app==="waze"){
+    url=(lat&&lng)?`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`:`https://waze.com/ul?q=${encodeURIComponent(textoEndereco||"")}&navigate=yes`;
+  }else if(app==="apple"){
+    url=(lat&&lng)?`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`:`https://maps.apple.com/?daddr=${encodeURIComponent(textoEndereco||"")}&dirflg=d`;
+  }else{
+    url=(lat&&lng)?`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`:`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(textoEndereco||"")}&travelmode=driving`;
+  }
+  window.open(url,"_blank");
 }
 
 // ── CONCLUIR CORRIDA ──
@@ -3080,6 +3118,7 @@ function toggleConfigPref(k){
 }
 function abrirTelaConfig(){
   renderConfigCards();
+  renderConfigNavApps();
   ["som","vibra","notif"].forEach(k=>{
     const el=document.getElementById("cfg-"+k);
     if(el)el.classList.toggle("on",getConfigPref(k,true));
