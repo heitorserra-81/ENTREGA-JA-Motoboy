@@ -2060,6 +2060,18 @@ async function aceitarCorrida(){
     user.creditos=novoCredito;
     localStorage.setItem("ejm_user",JSON.stringify(user));
 
+    // Cobrança do restaurante (quando ativada no painel admin): desconta o custo por entrega
+    // do restaurante e registra no pedido, para devolver em caso de cancelamento.
+    try{
+      const cfgSnap=await db.collection("ej_config").doc("geral").get();
+      const cfg=cfgSnap.exists?cfgSnap.data():{};
+      const custoRest=cfg.custoCreditoRestaurante||0;
+      if(cfg.cobrancaRestaurante===true&&custoRest>0&&pedidoAtual.clienteId&&!pedidoAtual.clienteId.startsWith("anon_")){
+        await db.collection("ej_restaurantes").doc(pedidoAtual.clienteId).update({creditos:firebase.firestore.FieldValue.increment(-custoRest)});
+        await db.collection("ej_pedidos").doc(pedidoAtual.id).update({creditoRestCobrado:custoRest});
+      }
+    }catch(e){}
+
     const pedidoAceito={...pedidoAtual,id:pedidoAtual.id};
     pedidoAtual=null;
     document.getElementById("modal-pedido").classList.remove("show");
@@ -2092,6 +2104,15 @@ async function devolverCredito(entregaId,valor){
     localStorage.setItem("ejm_user",JSON.stringify(user));
     atualizarCreditos();
     toast(valor+" crédito(s) devolvido(s) — entrega cancelada.");
+  }catch(e){}
+  // Devolve também o crédito do restaurante, se foi cobrado neste pedido (trava contra devolução dupla)
+  try{
+    const pSnap=await db.collection("ej_pedidos").doc(entregaId).get();
+    const p=pSnap.data();
+    if(p&&p.creditoRestCobrado>0&&!p.creditoRestDevolvido&&p.clienteId&&!p.clienteId.startsWith("anon_")){
+      await db.collection("ej_restaurantes").doc(p.clienteId).update({creditos:firebase.firestore.FieldValue.increment(p.creditoRestCobrado)});
+      await db.collection("ej_pedidos").doc(entregaId).update({creditoRestDevolvido:true});
+    }
   }catch(e){}
 }
 
