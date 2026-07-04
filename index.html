@@ -738,6 +738,11 @@ input[type=file]{display:none;}
       <div class="status-chip">Em entrega</div>
     </div>
 
+    <div id="fila-badge" style="display:none;margin-bottom:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:13px;padding:11px 14px;align-items:center;justify-content:space-between;cursor:pointer;" onclick="abrirFilaEntregas()">
+      <div style="font-size:12px;font-weight:700;color:#60a5fa;" id="fila-badge-txt">📦 1 entrega na fila</div>
+      <div style="font-size:12px;color:#60a5fa;">Ver ›</div>
+    </div>
+
     <div class="passageiro-card">
       <div class="pass-foto-corrida" id="pass-foto"><span>👤</span></div>
       <div class="pass-info-corrida">
@@ -877,6 +882,17 @@ input[type=file]{display:none;}
     </div>
     <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:13px;">Após o Pix, avise no WhatsApp com o comprovante. O crédito é liberado manualmente pelo administrador.</div>
     <button class="btn-cancel" onclick="document.getElementById('modal-cred-mot').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Fechar</button>
+  </div>
+</div>
+
+<!-- MODAL FILA DE ENTREGAS (paradas múltiplas) -->
+<div class="modal-base" id="modal-fila-entregas">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;"></div>
+    <div style="font-size:17px;font-weight:900;color:#fff;margin-bottom:4px;">📦 Suas entregas</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Toque em uma entrega para focar nela. A que não estiver em foco continua guardada, com seu crédito já descontado.</div>
+    <div id="lista-fila-entregas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:9px;"></div>
+    <button class="btn-cancel" onclick="document.getElementById('modal-fila-entregas').classList.remove('show')">Fechar</button>
   </div>
 </div>
 
@@ -1138,6 +1154,10 @@ input[type=file]{display:none;}
   <div class="config-toggle-row">
     <div><div class="config-toggle-nome">🔔 Notificações push</div><div class="config-toggle-desc">Avisar mesmo com o app em segundo plano</div></div>
     <div class="config-toggle" id="cfg-notif" onclick="toggleConfigPref('notif')"></div>
+  </div>
+  <div class="config-toggle-row">
+    <div><div class="config-toggle-nome">📦 Aceitar múltiplas entregas</div><div class="config-toggle-desc">Receba um segundo pedido mesmo já em rota. Cada um desconta seu próprio crédito.</div></div>
+    <div class="config-toggle" id="cfg-multistop" onclick="toggleConfigPref('multistop')"></div>
   </div>
 
   <div class="perf-sec-tit">App de navegação</div>
@@ -1864,13 +1884,16 @@ function nivelPorCorridas(tc){
 
 // ── ESCUTAR PEDIDOS ──
 let unsubPedidos=null,pedidoAtual=null,entregaAtiva=null,timerPedido=null,_pedSeg=15;
+let filaEntregas=[]; // entregas já aceitas aguardando o motoboy focar nelas (paradas múltiplas)
+function multiStopAtivo(){return getConfigPref("multistop",false);}
 let _escutaPedidosIniciadaEm=null;
 function escutarPedidos(){
   if(unsubPedidos)unsubPedidos();
   _escutaPedidosIniciadaEm=Date.now();
   unsubPedidos=db.collection("ej_pedidos").where("status","==","aguardando").onSnapshot(snap=>{
     snap.docChanges().forEach(change=>{
-      if(change.type==="added"&&!pedidoAtual&&!entregaAtiva){
+      const podeReceberNovo=!pedidoAtual&&(!entregaAtiva||(multiStopAtivo()&&filaEntregas.length===0));
+      if(change.type==="added"&&podeReceberNovo){
         const d=change.doc.data();
         // Só ignora pedidos realmente abandonados (ex: sobra de teste antigo).
         // Enquanto o status continuar "aguardando", o pedido é válido — o motoboy
@@ -2037,14 +2060,25 @@ async function aceitarCorrida(){
     user.creditos=novoCredito;
     localStorage.setItem("ejm_user",JSON.stringify(user));
 
-    entregaAtiva={...pedidoAtual,id:pedidoAtual.id};pedidoAtual=null;
+    const pedidoAceito={...pedidoAtual,id:pedidoAtual.id};
+    pedidoAtual=null;
     document.getElementById("modal-pedido").classList.remove("show");
-    if(unsubPedidos){unsubPedidos();unsubPedidos=null;}
 
-    loading(false);
-    atualizarCreditos();
-    toast(`Entrega aceita! ${custoCred} crédito(s) descontado(s). ✓`);
-    entrarTelaEntrega();
+    if(entregaAtiva){
+      // Já tem uma entrega em andamento — este vai para a fila (paradas múltiplas)
+      filaEntregas.push(pedidoAceito);
+      loading(false);
+      atualizarCreditos();
+      toast(`Entrega aceita! ${custoCred} crédito(s) descontado(s). Foi para sua fila. 📦`);
+      renderFilaEntregasBadge();
+    }else{
+      entregaAtiva=pedidoAceito;
+      if(!multiStopAtivo()&&unsubPedidos){unsubPedidos();unsubPedidos=null;}
+      loading(false);
+      atualizarCreditos();
+      toast(`Entrega aceita! ${custoCred} crédito(s) descontado(s). ✓`);
+      entrarTelaEntrega();
+    }
   }catch(e){loading(false);toast("Erro ao aceitar: "+e.message);}
 }
 
@@ -2086,16 +2120,72 @@ async function entrarTelaEntrega(){
   const valorTotal=entregaAtiva.valorTotal||entregaAtiva.valorPedido;
   if(g("valor-entrega"))g("valor-entrega").value=valorTotal?valorTotal.toFixed(2):"";
 
-  statusAtual="a_caminho";
-  g("entrega-status-txt").textContent="A caminho do restaurante";
-  const btn=g("btn-etapa-unica");
-  if(btn){btn.textContent="📍 Cheguei ao restaurante";btn.className="btn-etapa-unica";}
+  // Restaura a etapa certa: se esta entrega já teve o pagamento confirmado antes
+  // (ex: motoboy trocou de foco na fila de paradas múltiplas), retoma direto rumo ao cliente.
+  if(entregaAtiva.statusEtapa==="no_carro"){
+    statusAtual="no_carro";
+    g("entrega-status-txt").textContent="A caminho do cliente";
+    const btn=g("btn-etapa-unica");
+    if(btn){btn.textContent="🏁 Concluir entrega";btn.className="btn-etapa-unica etapa-concluir";}
+  }else{
+    statusAtual="a_caminho";
+    g("entrega-status-txt").textContent="A caminho do restaurante";
+    const btn=g("btn-etapa-unica");
+    if(btn){btn.textContent="📍 Cheguei ao restaurante";btn.className="btn-etapa-unica";}
+  }
   pararContadorEspera();
 
   mostrarTela("tela-corrida-mot");
   iniciarMapaEntregaMot();
   escutarEntregaAtivaMot(entregaAtiva.id);
   escutarNotifChatMot(entregaAtiva.id);
+  renderFilaEntregasBadge();
+}
+
+// ── PARADAS MÚLTIPLAS: fila de entregas aceitas aguardando foco ──
+function renderFilaEntregasBadge(){
+  const badge=document.getElementById("fila-badge");
+  if(!badge)return;
+  if(filaEntregas.length>0){
+    document.getElementById("fila-badge-txt").textContent="📦 "+filaEntregas.length+" entrega"+(filaEntregas.length>1?"s":"")+" na fila";
+    badge.style.display="flex";
+  }else{
+    badge.style.display="none";
+  }
+}
+function abrirFilaEntregas(){
+  const lista=[];
+  if(entregaAtiva)lista.push({...entregaAtiva,_emFoco:true});
+  filaEntregas.forEach(p=>lista.push({...p,_emFoco:false}));
+  const el=document.getElementById("lista-fila-entregas");
+  el.innerHTML=lista.map((p,i)=>{
+    const etapaLabel=p.statusEtapa==="no_carro"?"🚗 A caminho do cliente":"🏪 A caminho do restaurante";
+    return`<div style="background:${p._emFoco?"rgba(251,191,36,0.08)":"var(--card2)"};border:1px solid ${p._emFoco?"var(--dourado)":"var(--border)"};border-radius:14px;padding:13px;${p._emFoco?"":"cursor:pointer;"}" ${p._emFoco?"":`onclick="focarEntregaDaFila('${p.id}')"`}>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <div style="font-size:13px;font-weight:800;color:#fff;">${p.clienteNome||"Restaurante"}</div>
+        ${p._emFoco?'<div style="font-size:10px;font-weight:700;color:var(--dourado);background:rgba(251,191,36,0.15);padding:2px 9px;border-radius:10px;">EM FOCO</div>':'<div style="font-size:10px;font-weight:700;color:#60a5fa;">Tocar p/ focar</div>'}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:3px;">${etapaLabel}</div>
+      <div style="font-size:11px;color:var(--muted);">🏁 ${p.destino||"--"}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("modal-fila-entregas").classList.add("show");
+}
+function focarEntregaDaFila(id){
+  const idx=filaEntregas.findIndex(p=>p.id===id);
+  if(idx<0)return;
+  const novaFocada=filaEntregas.splice(idx,1)[0];
+  if(entregaAtiva)filaEntregas.push(entregaAtiva); // a que estava em foco volta pra fila
+  focarEntrega(novaFocada);
+  document.getElementById("modal-fila-entregas").classList.remove("show");
+}
+function focarEntrega(pedidoObj){
+  if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
+  if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
+  if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
+  entregaAtiva=pedidoObj;
+  entrarTelaEntrega();
+  toast("Entrega em foco: "+(pedidoObj.clienteNome||"Restaurante"));
 }
 
 // ── NOTIFICAÇÃO DE NOVAS MENSAGENS (mesmo com chat fechado) ──
@@ -2133,6 +2223,7 @@ async function avancarEtapa(){
     const res=await validarProximidadeGPS(entregaAtiva.origemLat,entregaAtiva.origemLng,"o restaurante");
     if(!res){if(btn)btn.disabled=false;return;}
     statusAtual="cheguei";
+    if(entregaAtiva)entregaAtiva.statusEtapa="cheguei";
     document.getElementById("entrega-status-txt").textContent="Chegou no restaurante!";
     try{
       const upd={statusEtapa:"cheguei",status:"motoboy_chegou"};
@@ -2187,6 +2278,7 @@ async function confirmarPagamentoRecebido(){
   const btn=document.getElementById("btn-etapa-unica");
   if(btn){btn.textContent="🏁 Concluir entrega";btn.className="btn-etapa-unica etapa-concluir";}
   atualizarRotaParaDestino();
+  if(entregaAtiva)entregaAtiva.statusEtapa="no_carro";
   try{
     await db.collection("ej_pedidos").doc(entregaAtiva.id).update({statusEtapa:"no_carro",status:"a_caminho",pagamentoConfirmado:true});
   }catch(e){}
@@ -2252,10 +2344,9 @@ async function confirmarCancelamentoPorPagamento(){
     pararContadorEspera();
     if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
     if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
-    entregaAtiva=null;statusAtual="a_caminho";
+    statusAtual="a_caminho";
     loading(false);
-    irPara("home");
-    if(online)escutarPedidos();
+    avancarProximaDaFilaOuHome();
     toast("Entrega cancelada. Créditos devolvidos.");
   }catch(e){loading(false);toast("Erro: "+e.message);}
 }
@@ -2405,6 +2496,18 @@ function abrirNavegacao(){
 }
 
 // ── CONCLUIR CORRIDA ──
+// Ao terminar/cancelar a entrega em foco: se tiver outra na fila (paradas múltiplas), assume ela automaticamente; senão volta pra home.
+function avancarProximaDaFilaOuHome(){
+  if(filaEntregas.length>0){
+    const proxima=filaEntregas.shift();
+    focarEntrega(proxima);
+    renderFilaEntregasBadge();
+  }else{
+    entregaAtiva=null;
+    irPara("home");
+    if(online)escutarPedidos();
+  }
+}
 async function concluirEntrega(){
   const valor=parseFloat(document.getElementById("valor-corrida").value);
   if(!valor||valor<=0){toast("Informe o valor da corrida");return;}
@@ -2430,12 +2533,10 @@ async function concluirEntrega(){
     if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
     if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
     if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
-    entregaAtiva=null;
     statusAtual="a_caminho";
     loading(false);
     toast("Corrida concluída! 🎉");
-    // Reiniciar a escuta de novos pedidos (garante que não fique "surda" após concluir)
-    if(online)escutarPedidos();
+    avancarProximaDaFilaOuHome();
     // Avaliação obrigatória antes de continuar
     setTimeout(()=>mostrarAvalMot(cIdConcluida,nomeConcluido),700);
   }catch(e){loading(false);toast("Erro: "+e.message);}
@@ -2453,10 +2554,8 @@ async function cancelarEntregaMotoboy(){
     if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
     if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
     if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
-    entregaAtiva=null;
     loading(false);
-    irPara("home");
-    if(online)escutarPedidos();
+    avancarProximaDaFilaOuHome();
   }catch(e){loading(false);irPara("home");}
 }
 
@@ -2475,25 +2574,26 @@ function escutarEntregaAtivaMot(id){
       if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
       if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
       if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
-      entregaAtiva=null;
-      irPara("home");
-      if(online)escutarPedidos();
+      statusAtual="a_caminho";
+      avancarProximaDaFilaOuHome();
     }
   });
 }
 
 // ── MAPA DA CORRIDA ──
-let mapaEntregaMot=null,marcDestinoMot=null;
+let mapaEntregaMot=null,marcDestinoMot=null,marcPosMot=null;
 function iniciarMapaEntregaMot(){
   if(!mapaEntregaMot){
     mapaEntregaMot=L.map("mapa-corrida-mot",{zoomControl:true,attributionControl:false});
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18}).addTo(mapaEntregaMot);
   }
   setTimeout(()=>mapaEntregaMot.invalidateSize(),200);
+  if(marcPosMot){mapaEntregaMot.removeLayer(marcPosMot);marcPosMot=null;}
+  if(marcDestinoMot){mapaEntregaMot.removeLayer(marcDestinoMot);marcDestinoMot=null;}
   if(posicaoAtual){
     mapaEntregaMot.setView(posicaoAtual,14);
     const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 42" width="34" height="42"><circle cx="17" cy="9" r="8" fill="#fbbf24" stroke="#fff" stroke-width="2"/><path d="M3 40 Q3 25 17 23 Q31 25 31 40Z" fill="#fbbf24" stroke="#fff" stroke-width="2"/></svg>`;
-    L.marker(posicaoAtual,{icon:L.divIcon({html:`<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));">${svg}</div>`,className:"",iconSize:[34,42],iconAnchor:[17,40]})}).addTo(mapaEntregaMot);
+    marcPosMot=L.marker(posicaoAtual,{icon:L.divIcon({html:`<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));">${svg}</div>`,className:"",iconSize:[34,42],iconAnchor:[17,40]})}).addTo(mapaEntregaMot);
   }
   if(entregaAtiva?.destinoLat&&entregaAtiva?.destinoLng){
     marcDestinoMot=L.marker([entregaAtiva.destinoLat,entregaAtiva.destinoLng]).addTo(mapaEntregaMot);
@@ -3110,7 +3210,8 @@ function setTamCard(id,tam){
   if(c){c.tam=tam;saveConfigCards(cards);renderConfigCards();}
 }
 function toggleConfigPref(k){
-  const atual=getConfigPref(k,true);
+  const def=k==="multistop"?false:true;
+  const atual=getConfigPref(k,def);
   setConfigPref(k,!atual);
   const el=document.getElementById("cfg-"+k);
   if(el)el.classList.toggle("on",!atual);
@@ -3123,6 +3224,8 @@ function abrirTelaConfig(){
     const el=document.getElementById("cfg-"+k);
     if(el)el.classList.toggle("on",getConfigPref(k,true));
   });
+  const elMulti=document.getElementById("cfg-multistop");
+  if(elMulti)elMulti.classList.toggle("on",getConfigPref("multistop",false));
 }
 
 
