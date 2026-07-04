@@ -1,0 +1,2905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0"/>
+<title>Entrega Já – Motoboy</title>
+<meta name="theme-color" content="#0f1a2e"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Entrega Já Motoboy"/>
+<link rel="manifest" id="manifest-link"/>
+<link rel="apple-touch-icon" id="apple-icon"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080f1e;--card:#0f1a2e;--card2:#1a2540;--azul2:#1a2a4a;--azul3:#243656;
+  --dourado:#fbbf24;--dourado2:#f59e0b;--dourado3:#b45309;
+  --border:rgba(251,191,36,0.2);--text:#f0e6c8;--muted:#7a8fa8;
+  --verde:#22c55e;--danger:#ef4444;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--satmin:max(env(safe-area-inset-top,0px),12px);
+}
+html,body{height:100%;font-family:-apple-system,sans-serif;color:var(--text);overflow:hidden;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;background:#080f1e;}
+input,textarea{-webkit-user-select:text!important;user-select:text!important;}
+@keyframes gira{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+@keyframes load{0%{transform:translateX(-100%);}100%{transform:translateX(350%);}}
+@keyframes fadein{from{opacity:0;}to{opacity:1;}}
+
+/* CANVAS PARTÍCULAS */
+#cv{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;display:block;}
+
+/* SCREENS */
+.screen{display:none;position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;z-index:2;background:transparent;}
+.screen.ativo{display:flex;}
+#tela-perfil>*{flex-shrink:0;}
+
+/* SPLASH */
+#tela-splash{align-items:center;justify-content:center;gap:18px;padding-top:max(40px,var(--sat));}
+.splash-logo{width:130px;height:130px;border-radius:32px;overflow:hidden;box-shadow:0 0 50px rgba(251,191,36,0.35);animation:float 3s ease-in-out infinite;}
+.splash-logo img{width:100%;height:100%;object-fit:cover;}
+.splash-title{font-size:30px;font-weight:900;color:#fff;text-align:center;}
+.splash-title span{color:var(--dourado);}
+.splash-sub{font-size:13px;color:var(--muted);}
+.splash-bar{width:44px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.splash-bar::after{content:"";display:block;height:100%;width:40%;background:linear-gradient(90deg,var(--dourado3),var(--dourado));animation:load 1.2s ease-in-out infinite;}
+
+/* LOGIN */
+#tela-login{min-height:100%;padding-top:max(40px,var(--sat));padding-bottom:40px;}
+.login-header{padding:16px 22px 20px;text-align:center;}
+.login-logo{width:80px;height:80px;border-radius:20px;overflow:hidden;margin:0 auto 12px;box-shadow:0 6px 24px rgba(251,191,36,0.25);}
+.login-logo img{width:100%;height:100%;object-fit:cover;}
+.login-header h1{font-size:22px;font-weight:900;color:#fff;margin-bottom:3px;}
+.login-header p{font-size:12px;color:var(--muted);}
+.login-body{padding:0 22px;display:flex;flex-direction:column;gap:11px;}
+.modo-tabs{display:flex;background:var(--card);border-radius:14px;padding:3px;border:1px solid var(--border);}
+.modo-tab{flex:1;padding:9px;border-radius:11px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.modo-tab.ativo{background:var(--azul2);color:var(--dourado);border:1px solid var(--border);}
+.campo-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;}
+.campo-input{width:100%;padding:13px 15px;background:var(--card);border:1px solid var(--border);border-radius:13px;color:var(--text);font-size:15px;font-family:inherit;outline:none;-webkit-appearance:none;-webkit-user-select:text;user-select:text;}
+.campo-input:focus{border-color:var(--dourado);}
+.campo-input::placeholder{color:var(--muted);}
+.emerg-box{background:rgba(251,191,36,0.05);border:1px solid var(--border);border-radius:14px;padding:14px;}
+.emerg-titulo{font-size:12px;font-weight:700;color:var(--dourado);margin-bottom:5px;}
+.emerg-desc{font-size:11px;color:var(--muted);margin-bottom:10px;}
+.sobre-row{display:flex;align-items:center;gap:11px;padding:10px 13px;background:var(--card2);border:1px solid var(--border);border-radius:12px;}
+.sobre-row span{font-size:20px;}
+.sobre-lb{font-size:13px;font-weight:700;color:#fff;}
+.sobre-vl{font-size:11px;color:var(--muted);margin-top:1px;}
+.termos-texto{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:6px;}
+.termos-texto h4{font-size:13px;font-weight:800;color:var(--dourado);margin:14px 0 5px;}
+.termos-texto h4:first-child{margin-top:0;}
+.termos-texto p{font-size:12px;color:var(--text);line-height:1.55;margin-bottom:4px;}
+.termos-check{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 2px;line-height:1.4;}
+.termos-check input{width:20px;height:20px;flex-shrink:0;accent-color:var(--dourado);margin-top:1px;}
+.termos-check a{color:var(--dourado);font-weight:600;text-decoration:underline;cursor:pointer;}
+.seg-box{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:14px;}
+.seg-titulo{font-size:12px;font-weight:700;color:#60a5fa;margin-bottom:5px;}
+.seg-desc{font-size:11px;color:var(--muted);margin-bottom:10px;}
+select.campo-input{-webkit-appearance:none;appearance:none;}
+.foto-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:13px;cursor:pointer;}
+.foto-prev{width:50px;height:50px;border-radius:50%;background:var(--card2);border:2px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;}
+.foto-prev img{width:100%;height:100%;object-fit:cover;}
+input[type=file]{display:none;}
+.btn-p{width:100%;padding:15px;border-radius:15px;background:var(--azul2);border:1px solid var(--border);color:var(--dourado);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-p:active{opacity:0.85;}
+.btn-sec{width:100%;padding:12px;border-radius:13px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+/* HOME */
+#tela-home{padding-bottom:24px;}
+.home-header{padding:20px 18px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 20px);background:linear-gradient(180deg,rgba(26,42,74,0.96) 0%,rgba(15,26,46,0.7) 70%,transparent 100%);}
+.home-header-top{display:flex;align-items:center;gap:10px;position:relative;min-height:72px;}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--card2);border:2px solid var(--dourado);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-size:14px;font-weight:700;color:var(--dourado);}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.header-info{flex:1;}
+.header-saudacao{font-size:11px;color:rgba(255,255,255,0.6);}
+.header-nome{font-size:16px;font-weight:800;color:#fff;}
+.btn-ham{background:rgba(251,191,36,0.08);border:1px solid var(--border);border-radius:13px;color:var(--dourado);font-size:22px;cursor:pointer;padding:9px 13px;flex-shrink:0;}
+
+/* ATALHOS SCROLL */
+.atalhos-wrap{padding:8px 14px 4px;}
+.atalhos-scroll{display:flex;gap:8px;overflow-x:scroll;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:0 2px 6px;scrollbar-width:none;cursor:grab;}
+.atalhos-scroll::-webkit-scrollbar{display:none;}
+.atalho-item{flex-shrink:0;width:90px;position:relative;border-radius:14px;padding:2px;overflow:hidden;cursor:pointer;transition:transform 0.18s ease,box-shadow 0.18s ease,filter 0.18s ease;}
+.atalho-item.drag-ativo{overflow:hidden;transform:scale(1.18) translateY(-10px) rotate(2deg)!important;z-index:1000;box-shadow:0 22px 48px rgba(251,191,36,0.7),0 12px 22px rgba(0,0,0,0.6)!important;filter:brightness(1.15);transition:none!important;touch-action:none;}
+.atalhos-scroll.reordenando{overflow:visible;touch-action:none;}
+.atalho-luz{position:absolute;top:50%;left:50%;width:200%;height:200%;animation:gira 2s linear infinite;border-radius:14px;}
+.atalho-conteudo{position:relative;z-index:2;background:var(--card2);border-radius:12px;padding:11px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;}
+.atalho-ic{font-size:22px;}
+.atalho-lb{font-size:11px;font-weight:600;color:var(--muted);text-align:center;line-height:1.2;}
+.atalho-end{font-size:9px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:76px;}
+
+/* CARD DESTINO */
+.dest-card{margin:12px 14px 10px;background:rgba(15,26,46,0.55);border:1px solid var(--border);border-radius:20px;padding:14px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.dest-titulo{font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;}
+.chips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;margin-bottom:8px;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;padding:5px 13px;border-radius:18px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;}
+.chip.ativo{background:var(--azul2);color:var(--dourado);border-color:var(--border);}
+.busca-row{display:flex;gap:7px;margin-bottom:7px;position:relative;}
+.campo-busca{flex:1;padding:12px 14px;background:var(--card2);border:1px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none;-webkit-user-select:text;user-select:text;}
+.campo-busca:focus{border-color:var(--dourado);}
+.campo-busca::placeholder{color:var(--muted);}
+.btn-mapa-ic{width:44px;height:44px;border-radius:13px;background:var(--azul2);border:1px solid var(--border);color:var(--dourado);font-size:19px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sugestoes{position:absolute;top:calc(100% + 4px);left:0;right:52px;background:var(--card);border:1px solid var(--border);border-radius:13px;z-index:200;overflow:hidden;display:none;max-height:200px;overflow-y:auto;}
+.sug-item{padding:10px 14px;border-bottom:1px solid rgba(251,191,36,0.05);cursor:pointer;}
+.sug-item:last-child{border-bottom:none;}
+.sug-nome{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px;}
+.sug-end{font-size:11px;color:var(--muted);}
+.sug-item:active{background:var(--card2);}
+.sug-mais{padding:10px 14px;text-align:center;font-size:12px;font-weight:600;color:var(--dourado);cursor:pointer;background:rgba(251,191,36,0.04);}
+.origem-row{display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--card2);border:1px solid var(--border);border-radius:13px;margin-bottom:7px;}
+.origem-txt{flex:1;font-size:12px;color:var(--muted);}
+.origem-txt.ok{color:var(--verde);}
+.campo-obs{width:100%;padding:10px 13px;background:var(--card2);border:1px solid var(--border);border-radius:13px;color:var(--text);font-size:13px;font-family:inherit;outline:none;-webkit-appearance:none;margin-bottom:7px;-webkit-user-select:text;user-select:text;}
+.campo-obs::placeholder{color:var(--muted);}
+.pgto-sec{margin-bottom:8px;}
+.pgto-titulo{font-size:13px;font-weight:800;color:#fff;margin-bottom:8px;}
+.pgto-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.pgto-btn{padding:11px 8px;border-radius:12px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.pgto-btn.ativo{background:rgba(251,191,36,0.12);border-color:var(--dourado);color:var(--dourado);}
+.valor-card{background:rgba(251,191,36,0.07);border:1px solid var(--border);border-radius:13px;padding:10px 14px;margin-bottom:8px;display:none;}
+.valor-num{font-size:22px;font-weight:900;color:var(--dourado);}
+.valor-info{font-size:11px;color:var(--muted);}
+
+/* BOTÃO CHAMAR */
+@property --bordaAng{syntax:"<angle>";initial-value:0deg;inherits:false;}
+@keyframes giraBorda{to{--bordaAng:360deg;}}
+@keyframes giraRot{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+.btn-chamar-wrap{
+  position:relative;border-radius:20px;padding:3px;
+  background:conic-gradient(from var(--bordaAng),#ef4444,#f97316,#fbbf24,#22c55e,#3b82f6,#a855f7,#ef4444);
+  animation:giraBorda 3s linear infinite;
+}
+.btn-chamar{
+  width:100%;padding:16px 20px;border-radius:17px;
+  background:linear-gradient(135deg,#1e40af,#2563eb,#1d4ed8);
+  border:none;
+  color:#ffffff;
+  font-size:18px;font-weight:900;
+  cursor:pointer;font-family:inherit;
+  position:relative;z-index:2;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  letter-spacing:0.5px;
+  text-shadow:0 1px 5px rgba(0,0,0,0.5);
+}
+/* Luz reluzente interna - passa de fora a fora */
+.btn-chamar::before{
+  content:"";position:absolute;
+  top:-60%;left:-60%;width:220%;height:220%;
+  background:linear-gradient(45deg,transparent 42%,rgba(255,255,255,0.4) 50%,transparent 58%);
+  animation:luzReluzente 2.8s linear infinite;
+  pointer-events:none;
+}
+@keyframes luzReluzente{0%,100%{transform:translateX(-60%);}50%{transform:translateX(60%);}}
+@keyframes heroBrilho{0%{transform:translateX(-200%);}100%{transform:translateX(400%);}}
+.btn-chamar img,.btn-chamar span{position:relative;z-index:1;}
+.btn-chamar:disabled{opacity:0.92;cursor:default;}
+
+/* MAPA MOTOBOYS */
+.mapa-mot-wrap{margin:0 14px 12px;border-radius:18px;overflow:hidden;border:1px solid rgba(34,197,94,0.2);height:200px;position:relative;background:#060d18;}
+#mapa-motoboys{position:absolute;top:0;left:0;bottom:0;right:0;width:100%;height:100%;}
+.mot-badge{position:absolute;z-index:999;pointer-events:none;border-radius:9px;padding:4px 10px;font-size:10px;font-weight:600;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,26,46,0.96);border-top:1px solid var(--border);display:flex;padding-bottom:max(8px,var(--sab));z-index:100;backdrop-filter:blur(10px);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 0;gap:3px;cursor:pointer;border:none;background:none;font-family:inherit;}
+.nav-ic{font-size:20px;}
+.nav-lb{font-size:9px;font-weight:600;color:var(--muted);}
+.nav-btn.ativo .nav-lb{color:var(--dourado);}
+
+/* BUSCANDO */
+#tela-buscando{align-items:center;justify-content:center;gap:14px;padding:24px;padding-top:max(60px,calc(var(--sat)+40px));}
+.busc-logo{width:84px;height:84px;border-radius:20px;overflow:hidden;animation:float 2s ease-in-out infinite;}
+.busc-logo img{width:100%;height:100%;object-fit:cover;}
+.busc-titulo{font-size:20px;font-weight:900;color:#fff;text-align:center;}
+.busc-sub{font-size:13px;color:var(--muted);text-align:center;}
+.busc-spinner{width:48px;height:48px;border:3px solid rgba(251,191,36,0.12);border-top-color:var(--dourado);border-radius:50%;animation:spin 0.9s linear infinite;}
+.busc-num{font-size:34px;font-weight:900;color:var(--dourado);}
+.busc-label{font-size:11px;color:var(--muted);margin-top:-10px;}
+.dev-retangulo{position:relative;display:inline-block;border-radius:13px;padding:2px;overflow:hidden;}
+.dev-luz{position:absolute;top:50%;left:50%;width:200%;height:200%;background:conic-gradient(#ef4444,#3b82f6,var(--dourado),#22c55e,#ef4444);animation:gira 2s linear infinite;}
+.dev-inner{position:relative;z-index:1;background:var(--card);border-radius:11px;padding:7px 18px;text-align:center;}
+.dev-por{font-size:10px;color:var(--muted);}
+.dev-nome{font-size:12px;font-weight:800;color:var(--dourado);white-space:nowrap;}
+.btn-cancelar-busca{padding:12px 26px;border-radius:13px;background:transparent;border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+/* EM CORRIDA */
+#tela-entrega{flex-direction:column;}
+#mapa-entrega{flex:1;min-height:42vh;position:relative;}
+.btn-full{position:absolute;top:max(10px,var(--sat));right:10px;z-index:999;background:rgba(8,15,30,0.9);border:1px solid var(--border);border-radius:9px;padding:5px 11px;font-size:11px;font-weight:600;color:var(--dourado);cursor:pointer;}
+.eta{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(8,15,30,0.92);border:1px solid var(--border);border-radius:18px;padding:4px 14px;font-size:11px;font-weight:700;color:var(--dourado);white-space:nowrap;display:none;}
+.entrega-painel{background:var(--card);border-top:1px solid var(--border);border-radius:22px 22px 0 0;padding:14px 16px;padding-bottom:max(14px,calc(var(--sab)+14px));}
+.entrega-status{font-size:13px;font-weight:700;color:var(--dourado);margin-bottom:9px;}
+.mot-card{display:flex;align-items:center;gap:11px;padding:11px;background:var(--card2);border-radius:14px;border:1px solid var(--border);margin-bottom:9px;cursor:pointer;}
+.mot-foto{width:48px;height:48px;border-radius:50%;background:var(--bg);border:2px solid var(--dourado);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:18px;}
+.mot-foto img{width:100%;height:100%;object-fit:cover;}
+.mot-nome{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;}
+.mot-veic{font-size:11px;color:var(--muted);}
+.mot-placa{font-size:11px;font-weight:700;color:var(--dourado);}
+.entrega-valor{font-size:22px;font-weight:900;color:var(--dourado);text-align:center;margin-bottom:9px;}
+.acoes{display:flex;gap:7px;margin-bottom:9px;}
+.btn-acao{flex:1;padding:10px;border-radius:13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);}
+.btn-cancelar-cor{width:100%;padding:11px;border-radius:13px;background:transparent;border:1px solid rgba(239,68,68,0.2);color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+/* CHAT */
+#modal-chat{display:none;position:fixed;inset:0;z-index:9980;background:rgba(0,0,0,0.8);align-items:flex-end;backdrop-filter:blur(6px);}
+#modal-chat.show{display:flex;}
+.chat-sheet{background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border);width:100%;height:68vh;display:flex;flex-direction:column;}
+.chat-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.chat-tit{flex:1;font-size:14px;font-weight:700;color:#fff;}
+.chat-msgs{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:7px;}
+.msg{max-width:78%;padding:8px 13px;border-radius:14px;font-size:13px;line-height:1.4;}
+.msg.minha{align-self:flex-end;background:var(--azul2);color:var(--dourado);border-bottom-right-radius:3px;}
+.msg.dele{align-self:flex-start;background:var(--card2);color:var(--text);border-bottom-left-radius:3px;}
+.msg-time{font-size:9px;color:var(--muted);margin-top:2px;text-align:right;}
+.chat-inp-row{padding:9px 12px;padding-bottom:max(9px,var(--sab));border-top:1px solid var(--border);display:flex;gap:7px;}
+.chat-inp{flex:1;padding:10px 13px;background:var(--card2);border:1px solid var(--border);border-radius:18px;color:var(--text);font-size:13px;font-family:inherit;outline:none;-webkit-user-select:text;user-select:text;}
+.chat-inp::placeholder{color:var(--muted);}
+.btn-send{width:40px;height:40px;border-radius:50%;background:var(--azul2);border:1px solid var(--border);color:var(--dourado);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* PERFIL */
+#tela-perfil{padding-bottom:72px;}
+.perf-hdr{background:linear-gradient(180deg,rgba(26,42,74,0.95),transparent);padding:14px 18px 18px;padding-top:calc(env(safe-area-inset-top,0px) + 14px);}
+.perf-hdr h2{font-size:20px;font-weight:800;color:#fff;}
+.perf-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
+.perf-user{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border);cursor:pointer;}
+.perf-av{width:64px;height:64px;border-radius:50%;background:var(--card2);border:3px solid var(--dourado);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--dourado);position:relative;flex-shrink:0;}
+.perf-av img{width:100%;height:100%;object-fit:cover;}
+.perf-edit{position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--dourado);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:2px solid var(--card);}
+.perf-nome{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;}
+.perf-fone{font-size:12px;color:var(--muted);}
+.perf-badge{display:inline-flex;margin-top:4px;background:rgba(251,191,36,0.08);border:1px solid var(--border);border-radius:7px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--dourado);}
+/* PERFIL NOVO */
+.perf-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.perf-marca{display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px 0 14px;}
+.perf-marca-logo{width:54px;height:54px;border-radius:14px;object-fit:cover;box-shadow:0 4px 14px rgba(251,191,36,0.25);}
+.perf-marca-txt{font-size:11px;color:var(--muted);}
+.perf-marca-txt b{color:var(--dourado);font-weight:700;}
+.perf-hero{position:relative;margin:0 16px 16px;border-radius:22px;border:1px solid var(--border);background:linear-gradient(135deg,#1e40af 0%,#2563eb 35%,#7c3aed 65%,#b45309 100%);overflow:hidden;}
+.perf-hero-bg{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none;}
+.perf-hero-bg::after{content:"";position:absolute;top:0;left:0;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.28),transparent);animation:heroBrilho 3s linear infinite;}
+.perf-hero-content{position:relative;z-index:2;padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.perf-av-outer{position:relative;width:104px;height:104px;}
+.perf-av-ring{position:relative;width:104px;height:104px;border-radius:50%;padding:4px;overflow:hidden;background:var(--nivel-grad,conic-gradient(#cd7f32,#f0b97d,#8b5a2b,#cd7f32));}
+.perf-av-ring::before{content:"";position:absolute;top:50%;left:50%;width:150%;height:150%;border-radius:50%;background:var(--nivel-grad,conic-gradient(#cd7f32,#f0b97d,#8b5a2b,#cd7f32));animation:giraRot 3s linear infinite;z-index:0;}
+.perf-av-big{position:relative;z-index:1;width:96px;height:96px;border-radius:50%;background:var(--card2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 4px 14px rgba(0,0,0,0.5);}
+.perf-av-big img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.perf-av-outer .perf-edit{position:absolute;bottom:-2px;right:-2px;width:32px;height:32px;border-radius:50%;background:var(--dourado);border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.4);}
+.perf-nome-big{font-size:22px;font-weight:900;color:#fff;margin-top:12px;text-shadow:0 2px 8px rgba(0,0,0,0.6);}
+.perf-nivel{margin-top:8px;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:5px 15px;font-size:12px;font-weight:700;color:#ffe9b0;}
+.perf-stats-row{display:flex;gap:10px;margin:0 16px 16px;}
+.perf-stat-wrap{flex:1;position:relative;border-radius:16px;padding:2px;overflow:hidden;}
+.perf-stat-wrap::before{content:"";position:absolute;top:50%;left:50%;width:250%;height:250%;background:conic-gradient(#ef4444,#f97316,#fbbf24,#22c55e,#3b82f6,#a855f7,#ef4444);animation:giraRot 4s linear infinite;}
+.perf-stat{position:relative;z-index:2;background:var(--card);border-radius:14px;padding:16px 8px;text-align:center;}
+.perf-stat-num{font-size:21px;font-weight:900;color:var(--dourado);}
+.perf-stat-lb{font-size:10px;color:var(--muted);margin-top:4px;font-weight:600;}
+.perf-sec-tit{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:18px 18px 9px;}
+.perf-info-card{margin:0 16px;background:var(--card2);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.perf-info-row{display:flex;align-items:center;gap:13px;padding:14px 16px;border-bottom:1px solid rgba(251,191,36,0.07);}
+.perf-info-row:last-child{border-bottom:none;}
+.perf-info-ic{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
+.perf-info-txt{flex:1;min-width:0;}
+.perf-info-lb{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.perf-info-vl{font-size:15px;color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.perf-emerg{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);}
+.perf-acoes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 16px;}
+.perf-acao{display:flex;align-items:center;gap:9px;padding:15px 13px;background:var(--card);border:1px solid var(--border);border-radius:14px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;}
+.perf-acao span{font-size:18px;}
+.perf-acao:active{background:var(--card2);}
+.perf-hist{margin:0 16px;display:flex;flex-direction:column;gap:8px;}
+
+.hist-item{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid rgba(251,191,36,0.04);}
+.hist-item:last-child{border-bottom:none;}
+.hist-ic{width:36px;height:36px;border-radius:11px;background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.hist-local{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px;}
+.hist-data{font-size:11px;color:var(--muted);}
+.hist-val{font-size:13px;font-weight:700;color:var(--dourado);}
+.btn-sair{margin:22px 16px 0;width:calc(100% - 32px);padding:13px;border-radius:14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.18);color:#ef4444;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+/* MAPA DESTINO */
+#modal-mapa-dest{display:none;position:fixed;inset:0;z-index:9970;flex-direction:column;}
+#modal-mapa-dest.show{display:flex;}
+#mapa-dest-div{flex:1;position:relative;}
+.dest-hdr{background:var(--card);border-bottom:1px solid var(--border);padding:13px 18px;padding-top:max(13px,calc(var(--sat)+8px));display:flex;align-items:center;gap:11px;}
+.dest-hdr-tit{flex:1;font-size:13px;font-weight:700;color:#fff;}
+.btn-fechar-dest{padding:7px 13px;border-radius:11px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.dest-footer{background:var(--card);border-top:1px solid var(--border);padding:11px 16px;padding-bottom:max(11px,var(--sab));}
+.dest-end-txt{font-size:12px;color:var(--muted);margin-bottom:8px;min-height:16px;}
+.btn-confirmar{width:100%;padding:14px;border-radius:14px;background:var(--azul2);border:1px solid var(--border);color:var(--dourado);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-confirmar:disabled{opacity:0.38;}
+.pin-centro{position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);z-index:9971;font-size:34px;pointer-events:none;}
+
+/* MAPA FULL */
+#modal-mapa-full{display:none;position:fixed;inset:0;z-index:9960;background:#000;flex-direction:column;}
+#modal-mapa-full.show{display:flex;}
+#mapa-full-div{flex:1;}
+.btn-fechar-full{position:fixed;top:max(70px,calc(var(--sat)+60px));left:14px;z-index:9961;background:rgba(8,15,30,0.97);border:2px solid var(--dourado);border-radius:13px;padding:13px 20px;font-size:14px;font-weight:700;color:var(--dourado);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.5);}
+
+/* MODAL MOTOBOY */
+#modal-mot{display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+#modal-mot.show{display:flex;}
+.mot-modal-box{background:var(--card);border-radius:22px;border:1px solid var(--border);padding:22px;width:86%;max-width:320px;text-align:center;}
+.mot-modal-foto{width:88px;height:88px;border-radius:50%;background:var(--card2);border:3px solid var(--dourado);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 11px;}
+.mot-modal-foto img{width:100%;height:100%;object-fit:cover;}
+
+/* MODAIS BASE */
+.modal-base{display:none;position:fixed;inset:0;z-index:9985;background:rgba(0,0,0,0.87);align-items:flex-end;backdrop-filter:blur(5px);}
+.modal-base.show{display:flex;}
+.modal-sheet{background:var(--card);border-radius:26px 26px 0 0;border-top:1px solid var(--border);padding:22px;padding-bottom:max(38px,calc(var(--sab)+22px));width:100%;animation:slideUp 0.3s ease;max-height:88vh;overflow-y:auto;}
+.btn-ok{width:100%;padding:15px;border-radius:14px;background:var(--azul2);border:1px solid var(--border);color:var(--dourado);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:7px;}
+.btn-cancel{width:100%;padding:12px;border-radius:13px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;}
+
+/* MENU */
+#menu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;}
+#menu-lateral{display:none;position:fixed;top:0;right:0;bottom:0;width:282px;background:var(--card);border-left:1px solid var(--border);z-index:8001;overflow-y:auto;}
+.menu-hdr{padding:calc(env(safe-area-inset-top,0px) + 46px) 18px 18px;background:linear-gradient(180deg,var(--azul2),var(--card));border-bottom:1px solid var(--border);text-align:center;}
+.menu-logo{width:80px;height:80px;border-radius:22px;overflow:hidden;margin:0 auto 12px;box-shadow:0 6px 20px rgba(251,191,36,0.3);}
+.menu-logo img{width:100%;height:100%;object-fit:cover;}
+.menu-app{font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;}
+.menu-dev-por{font-size:10px;color:var(--muted);margin-bottom:5px;}
+.menu-ret{position:relative;display:inline-block;border-radius:12px;padding:2px;overflow:hidden;}
+.menu-ret-luz{position:absolute;top:50%;left:50%;width:200%;height:200%;background:conic-gradient(#ef4444,#3b82f6,var(--dourado),#22c55e,#ef4444);animation:gira 2s linear infinite;}
+.menu-ret-inner{position:relative;z-index:1;background:var(--card2);border-radius:10px;padding:6px 16px;}
+.menu-ret-nome{font-size:12px;font-weight:800;color:var(--dourado);white-space:nowrap;}
+.menu-items{padding:8px 18px 36px;}
+.menu-item{padding:16px 0;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;border-bottom:1px solid rgba(251,191,36,0.05);display:flex;align-items:center;gap:9px;}
+.menu-item:last-child{border-bottom:none;}
+.menu-sep{height:1px;background:var(--border);margin:5px 0;}
+
+/* CONFIG */
+.config-hdr{padding:max(18px,calc(var(--sat)+14px)) 16px 12px;background:linear-gradient(180deg,rgba(26,42,74,0.95),transparent);display:flex;align-items:center;gap:11px;}
+.config-tit{font-size:17px;font-weight:800;color:#fff;}
+.config-sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:12px 16px 6px;}
+.config-item{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid rgba(251,191,36,0.04);}
+.config-ic{font-size:22px;width:38px;text-align:center;}
+.config-info{flex:1;}
+.config-nome{font-size:13px;font-weight:600;color:var(--text);}
+.config-end{font-size:11px;color:var(--muted);}
+.toggle{width:42px;height:23px;border-radius:11px;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:var(--verde);}
+.toggle.off{background:var(--card2);border:1px solid var(--border);}
+.toggle::after{content:"";position:absolute;top:2px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left 0.2s;}
+.toggle.on::after{left:21px;}
+.toggle.off::after{left:2px;}
+
+/* MODAL CRIAR ATALHO */
+#modal-criar-atalho{display:none;position:fixed;inset:0;z-index:9986;background:rgba(0,0,0,0.88);align-items:flex-end;backdrop-filter:blur(5px);}
+#modal-criar-atalho.show{display:flex;}
+.icone-op{width:40px;height:40px;border-radius:11px;background:var(--card2);border:2px solid transparent;display:flex;align-items:center;justify-content:center;font-size:21px;cursor:pointer;transition:border-color 0.15s;}
+.icone-op.sel{border-color:var(--dourado);}
+.cor-op{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;}
+.cor-op.sel{border-color:#fff;}
+
+/* CROP */
+.crop-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:20000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:22px;}
+.crop-container{width:260px;height:260px;border-radius:50%;overflow:hidden;border:3px solid var(--dourado);flex-shrink:0;}
+.crop-canvas{width:260px;height:260px;display:block;}
+
+/* ESTRELAS */
+.estrela{font-size:36px;color:rgba(255,255,255,0.12);cursor:pointer;transition:color 0.1s;}
+.estrela.on{color:var(--dourado);}
+
+/* PWA */
+#pwa-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9997;padding:11px 16px;padding-bottom:max(11px,var(--sab));background:rgba(15,26,46,0.97);border-top:1px solid var(--border);backdrop-filter:blur(10px);}
+#pwa-banner.show{display:block;animation:slideUp 0.4s ease;}
+.pwa-inner{display:flex;align-items:center;gap:11px;}
+.pwa-logo{width:42px;height:42px;border-radius:11px;overflow:hidden;flex-shrink:0;}.pwa-txt{flex:1;display:flex;flex-direction:column;}.pwa-txt strong{font-size:13px;color:#fff;}.pwa-txt span{font-size:11px;color:var(--muted);}
+.pwa-logo img{width:100%;height:100%;object-fit:cover;}
+.pwa-txt strong{display:block;font-size:13px;font-weight:700;color:#fff;}
+.pwa-txt span{font-size:11px;color:var(--muted);}
+.pwa-btns{display:flex;gap:7px;align-items:center;margin-left:auto;}
+.btn-inst{padding:7px 13px;border-radius:18px;background:var(--azul2);border:1px solid var(--border);color:var(--dourado);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-x{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.07);border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#ios-guide{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9997;padding:18px 16px;padding-bottom:max(18px,var(--sab));background:rgba(15,26,46,0.97);border-top:1px solid var(--border);}
+#ios-guide.show{display:block;animation:slideUp 0.4s ease;}
+.ios-tit{font-size:14px;font-weight:700;color:#fff;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;}
+.ios-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.ios-step{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:rgba(255,255,255,0.62);line-height:1.5;}
+.ios-n{width:19px;height:19px;border-radius:50%;background:rgba(251,191,36,0.1);color:var(--dourado);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ios-step em{font-style:normal;color:#fff;font-weight:600;}
+.chip-ios{background:rgba(251,191,36,0.08);border-radius:5px;padding:1px 6px;font-size:10px;color:var(--dourado);font-weight:600;}
+
+/* TOAST / LOADING */
+#toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 16px;font-size:12px;font-weight:600;color:var(--text);z-index:99999;opacity:0;transition:all 0.3s;text-align:center;max-width:88vw;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:center;justify-content:center;}
+#loading.show{display:flex;}
+.ld-spin{width:44px;height:44px;border:3px solid rgba(251,191,36,0.12);border-top-color:var(--dourado);border-radius:50%;animation:spin 0.8s linear infinite;}
+/* TOGGLE ONLINE */
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;margin:14px 16px 12px;padding:16px 18px;background:var(--card);border:1px solid var(--border);border-radius:18px;}
+.toggle-info strong{display:block;font-size:14px;color:#fff;}
+.toggle-info span{font-size:11px;color:var(--muted);}
+.toggle-btn{position:relative;width:54px;height:30px;border-radius:15px;background:var(--card2);border:2px solid var(--border);cursor:pointer;transition:background 0.3s;flex-shrink:0;}
+.toggle-btn::before{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform 0.3s,background 0.3s;}
+.toggle-btn.on{background:rgba(34,197,94,0.25);border-color:var(--verde);}
+.toggle-btn.on::before{transform:translateX(24px);background:var(--verde);}
+/* CRÉDITOS */
+.creditos-bar{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 16px;}
+.creditos-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.creditos-label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
+.creditos-val{font-size:17px;font-weight:900;color:var(--dourado);}
+.creditos-barra{height:7px;background:var(--card2);border-radius:4px;overflow:hidden;}
+.creditos-prog{height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:4px;transition:width 0.5s;}
+.creditos-aviso{font-size:11px;color:var(--muted);margin-top:7px;}
+.creditos-aviso.baixo{color:#ef4444;font-weight:700;}
+/* GANHOS HOME */
+.ganhos-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;}
+.ganhos-titulo{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;}
+.ganhos-row{display:flex;gap:10px;}
+.ganhos-item{flex:1;text-align:center;}
+.ganhos-val{font-size:18px;font-weight:900;color:#fff;}
+.ganhos-val.destaque{color:var(--dourado);font-size:20px;}
+.ganhos-label{font-size:10px;color:var(--muted);margin-top:3px;}
+/* MAPA */
+.mapa-wrap{margin:0 16px 12px;border-radius:18px;overflow:hidden;border:1px solid var(--border);height:190px;background:var(--card);position:relative;}
+.mapa-label{position:absolute;top:10px;left:10px;z-index:999;background:rgba(10,16,32,0.85);border:1px solid var(--border);border-radius:10px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text);}
+.btn-mapa-full{position:absolute;top:10px;right:10px;z-index:999;background:rgba(10,16,32,0.85);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--dourado);cursor:pointer;}
+#mapa-home{width:100%;height:100%;}
+/* SECAO / HIST */
+.secao-titulo{padding:6px 16px 8px;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:0.4px;text-transform:uppercase;}
+.hist-icon{width:38px;height:38px;border-radius:11px;background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.hist-info{flex:1;}
+.hist-local{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.hist-data{font-size:11px;color:var(--muted);}
+.hist-valor{font-size:13px;font-weight:700;color:var(--dourado);}
+.modal-mapa-full{display:none;position:fixed;inset:0;z-index:9000;background:var(--bg);flex-direction:column;}
+.modal-mapa-full.show{display:flex;}
+#mapa-full-div{width:100%;}
+/* MODAL PEDIDO */
+.ped-timer-ring{position:relative;width:60px;height:60px;border-radius:50%;background:conic-gradient(var(--dourado) 0deg,var(--card2) 0deg);display:flex;align-items:center;justify-content:center;transition:background 1s linear;}
+.ped-timer-ring::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--card);}
+.ped-timer-num{position:relative;z-index:1;font-size:22px;font-weight:900;color:var(--dourado);}
+.ped-av-outer{position:relative;width:104px;height:104px;}
+.ped-av-ring{position:relative;width:104px;height:104px;border-radius:50%;padding:4px;overflow:hidden;background:var(--nivel-grad,conic-gradient(#cd7f32,#f0b97d,#8b5a2b,#cd7f32));}
+.ped-av-ring::before{content:"";position:absolute;top:50%;left:50%;width:150%;height:150%;border-radius:50%;background:var(--nivel-grad,conic-gradient(#cd7f32,#f0b97d,#8b5a2b,#cd7f32));animation:giraRot 3s linear infinite;}
+.ped-av-big{position:relative;z-index:1;width:96px;height:96px;border-radius:50%;background:var(--card2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:40px;}
+.ped-av-big img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.ped-badge{background:rgba(251,191,36,0.12);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#ffe9b0;}
+.ped-comentario{background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:11px 13px;margin-bottom:12px;}
+.ped-pgto-card{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:13px 16px;margin-bottom:12px;text-align:center;}
+.pedido-rota{margin:0 0 10px;background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:11px 13px;}
+.pedido-rota-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;}
+.pedido-rota-row span{color:var(--muted);font-size:12px;flex-shrink:0;margin-right:10px;}
+.pedido-rota-row div{color:var(--text);font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.pedido-rota-row+.pedido-rota-row{border-top:1px solid rgba(251,191,36,0.07);}
+.pedido-obs{background:rgba(251,191,36,0.06);border:1px dashed var(--border);border-radius:11px;padding:9px 12px;font-size:12px;color:var(--text);margin-bottom:10px;}
+.pedido-valor-row{display:flex;gap:10px;margin-bottom:14px;}
+.pedido-valor-item{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:11px;text-align:center;}
+.pedido-valor-num{font-size:16px;font-weight:900;color:#fff;}
+.pedido-valor-num.destaque{color:var(--dourado);font-size:18px;}
+.pedido-valor-label{font-size:10px;color:var(--muted);margin-top:3px;}
+.pedido-btns{display:flex;gap:10px;}
+.btn-recusar{flex:1;padding:14px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
+.btn-aceitar{flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(34,197,94,0.35);}
+/* TELA ENTREGA MOTOBOY */
+.btn-mapa-mini{position:absolute;top:10px;right:10px;z-index:999;background:rgba(10,16,32,0.85);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--dourado);cursor:pointer;}
+.entrega-painel{background:var(--bg);border-radius:24px 24px 0 0;margin-top:-18px;position:relative;z-index:2;padding:18px 16px 24px;}
+.entrega-status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.entrega-status-txt{font-size:15px;font-weight:800;color:#fff;}
+.status-chip{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:var(--verde);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
+.passageiro-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;}
+.pass-foto-entrega{width:50px;height:50px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;}
+.pass-foto-entrega img{width:100%;height:100%;object-fit:cover;}
+.pass-info-entrega{flex:1;min-width:0;}
+.pass-nome-entrega{font-size:14px;font-weight:800;color:#fff;}
+.pass-destino-entrega{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pass-obs-entrega{font-size:11px;color:var(--dourado);margin-top:3px;}
+.entrega-acoes{display:flex;gap:9px;margin-bottom:14px;}
+.btn-nav,.btn-zap{flex:1;padding:12px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+#etapas-entrega{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+.etapa{flex-shrink:0;padding:9px 14px;border-radius:20px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.etapa.ativa{background:rgba(251,191,36,0.15);border-color:var(--dourado);color:var(--dourado);}
+#contador-espera{display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:10px 14px;margin-bottom:12px;text-align:center;}
+#contador-espera-num{font-size:26px;font-weight:900;color:var(--dourado);}
+.valor-input-wrap{margin-bottom:12px;}
+.valor-input-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;}
+.valor-input-row{display:flex;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:0 14px;}
+.valor-prefix{font-size:16px;font-weight:800;color:var(--dourado);margin-right:8px;}
+.valor-input{flex:1;background:none;border:none;outline:none;color:#fff;font-size:20px;font-weight:800;padding:13px 0;font-family:inherit;}
+.btn-concluir{width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;box-shadow:0 4px 14px rgba(34,197,94,0.3);}
+.btn-cancelar-entrega{width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+/* AVALIAÇÃO MOTOBOY */
+.estrela-mot{font-size:38px;color:var(--card2);cursor:pointer;transition:color 0.15s;}
+.estrela-mot.on{color:var(--dourado);}
+/* META */
+.meta-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:15px;}
+.meta-periodos{display:flex;background:var(--card2);border-radius:10px;padding:2px;}
+.meta-per{padding:5px 11px;border:none;background:none;color:var(--muted);font-size:11px;font-weight:700;border-radius:8px;cursor:pointer;font-family:inherit;}
+.meta-per.ativo{background:var(--dourado);color:#1a1a1a;}
+.meta-barra{height:9px;background:var(--card2);border-radius:5px;overflow:hidden;}
+.meta-barra-prog{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:5px;transition:width 0.5s;}
+/* GANHOS RESUMO */
+.ganhos-resumo-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;}
+.ganhos-total{text-align:center;margin-bottom:14px;}
+.ganhos-total-val{font-size:28px;font-weight:900;color:var(--dourado);}
+.ganhos-total-label{font-size:11px;color:var(--muted);margin-top:3px;}
+.ganhos-stats{display:flex;gap:10px;}
+.ganhos-stat{flex:1;text-align:center;background:var(--card2);border-radius:13px;padding:11px 6px;}
+.ganhos-stat-val{font-size:16px;font-weight:900;color:#fff;}
+.ganhos-stat-label{font-size:10px;color:var(--muted);margin-top:3px;}
+/* GRÁFICO */
+.grafico-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;}
+.grafico-barras{display:flex;align-items:flex-end;justify-content:space-between;height:110px;gap:6px;}
+.grafico-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
+.grafico-bar{width:100%;max-width:28px;background:linear-gradient(180deg,#fbbf24,#f59e0b);border-radius:6px 6px 2px 2px;min-height:3px;transition:height 0.4s;}
+.grafico-lb{font-size:10px;color:var(--muted);font-weight:600;}
+.entrega-hist-card{margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:13px;}
+.entrega-hist-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.entrega-hist-status{font-size:10px;font-weight:800;padding:3px 9px;border-radius:8px;letter-spacing:0.3px;}
+.s-concluida{background:rgba(34,197,94,0.15);color:var(--verde);}
+.s-cancelada{background:rgba(239,68,68,0.12);color:#ef4444;}
+.entrega-hist-data{font-size:11px;color:var(--muted);}
+.entrega-hist-rota{font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.entrega-hist-bottom{display:flex;justify-content:space-between;align-items:center;}
+.entrega-hist-passageiro{font-size:12px;color:var(--muted);}
+.entrega-hist-valor{font-size:14px;font-weight:800;color:var(--dourado);}
+.cred-opcoes{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+.cred-op{padding:10px 4px;border-radius:11px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.cred-op.ativo{background:rgba(251,191,36,0.15);border-color:var(--dourado);color:var(--dourado);}
+/* CARDS WIDGET (home customizável) */
+#cards-container{display:flex;flex-wrap:wrap;gap:10px;margin:0 16px 12px;position:relative;}
+#cards-container.reordenando{overflow:visible;}
+.card-widget{position:relative;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:15px;cursor:pointer;box-sizing:border-box;}
+.card-widget.tam-1{width:100%;}
+.card-widget.tam-2{width:calc(50% - 5px);}
+.card-widget.tam-3{width:calc(33.333% - 7px);}
+.card-widget:not(.drag-ativo){transition:transform 0.25s cubic-bezier(.2,.9,.3,1.3),box-shadow 0.25s ease;}
+.card-widget.drag-ativo{
+  position:fixed!important;z-index:9500;
+  box-shadow:0 24px 50px rgba(251,191,36,0.4),0 14px 26px rgba(0,0,0,0.55)!important;
+  filter:brightness(1.12);
+  transform:scale(1.06) rotate(-1.5deg)!important;
+  transition:box-shadow 0.2s ease,filter 0.2s ease!important;
+  pointer-events:none;
+}
+.card-widget-placeholder{border-radius:18px;border:2px dashed var(--border);background:rgba(251,191,36,0.04);box-sizing:border-box;}
+.card-widget-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.card-widget-titulo{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card-widget-icon{font-size:16px;flex-shrink:0;}
+.card-widget-val{font-size:22px;font-weight:900;color:var(--dourado);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card-widget-sub{font-size:11px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card-widget.tam-3 .card-widget-val{font-size:17px;}
+/* CONFIGURAÇÕES */
+.config-card-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:13px;margin:0 16px 9px;}
+.config-card-icon{font-size:22px;width:32px;text-align:center;flex-shrink:0;}
+.config-card-info{flex:1;min-width:0;}
+.config-card-nome{font-size:13px;font-weight:700;color:#fff;}
+.config-card-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+.config-toggle{position:relative;width:46px;height:26px;border-radius:13px;background:var(--card2);border:2px solid var(--border);cursor:pointer;flex-shrink:0;transition:background 0.25s;}
+.config-toggle::before{content:"";position:absolute;top:1px;left:1px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform 0.25s,background 0.25s;}
+.config-toggle.on{background:rgba(34,197,94,0.25);border-color:var(--verde);}
+.config-toggle.on::before{transform:translateX(20px);background:var(--verde);}
+.config-tam-sel{display:flex;gap:5px;margin-top:8px;}
+.config-tam-btn{flex:1;padding:6px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+.config-tam-btn.ativo{background:rgba(251,191,36,0.15);border-color:var(--dourado);color:var(--dourado);}
+.config-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:13px 15px;margin:0 16px 9px;}
+.config-toggle-nome{font-size:13px;font-weight:700;color:#fff;}
+.config-toggle-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+.btn-etapa-unica{width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#1a1a1a;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:14px;box-shadow:0 6px 18px rgba(245,158,11,0.4);transition:background 0.3s,box-shadow 0.3s;}
+.btn-etapa-unica.etapa-embarque{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 6px 18px rgba(59,130,246,0.4);}
+.btn-etapa-unica.etapa-concluir{background:linear-gradient(135deg,#22c55e,#4ade80);box-shadow:0 6px 18px rgba(34,197,94,0.4);color:#fff;}
+</style></head>
+<body>
+<!-- CANVAS PARTÍCULAS -->
+<canvas id="cv"></canvas>
+
+<!-- SPLASH -->
+<div class="screen ativo" id="tela-splash">
+  <div class="splash-logo"><img id="logo-splash" src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" alt="Entrega Já Motoboy" style="width:100%;height:100%;object-fit:cover;border-radius:32px;background:#1a2a4a;" onerror="logoFallback(this)"/></div>
+  <div class="splash-title">Entrega <span>Já</span></div>
+  <div class="splash-sub">Área do motoboy</div>
+  <div class="splash-bar"></div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="tela-login">
+  <div class="login-header">
+    <div class="login-logo"><img src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" alt="Entrega Já Motoboy"/></div>
+    <h1>Entrega Já</h1>
+    <p>Área do motoboy</p>
+  </div>
+  <div class="login-body">
+    <div class="modo-tabs">
+      <button class="modo-tab ativo" id="tab-cad" onclick="altTab('cad')">Cadastrar</button>
+      <button class="modo-tab" id="tab-ent" onclick="altTab('ent')">Entrar</button>
+    </div>
+    <div id="form-cad">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div><div class="campo-label">Nome completo</div><input class="campo-input" id="cad-nome" type="text" placeholder="Seu nome" autocomplete="name"/></div>
+        <div><div class="campo-label">WhatsApp</div><input class="campo-input" id="cad-fone" type="tel" placeholder="(19) 99999-9999"/></div>
+        <div><div class="campo-label">CPF *</div><input class="campo-input" id="cad-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)"/></div>
+        <div><div class="campo-label">Senha *</div><input class="campo-input" id="cad-senha" type="password" placeholder="Crie uma senha (mín. 4 dígitos)" autocomplete="new-password"/></div>
+        <div class="seg-box">
+          <div class="seg-titulo">🔐 Recuperação de senha</div>
+          <div class="seg-desc">Caso esqueça a senha, você poderá redefini-la respondendo esta pergunta.</div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <select class="campo-input" id="cad-pergunta">
+              <option value="">Escolha uma pergunta de segurança</option>
+              <option value="Qual o nome do seu primeiro animal de estimação?">Nome do seu primeiro animal de estimação?</option>
+              <option value="Qual a cidade onde você nasceu?">Cidade onde você nasceu?</option>
+              <option value="Qual o nome de solteira da sua mãe?">Nome de solteira da sua mãe?</option>
+              <option value="Qual o nome da sua primeira escola?">Nome da sua primeira escola?</option>
+              <option value="Qual o seu prato favorito?">Seu prato favorito?</option>
+            </select>
+            <input class="campo-input" id="cad-resposta" type="text" placeholder="Sua resposta"/>
+          </div>
+        </div>
+        <div><div class="campo-label">Tipo de veículo</div>
+          <select class="campo-input" id="cad-veiculo">
+            <option value="carro">Carro</option>
+            <option value="moto">Moto</option>
+            <option value="van">Van</option>
+          </select>
+        </div>
+        <div><div class="campo-label">Placa</div><input class="campo-input" id="cad-placa" type="text" placeholder="ABC-1234" style="text-transform:uppercase;"/></div>
+        <div>
+          <div class="campo-label">Foto de perfil</div>
+          <div class="foto-btn" onclick="document.getElementById('inp-foto-cad').click()">
+            <div class="foto-prev" id="foto-prev-cad">📷</div>
+            <div><strong id="foto-txt-cad" style="display:block;font-size:13px;color:var(--text);margin-bottom:2px;">Adicionar foto</strong><span style="font-size:11px;color:var(--muted);">Toque para escolher</span></div>
+          </div>
+          <input type="file" id="inp-foto-cad" accept="image/*" onchange="processarFoto(this,'foto-prev-cad','foto-txt-cad')"/>
+        </div>
+        <label class="termos-check">
+          <input type="checkbox" id="cad-termos"/>
+          <span>Li e aceito os <a onclick="event.preventDefault();document.getElementById('modal-termos').classList.add('show')">Termos de Uso e Política de Responsabilidade</a></span>
+        </label>
+        <button class="btn-p" onclick="cadastrar()">Criar minha conta</button>
+      </div>
+    </div>
+    <div id="form-ent" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div><div class="campo-label">WhatsApp</div><input class="campo-input" id="ent-fone" type="tel" placeholder="(19) 99999-9999"/></div>
+        <div><div class="campo-label">Senha</div><input class="campo-input" id="ent-senha" type="password" placeholder="Sua senha" autocomplete="current-password"/></div>
+        <button class="btn-p" onclick="entrar()">Entrar</button>
+        <button class="btn-link" onclick="abrirRecuperar()" style="background:none;border:none;color:var(--dourado);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px;">Esqueci minha senha</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="tela-home">
+  <div class="home-header">
+    <div class="home-header-top">
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;" onclick="irPara('perfil')">
+        <div class="avatar" id="home-avatar"><span id="home-initial">🚗</span></div>
+        <div>
+          <div class="home-saudacao" id="saudacao">Bom dia!</div>
+          <div class="home-nome" id="home-nome">--</div>
+        </div>
+      </div>
+      <div style="flex:1;"></div>
+      <img src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" style="width:66px;height:66px;border-radius:18px;object-fit:cover;position:absolute;left:0;right:0;margin:0 auto;margin-top:0px;box-shadow:0 6px 20px rgba(251,191,36,0.45);"/>
+      <button class="btn-ham" onclick="abrirMenu()" style="flex-shrink:0;position:relative;z-index:1;">☰</button>
+    </div>
+    <div class="toggle-wrap">
+      <div class="toggle-info"><strong id="toggle-label">Você está offline</strong><span id="toggle-sub">Ative para receber entregas</span></div>
+      <div class="toggle-btn" id="toggle-btn" onclick="alternarOnline()"></div>
+    </div>
+  </div>
+
+  <div id="cards-container"></div>
+
+  <div class="creditos-bar" onclick="abrirComprarCreditosMot()" style="cursor:pointer;">
+    <div class="creditos-top"><div class="creditos-label">Créditos · toque para recarregar</div><div class="creditos-val" id="creditos-val">R$ 0,00</div></div>
+    <div class="creditos-barra"><div class="creditos-prog" id="creditos-prog" style="width:0%"></div></div>
+    <div class="creditos-aviso" id="creditos-aviso">Toque para comprar mais créditos</div>
+  </div>
+
+  <div class="ganhos-card" onclick="irPara('ganhos')" style="cursor:pointer;">
+    <div class="ganhos-titulo">Ganhos de hoje · toque para ver mais →</div>
+    <div class="ganhos-row">
+      <div class="ganhos-item"><div class="ganhos-val destaque" id="ganhos-hoje">R$ 0,00</div><div class="ganhos-label">Ganhos</div></div>
+      <div class="ganhos-item"><div class="ganhos-val" id="corridas-hoje">0</div><div class="ganhos-label">Entregas</div></div>
+      <div class="ganhos-item"><div class="ganhos-val" id="aval-media">--</div><div class="ganhos-label">Avaliação</div></div>
+    </div>
+  </div>
+
+  <div class="mapa-wrap">
+    <div class="mapa-label">📍 Sua posição</div>
+    <button class="btn-mapa-full" onclick="abrirMapaFull()">⛶ Ampliar</button>
+    <div id="mapa-home"></div>
+  </div>
+
+  <div id="lista-hist-home" style="display:none;"></div>
+  <div style="height:24px;"></div>
+</div>
+
+<!-- MODAL MAPA AMPLIADO -->
+<div id="modal-mapa-full" class="modal-mapa-full">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 16px);">
+    <div style="font-size:15px;font-weight:800;color:#fff;">Sua posição</div>
+    <button onclick="fecharMapaFull()" style="background:var(--card2);border:1px solid var(--border);color:var(--dourado);width:34px;height:34px;border-radius:10px;font-size:16px;cursor:pointer;">✕</button>
+  </div>
+  <div id="mapa-full-div" style="flex:1;"></div>
+</div>
+
+<!-- TELA CORRIDA (motoboy) -->
+<div class="screen" id="tela-corrida-mot">
+  <div id="mapa-corrida-mot" style="height:42vh;position:relative;">
+    <button class="btn-mapa-mini" onclick="abrirMapaFull()">⛶ Ampliar</button>
+  </div>
+  <div class="corrida-painel">
+    <div class="corrida-status-row">
+      <div class="entrega-status-txt" id="entrega-status-txt">A caminho do passageiro</div>
+      <div class="status-chip">Em entrega</div>
+    </div>
+
+    <div class="passageiro-card">
+      <div class="pass-foto-corrida" id="pass-foto"><span>👤</span></div>
+      <div class="pass-info-corrida">
+        <div class="pass-nome-corrida" id="pass-nome">--</div>
+        <div class="pass-destino-corrida" id="pass-destino">--</div>
+        <div class="pass-obs-corrida" id="pass-obs" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="ped-pgto-card" style="margin-bottom:10px;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;">PAGAMENTO COMBINADO</div>
+      <div style="font-size:15px;font-weight:900;color:var(--dourado);margin-top:2px;" id="corrida-pgto-info">--</div>
+    </div>
+
+    <div class="corrida-acoes">
+      <button class="btn-nav" onclick="abrirNavegacao()">🧭 Navegar</button>
+      <button class="btn-zap" onclick="abrirChatMot()">💬 Chat</button>
+    </div>
+
+    <!-- BOTÃO ÚNICO DE PROGRESSO (muda de ação sozinho, como Uber/99) -->
+    <button class="btn-etapa-unica" id="btn-etapa-unica" onclick="avancarEtapa()">📍 Cheguei ao passageiro</button>
+
+    <div id="contador-espera" style="display:none;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Aguardando passageiro</div>
+      <div id="contador-espera-num">0:00</div>
+    </div>
+
+    <div class="valor-input-wrap">
+      <div class="valor-input-label">Valor cobrado <span style="font-size:10px;color:var(--verde);margin-left:6px;">✏️ editável</span></div>
+      <div class="valor-input-row"><div class="valor-prefix">R$</div><input type="number" class="valor-input" id="valor-corrida" placeholder="0,00" step="0.50" min="0"/></div>
+    </div>
+
+    <button class="btn-cancelar-corrida" onclick="cancelarEntregaMotoboy()">Cancelar entrega</button>
+  </div>
+</div>
+
+<!-- MODAL CHAT (motoboy) -->
+<div class="modal-base" id="modal-chat-mot">
+  <div class="modal-sheet" style="height:75vh;display:flex;flex-direction:column;padding-bottom:0;">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 12px;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:15px;font-weight:800;color:#fff;">💬 Chat com passageiro</div>
+      <button onclick="fecharChatMot()" style="background:var(--card2);border:1px solid var(--border);color:var(--dourado);width:32px;height:32px;border-radius:9px;font-size:15px;cursor:pointer;">✕</button>
+    </div>
+    <div class="chat-msgs" id="chat-msgs-mot" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div style="display:flex;gap:8px;padding:10px 0;">
+      <input class="campo-input" id="chat-inp-mot" type="text" placeholder="Digite uma mensagem..." style="flex:1;margin-bottom:0;"/>
+      <button onclick="enviarMsgMot()" style="background:var(--dourado);border:none;color:#1a1a1a;width:44px;height:44px;border-radius:13px;font-size:18px;cursor:pointer;flex-shrink:0;">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AVALIAÇÃO OBRIGATÓRIA (motoboy avalia passageiro) -->
+<div class="modal-base" id="modal-aval-mot">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="text-align:center;margin-bottom:6px;font-size:17px;font-weight:900;color:#fff;">Como foi com <span id="aval-mot-nome">o passageiro</span>?</div>
+    <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:18px;">Sua avaliação é obrigatória para continuar usando o app</div>
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:18px;">
+      <span class="estrela-mot" data-n="1" onclick="selEstrelaMot(1)">★</span>
+      <span class="estrela-mot" data-n="2" onclick="selEstrelaMot(2)">★</span>
+      <span class="estrela-mot" data-n="3" onclick="selEstrelaMot(3)">★</span>
+      <span class="estrela-mot" data-n="4" onclick="selEstrelaMot(4)">★</span>
+      <span class="estrela-mot" data-n="5" onclick="selEstrelaMot(5)">★</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:7px;">Comentário (opcional)</div>
+    <textarea id="aval-mot-comentario" placeholder="Como foi a corrida com este passageiro?" style="width:100%;min-height:90px;background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;margin-bottom:16px;"></textarea>
+    <button class="btn-p" onclick="enviarAvalMot()" style="width:100%;">Enviar avaliação</button>
+  </div>
+</div>
+
+<!-- MODAL TERMOS -->
+<div class="modal-base" id="modal-termos">
+  <div class="modal-sheet" style="max-height:90vh;">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="font-size:17px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;">Termos de Uso</div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;">Entrega Já · Política de Responsabilidade — Motoboy</div>
+    <div class="termos-texto">
+      <h4>1. Sobre a plataforma</h4>
+      <p>O Entrega Já é uma plataforma tecnológica que conecta passageiros a motoboys particulares independentes. Não somos uma empresa de transporte, não possuímos frota, não empregamos motoboys e não prestamos diretamente o serviço de transporte.</p>
+      <h4>2. Cadastro e acesso</h4>
+      <p>O motoboy deve fornecer dados verdadeiros (nome, CPF, telefone, veículo, placa). O acesso é protegido por senha pessoal e intransferível, sendo o titular responsável por toda atividade na conta.</p>
+      <h4>3. Obrigações do motoboy</h4>
+      <p>O motoboy declara possuir CNH válida com EAR quando exigido, veículo regularizado, em boas condições e seguro vigente. É responsável por conduzir com segurança, pela integridade dos passageiros, e por multas, acidentes ou danos durante a entrega. Atua como profissional autônomo, sem vínculo empregatício com a plataforma. O motoboy pode recusar entregas a seu critério.</p>
+      <h4>4. Forma de pagamento</h4>
+      <p>O valor da entrega é combinado diretamente entre passageiro e motoboy. A forma de pagamento escolhida pelo passageiro é exibida antes da aceitação da entrega. A disponibilidade de maquininha de cartão é de responsabilidade exclusiva do motoboy. A plataforma não recebe, não intermedeia e não se responsabiliza pelos pagamentos entre as partes.</p>
+      <h4>5. Créditos</h4>
+      <p>Os créditos são utilizados pelo motoboy para receber pedidos de entrega, com saldo máximo configurável pela plataforma. Ao aceitar uma entrega, os créditos são descontados conforme a distância. Se a entrega for cancelada, os créditos são devolvidos automaticamente. Caso o crédito se esgote, o motoboy deixa de receber pedidos até nova recarga. Os créditos não são reembolsáveis.</p>
+      <h4>6. Animais e bagagem</h4>
+      <p>O transporte de animais de estimação e de bagagem volumosa deve ser combinado previamente com o passageiro pelo chat. O motoboy tem o direito de recusar a entrega caso não concorde com essas condições.</p>
+      <h4>7. Avaliações</h4>
+      <p>Ao final de cada entrega, motoboy e passageiro avaliam-se mutuamente com estrelas (obrigatório) e comentário (opcional). A média de avaliações pode afetar o nível e a visibilidade do motoboy na plataforma. Avaliações consideradas injustas podem ser contestadas junto à administração.</p>
+      <h4>8. Relação entre as partes</h4>
+      <p>A entrega é um acordo direto entre passageiro e motoboy. Conflitos, danos ou prejuízos devem ser resolvidos diretamente entre eles, podendo recorrer aos meios legais. A plataforma não tem obrigação de intervir ou arbitrar conflitos.</p>
+      <h4>9. Isenção de responsabilidade</h4>
+      <p>Na máxima extensão permitida por lei, o Entrega Já não se responsabiliza por: acidentes de trânsito, danos materiais ou pessoais; furtos, roubos ou atos ilícitos; atrasos, cancelamentos ou condutas das partes; condições do veículo; veracidade das informações dos usuários; ou prejuízos indiretos.</p>
+      <h4>10. Segurança</h4>
+      <p>Os recursos de segurança do aplicativo são ferramentas auxiliares e não substituem os serviços oficiais de emergência. Em situação de risco, acione imediatamente a Polícia (190), o SAMU (192) ou os Bombeiros (193).</p>
+      <h4>11. Proteção de dados (LGPD)</h4>
+      <p>Em conformidade com a Lei nº 13.709/2018, coletamos dados pessoais (nome, CPF, telefone, localização, foto) para viabilizar o serviço de intermediação, comunicação entre as partes e segurança. O motoboy pode solicitar a exclusão de seus dados, ressalvado o que deva ser mantido por obrigação legal.</p>
+      <h4>12. Conduta proibida</h4>
+      <p>É vedado usar o aplicativo para fins ilícitos, assediar ou agredir usuários, fornecer informações falsas ou tentar fraudar o sistema. O descumprimento pode resultar em suspensão ou exclusão da conta.</p>
+      <h4>13. Disposições gerais</h4>
+      <p>Estes termos podem ser atualizados a qualquer momento. O uso continuado implica aceitação. Fica eleito o foro da comarca de Holambra/SP para dirimir conflitos. Ao concluir o cadastro, o motoboy declara ter lido e aceito integralmente estes termos.</p>
+    </div>
+    <button class="btn-p" onclick="document.getElementById('cad-termos').checked=true;document.getElementById('modal-termos').classList.remove('show')" style="width:100%;margin-top:14px;">Li e aceito</button>
+    <button class="btn-cancel" onclick="document.getElementById('modal-termos').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:9px;">Fechar</button>
+  </div>
+</div>
+
+<!-- MODAL COMPRAR CRÉDITOS -->
+<div class="modal-base" id="modal-cred-mot">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="font-size:17px;font-weight:800;color:#fff;margin-bottom:5px;">💳 Comprar Créditos</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Créditos são necessários para receber pedidos. Saldo máximo: R$ 200.</div>
+
+    <div style="margin-bottom:13px;">
+      <div class="campo-label">Quanto deseja adicionar?</div>
+      <div class="cred-opcoes">
+        <button class="cred-op" onclick="selCredValor(20,this)">R$ 20</button>
+        <button class="cred-op" onclick="selCredValor(50,this)">R$ 50</button>
+        <button class="cred-op ativo" onclick="selCredValor(100,this)">R$ 100</button>
+        <button class="cred-op" onclick="selCredValor(200,this)">R$ 200</button>
+      </div>
+      <input class="campo-input" id="cred-valor-custom" type="number" placeholder="Ou digite outro valor" min="1" max="200" style="margin-top:9px;" oninput="document.querySelectorAll('.cred-op').forEach(b=>b.classList.remove('ativo'))"/>
+    </div>
+
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:13px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Chave Pix</div>
+      <div style="font-size:15px;font-weight:700;color:#fff;">19982480386</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px;">WhatsApp · Heitor Serra Neto</div>
+    </div>
+    <div style="display:flex;gap:9px;margin-bottom:13px;">
+      <button onclick="copiarPixMot()" style="flex:1;padding:11px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📋 Copiar chave</button>
+      <button onclick="avisarPagamentoMot()" style="flex:1;padding:11px;border-radius:13px;background:#25d366;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">WhatsApp</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:13px;">Após o Pix, avise no WhatsApp com o comprovante. O crédito é liberado manualmente pelo administrador.</div>
+    <button class="btn-cancel" onclick="document.getElementById('modal-cred-mot').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Fechar</button>
+  </div>
+</div>
+
+<!-- MODAL HISTÓRICO DE CORRIDAS -->
+<div class="modal-base" id="modal-hist-mot">
+  <div class="modal-sheet" style="max-height:85vh;display:flex;flex-direction:column;">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:17px;font-weight:900;color:#fff;">🕐 Histórico de entregas</div>
+      <button onclick="document.getElementById('modal-hist-mot').classList.remove('show')" style="background:var(--card2);border:1px solid var(--border);color:var(--dourado);width:32px;height:32px;border-radius:9px;font-size:15px;cursor:pointer;">✕</button>
+    </div>
+    <div id="lista-hist-mot" style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;"><div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- MODAL SOBRE -->
+<div class="modal-base" id="modal-sobre">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px;">
+      <img src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" style="width:78px;height:78px;border-radius:18px;object-fit:cover;box-shadow:0 6px 20px rgba(251,191,36,0.3);"/>
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-top:10px;letter-spacing:0.5px;">Entrega Já</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px;">Área do Motoboy · Versão 1.0</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Desenvolvido por <b style="color:var(--dourado);">Heitor Serra Neto</b></div>
+    </div>
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:13px;color:var(--text);line-height:1.6;">O Entrega Já conecta você a passageiros da sua região. Fique online, receba pedidos, acompanhe seus ganhos e atenda com segurança.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+      <div class="sobre-row" onclick="document.getElementById('modal-sobre').classList.remove('show');abrirComprarCreditosMot();" style="cursor:pointer;"><span>💳</span><div><div class="sobre-lb">Créditos</div><div class="sobre-vl">Toque para comprar créditos</div></div></div>
+      <div class="sobre-row" onclick="abrirCoberturaMot()" style="cursor:pointer;"><span>📍</span><div><div class="sobre-lb">Cobertura</div><div class="sobre-vl">Holambra, Jaguariúna, Arthur Nogueira e região</div></div></div>
+      <div class="sobre-row" onclick="window.open('https://wa.me/5519982480386?text='+encodeURIComponent('Olá! Preciso de suporte no Entrega Já (Motoboy).'),'_blank')" style="cursor:pointer;"><span>💬</span><div><div class="sobre-lb">Suporte</div><div class="sobre-vl">Toque para falar no WhatsApp</div></div></div>
+    </div>
+    <button class="btn-p" onclick="document.getElementById('modal-sobre').classList.remove('show');document.getElementById('modal-termos').classList.add('show')" style="width:100%;margin-bottom:9px;background:var(--card2);color:var(--dourado);border:1px solid var(--border);">📄 Termos de Uso</button>
+    <button class="btn-cancel" onclick="document.getElementById('modal-sobre').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Fechar</button>
+  </div>
+</div>
+
+<!-- MODAL RECUPERAR SENHA -->
+<div class="modal-base" id="modal-recuperar">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="font-size:18px;font-weight:900;color:#fff;text-align:center;margin-bottom:8px;">🔐 Recuperar senha</div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px;">Informe seu WhatsApp e responda a pergunta de segurança</div>
+    <div id="rec-passo1">
+      <div style="margin-bottom:11px;"><div class="campo-label">WhatsApp</div><input class="campo-input" id="rec-fone" type="tel" placeholder="(19) 99999-9999"/></div>
+      <button class="btn-p" onclick="recBuscar()" style="width:100%;">Continuar</button>
+    </div>
+    <div id="rec-passo2" style="display:none;">
+      <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:13px;padding:13px;margin-bottom:11px;">
+        <div style="font-size:11px;color:#60a5fa;font-weight:700;margin-bottom:5px;">PERGUNTA DE SEGURANÇA</div>
+        <div id="rec-pergunta" style="font-size:14px;color:#fff;font-weight:600;">--</div>
+      </div>
+      <div style="margin-bottom:11px;"><div class="campo-label">Sua resposta</div><input class="campo-input" id="rec-resposta" type="text" placeholder="Resposta"/></div>
+      <div style="margin-bottom:11px;"><div class="campo-label">Nova senha</div><input class="campo-input" id="rec-nova" type="password" placeholder="Crie a nova senha"/></div>
+      <button class="btn-p" onclick="recRedefinir()" style="width:100%;margin-bottom:9px;">Redefinir senha</button>
+      <button onclick="recFalarAdmin()" style="width:100%;padding:13px;border-radius:13px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Não consigo lembrar — Falar com administrador</button>
+    </div>
+    <button class="btn-cancel" onclick="document.getElementById('modal-recuperar').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:9px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- MENU HAMBÚRGUER (placeholder simples por enquanto) -->
+<div id="menu-overlay" onclick="fecharMenu()"></div>
+<div id="menu-lateral">
+  <div class="menu-hdr">
+    <div class="menu-logo"><img src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:22px;"/></div>
+    <div class="menu-app">Entrega Já</div>
+    <div class="menu-dev-por">Desenvolvido por</div>
+    <div class="menu-ret">
+      <div class="menu-ret-luz"></div>
+      <div class="menu-ret-inner"><div class="menu-ret-nome">Heitor Serra Neto</div></div>
+    </div>
+  </div>
+  <div class="menu-items">
+    <div class="menu-item" onclick="fecharMenu();irPara('ganhos')">💰 Meus ganhos</div>
+    <div class="menu-item" onclick="abrirHistoricoMot();fecharMenu()">🕐 Histórico de entregas</div>
+    <div class="menu-item" onclick="fecharMenu();irPara('perfil')">👤 Meu perfil</div>
+    <div class="menu-item" onclick="fecharMenu();irPara('config')">⚙️ Configurações</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item" onclick="abrirSobre();fecharMenu()">ℹ️ Sobre o aplicativo</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item" style="color:#ef4444;" onclick="sair()">🚪 Sair da conta</div>
+  </div>
+</div>
+
+<!-- TELA GANHOS -->
+<div class="screen" id="tela-ganhos">
+  <div class="perf-hdr">
+    <button onclick="irPara('home')" style="background:none;border:none;color:var(--dourado);font-size:22px;cursor:pointer;padding:3px;">←</button>
+    <h2 style="margin:0;">Meus Ganhos</h2>
+    <div style="width:30px;"></div>
+  </div>
+
+  <!-- META -->
+  <div class="meta-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:800;color:#fff;">🎯 Meta</div>
+      <div class="meta-periodos">
+        <button class="meta-per ativo" data-per="dia" onclick="trocarPeriodoMeta('dia')">Dia</button>
+        <button class="meta-per" data-per="semana" onclick="trocarPeriodoMeta('semana')">Semana</button>
+        <button class="meta-per" data-per="mes" onclick="trocarPeriodoMeta('mes')">Mês</button>
+      </div>
+    </div>
+    <div id="meta-sem-valor" style="text-align:center;padding:10px 0;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Você ainda não definiu uma meta</div>
+      <button class="btn-p" onclick="abrirDefinirMeta()" style="width:auto;padding:10px 20px;">Definir meta</button>
+    </div>
+    <div id="meta-com-valor" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+        <div style="font-size:20px;font-weight:900;color:var(--dourado);" id="meta-atual-val">R$ 0</div>
+        <div style="font-size:12px;color:var(--muted);">de <span id="meta-alvo-val">R$ 0</span></div>
+      </div>
+      <div class="meta-barra"><div class="meta-barra-prog" id="meta-barra-prog" style="width:0%;"></div></div>
+      <button onclick="abrirDefinirMeta()" style="background:none;border:none;color:var(--dourado);font-size:11px;font-weight:600;cursor:pointer;margin-top:8px;padding:4px;">✏️ Editar meta</button>
+    </div>
+  </div>
+
+  <!-- RESUMO -->
+  <div class="ganhos-resumo-card">
+    <div class="ganhos-total"><div class="ganhos-total-val" id="total-ganhos">R$ 0,00</div><div class="ganhos-total-label">Total acumulado</div></div>
+    <div class="ganhos-stats">
+      <div class="ganhos-stat"><div class="ganhos-stat-val" id="total-entregas">0</div><div class="ganhos-stat-label">Entregas</div></div>
+      <div class="ganhos-stat"><div class="ganhos-stat-val" id="total-aval">--</div><div class="ganhos-stat-label">Avaliação</div></div>
+      <div class="ganhos-stat"><div class="ganhos-stat-val" id="total-creditos">R$ 0</div><div class="ganhos-stat-label">Créditos</div></div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO -->
+  <div class="grafico-card">
+    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Ganhos dos últimos 7 dias</div>
+    <div id="grafico-barras" class="grafico-barras"></div>
+  </div>
+
+  <div class="secao-titulo">Histórico de entregas</div>
+  <div id="lista-corridas-ganhos"></div>
+  <div style="height:24px;"></div>
+</div>
+
+<!-- MODAL DEFINIR META -->
+<div class="modal-base" id="modal-meta">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="font-size:17px;font-weight:900;color:#fff;text-align:center;margin-bottom:18px;">🎯 Definir meta de ganhos</div>
+    <div style="margin-bottom:14px;"><div class="campo-label">Período</div>
+      <select class="campo-input" id="meta-periodo-sel">
+        <option value="dia">Diária</option>
+        <option value="semana">Semanal</option>
+        <option value="mes">Mensal</option>
+      </select>
+    </div>
+    <div style="margin-bottom:18px;"><div class="campo-label">Valor da meta (R$)</div><input class="campo-input" id="meta-valor-input" type="number" placeholder="Ex: 150" min="1"/></div>
+    <button class="btn-p" onclick="salvarMeta()" style="width:100%;margin-bottom:9px;">Salvar meta</button>
+    <button class="btn-cancel" onclick="document.getElementById('modal-meta').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Cancelar</button>
+  </div>
+</div>
+
+<!-- PERFIL COMPLETO -->
+<div class="screen" id="tela-perfil">
+  <div class="perf-hdr">
+    <button onclick="irPara('home')" style="background:none;border:none;color:var(--dourado);font-size:22px;cursor:pointer;padding:3px;">←</button>
+    <h2 style="margin:0;">Meu Perfil</h2>
+    <button onclick="abrirEditarPerfilMot()" style="background:rgba(251,191,36,0.1);border:1px solid var(--border);color:var(--dourado);font-size:12px;font-weight:700;cursor:pointer;padding:7px 14px;border-radius:20px;">✏️ Editar</button>
+  </div>
+
+  <div class="perf-marca">
+    <img src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" class="perf-marca-logo"/>
+    <div class="perf-marca-txt">Desenvolvido por <b>Heitor Serra Neto</b></div>
+  </div>
+
+  <div class="perf-hero">
+    <div class="perf-hero-content">
+      <div class="perf-av-outer">
+        <div class="perf-av-ring" id="perf-av-ring">
+          <div class="perf-av-big" id="perf-av"><span id="perf-initial">🚗</span></div>
+        </div>
+        <div class="perf-edit" onclick="event.stopPropagation();document.getElementById('inp-foto-perf').click()">✏️</div>
+      </div>
+      <input type="file" id="inp-foto-perf" accept="image/*" onchange="atualizarFotoPerfilMot(this)"/>
+      <div class="perf-nome-big" id="perf-nome">--</div>
+      <div class="perf-nivel" id="perf-nivel">🥉 Motoboy Bronze</div>
+    </div>
+  </div>
+
+  <div class="perf-stats-row">
+    <div class="perf-stat-wrap"><div class="perf-stat"><div class="perf-stat-num" id="ps-corridas">0</div><div class="perf-stat-lb">Entregas</div></div></div>
+    <div class="perf-stat-wrap"><div class="perf-stat"><div class="perf-stat-num" id="ps-aval">5.0</div><div class="perf-stat-lb">⭐ Avaliação</div></div></div>
+    <div class="perf-stat-wrap"><div class="perf-stat"><div class="perf-stat-num" id="ps-membro">--</div><div class="perf-stat-lb">Membro desde</div></div></div>
+  </div>
+
+  <div id="alerta-aval-baixa" style="display:none;margin:0 16px 14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:13px;">
+    <div style="font-size:13px;font-weight:800;color:#ef4444;margin-bottom:4px;">⚠️ Sua avaliação está baixa</div>
+    <div style="font-size:12px;color:var(--text);margin-bottom:8px;">Isso pode afetar o recebimento de entregas. Se quiser, explique o que houve.</div>
+    <textarea id="explicacao-aval" placeholder="Explique aqui (opcional)..." style="width:100%;min-height:60px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px;color:var(--text);font-family:inherit;font-size:12px;resize:none;margin-bottom:8px;"></textarea>
+    <button onclick="enviarExplicacaoAval()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#ef4444;font-size:12px;font-weight:700;padding:8px 16px;border-radius:10px;cursor:pointer;font-family:inherit;">Enviar explicação</button>
+  </div>
+
+  <div class="perf-sec-tit">Dados pessoais</div>
+  <div class="perf-info-card">
+    <div class="perf-info-row"><span class="perf-info-ic">👤</span><div class="perf-info-txt"><div class="perf-info-lb">Nome completo</div><div class="perf-info-vl" id="pi-nome">--</div></div></div>
+    <div class="perf-info-row"><span class="perf-info-ic">📱</span><div class="perf-info-txt"><div class="perf-info-lb">WhatsApp</div><div class="perf-info-vl" id="pi-fone">--</div></div></div>
+    <div class="perf-info-row"><span class="perf-info-ic">🪪</span><div class="perf-info-txt"><div class="perf-info-lb">CPF</div><div class="perf-info-vl" id="pi-cpf">--</div></div></div>
+  </div>
+
+  <div class="perf-sec-tit">Veículo</div>
+  <div class="perf-info-card">
+    <div class="perf-info-row"><span class="perf-info-ic">🚘</span><div class="perf-info-txt"><div class="perf-info-lb">Tipo</div><div class="perf-info-vl" id="pi-veiculo">--</div></div></div>
+    <div class="perf-info-row"><span class="perf-info-ic">🔖</span><div class="perf-info-txt"><div class="perf-info-lb">Placa</div><div class="perf-info-vl" id="pi-placa">--</div></div></div>
+  </div>
+
+  <button class="btn-sair" onclick="sair()">Sair da conta</button>
+  <div style="text-align:center;margin:16px 0 30px;font-size:10px;color:rgba(255,255,255,0.15);">Entrega Já · Desenvolvido por Heitor Serra Neto</div>
+</div>
+
+<!-- MODAL EDITAR PERFIL (motoboy) -->
+<div class="modal-base" id="modal-editar-mot">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="font-size:18px;font-weight:900;color:#fff;text-align:center;margin-bottom:18px;">Editar Perfil</div>
+    <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:14px;">
+      <div><div class="campo-label">Nome completo</div><input id="ed-nome-mot" class="campo-input" type="text" placeholder="Seu nome"/></div>
+      <div><div class="campo-label">WhatsApp</div><input id="ed-fone-mot" class="campo-input" type="tel" placeholder="(19) 99999-9999"/></div>
+      <div><div class="campo-label">CPF</div><input id="ed-cpf-mot" class="campo-input" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)"/></div>
+      <div><div class="campo-label">Tipo de veículo</div>
+        <select class="campo-input" id="ed-veiculo-mot">
+          <option value="carro">Carro</option>
+          <option value="moto">Moto</option>
+          <option value="van">Van</option>
+        </select>
+      </div>
+      <div><div class="campo-label">Placa</div><input id="ed-placa-mot" class="campo-input" type="text" style="text-transform:uppercase;" placeholder="ABC-1234"/></div>
+    </div>
+    <button class="btn-p" onclick="salvarPerfilMot()" style="width:100%;margin-bottom:9px;">Salvar alterações</button>
+    <button class="btn-cancel" onclick="document.getElementById('modal-editar-mot').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Cancelar</button>
+  </div>
+</div>
+
+<!-- TELA CONFIGURAÇÕES -->
+<div class="screen" id="tela-config">
+  <div class="perf-hdr">
+    <button onclick="irPara('home')" style="background:none;border:none;color:var(--dourado);font-size:22px;cursor:pointer;padding:3px;">←</button>
+    <h2 style="margin:0;">Configurações</h2>
+    <div style="width:30px;"></div>
+  </div>
+
+  <div class="perf-sec-tit">Cards da tela inicial</div>
+  <div style="margin:0 16px 12px;font-size:11px;color:var(--muted);">Ative os cards que quiser ver na tela inicial. Segure e arraste um card para reordenar.</div>
+  <div id="lista-config-cards"></div>
+
+  <div class="perf-sec-tit">Preferências</div>
+  <div class="config-toggle-row">
+    <div><div class="config-toggle-nome">🔊 Som de novo pedido</div><div class="config-toggle-desc">Toca som e voz ao receber pedido</div></div>
+    <div class="config-toggle" id="cfg-som" onclick="toggleConfigPref('som')"></div>
+  </div>
+  <div class="config-toggle-row">
+    <div><div class="config-toggle-nome">📳 Vibração</div><div class="config-toggle-desc">Vibra ao reordenar cards e receber pedidos</div></div>
+    <div class="config-toggle" id="cfg-vibra" onclick="toggleConfigPref('vibra')"></div>
+  </div>
+  <div class="config-toggle-row">
+    <div><div class="config-toggle-nome">🔔 Notificações push</div><div class="config-toggle-desc">Avisar mesmo com o app em segundo plano</div></div>
+    <div class="config-toggle" id="cfg-notif" onclick="toggleConfigPref('notif')"></div>
+  </div>
+
+  <div style="height:24px;"></div>
+</div>
+
+<!-- MODAL PEDIDO DE CORRIDA -->
+<div class="modal-base" id="modal-pedido">
+  <div class="modal-sheet" id="ped-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;"></div>
+
+    <!-- Timer -->
+    <div style="display:flex;justify-content:center;margin-bottom:14px;">
+      <div class="ped-timer-ring">
+        <div class="ped-timer-num" id="ped-timer">15</div>
+      </div>
+    </div>
+
+    <!-- Foto grande + nome + idade + nível -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px;">
+      <div class="ped-av-outer">
+        <div class="ped-av-ring" id="ped-av-ring">
+          <div class="ped-av-big" id="ped-foto"><span>👤</span></div>
+        </div>
+      </div>
+      <div style="font-size:19px;font-weight:900;color:#fff;margin-top:10px;" id="ped-nome">--</div>
+      <div style="display:flex;gap:7px;align-items:center;margin-top:5px;">
+        <div class="ped-badge" id="ped-nivel">🥉 Bronze</div>
+        <div class="ped-badge" id="ped-idade">-- anos</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;" id="ped-stats">⭐ 5.0 · 0 entregas</div>
+    </div>
+
+    <!-- Último comentário -->
+    <div class="ped-comentario" id="ped-comentario-wrap" style="display:none;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:3px;">💬 ÚLTIMO COMENTÁRIO RECEBIDO</div>
+      <div style="font-size:13px;color:var(--text);font-style:italic;" id="ped-comentario">--</div>
+    </div>
+
+    <!-- Forma de pagamento (destaque) -->
+    <div class="ped-pgto-card" id="ped-pgto-card">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;">FORMA DE PAGAMENTO</div>
+      <div style="font-size:17px;font-weight:900;color:var(--dourado);margin-top:3px;" id="ped-pgto">--</div>
+      <div style="font-size:12px;color:var(--text);margin-top:2px;" id="ped-troco" style="display:none;"></div>
+      <div style="font-size:12px;color:#f59e0b;font-weight:700;margin-top:6px;" id="ped-maquininha" style="display:none;"></div>
+    </div>
+
+    <!-- Rota -->
+    <div class="pedido-rota">
+      <div class="pedido-rota-row"><span>📍 Origem</span><div id="ped-origem">--</div></div>
+      <div class="pedido-rota-row"><span>🏁 Destino</span><div id="ped-destino">--</div></div>
+    </div>
+
+    <div class="pedido-obs" id="ped-obs" style="display:none;"></div>
+
+    <!-- Valor + crédito -->
+    <div class="pedido-valor-row">
+      <div class="pedido-valor-item"><div class="pedido-valor-num destaque" id="ped-valor">--</div><div class="pedido-valor-label">Valor estimado</div></div>
+      <div class="pedido-valor-item"><div class="pedido-valor-num" id="ped-credito-custo">--</div><div class="pedido-valor-label">Custo em créditos</div></div>
+    </div>
+
+    <div class="pedido-btns">
+      <button class="btn-recusar" onclick="recusarCorrida()">Recusar</button>
+      <button class="btn-aceitar" onclick="aceitarCorrida()">Aceitar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CROP FOTO -->
+<div class="crop-overlay" id="crop-overlay">
+  <div style="color:#fff;font-size:15px;font-weight:700;">Ajustar foto</div>
+  <div style="color:var(--muted);font-size:12px;margin-top:-8px;">Arraste e use dois dedos para zoom</div>
+  <div class="crop-container" id="crop-container">
+    <canvas class="crop-canvas" id="crop-canvas" width="260" height="260"></canvas>
+  </div>
+  <div style="display:flex;gap:11px;">
+    <button onclick="cancelarCrop()" style="padding:11px 22px;border-radius:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;font-size:13px;background:rgba(255,255,255,0.07);color:var(--muted);">Cancelar</button>
+    <button onclick="confirmarCrop()" style="padding:11px 22px;border-radius:13px;font-weight:700;border:1px solid var(--border);cursor:pointer;font-family:inherit;font-size:13px;background:var(--azul2);color:var(--dourado);">Usar foto</button>
+  </div>
+</div>
+
+<div id="pwa-banner">
+  <div class="pwa-inner">
+    <div class="pwa-logo"><img id="pwa-logo-img" src="" alt=""/></div>
+    <div class="pwa-txt"><strong>Instalar Entrega Já</strong><span>Adicione à tela inicial</span></div>
+    <div class="pwa-btns"><button class="btn-inst" id="btn-inst">Instalar</button><button class="btn-x" onclick="fecharPWA()">✕</button></div>
+  </div>
+</div>
+<div id="ios-guide">
+  <div class="ios-tit">📲 Instalar no iPhone <button class="btn-x" onclick="fecharPWA()">✕</button></div>
+  <div class="ios-steps">
+    <div class="ios-step"><div class="ios-n">1</div><span>Toque em <span class="chip-ios">⬆ Compartilhar</span> na barra do Safari</span></div>
+    <div class="ios-step"><div class="ios-n">2</div><span>Role e toque em <em>"Adicionar à Tela de Início"</em></span></div>
+    <div class="ios-step"><div class="ios-n">3</div><span>Toque em <em>"Adicionar"</em> para confirmar</span></div>
+  </div>
+  <button onclick="fecharPWA()" style="width:100%;padding:10px;border-radius:16px;background:rgba(255,255,255,0.05);border:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Entendi</button>
+</div>
+
+<!-- MODAL VALIDAÇÃO GPS (fora do local) -->
+<div class="modal-base" id="modal-gps-fora">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="font-size:32px;text-align:center;margin-bottom:10px;">📍</div>
+    <div style="font-size:16px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px;" id="gps-fora-titulo">Você ainda não chegou</div>
+    <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.5;" id="gps-fora-desc">Você está a 000m de distância.</div>
+    <button id="gps-fora-btn-continuar" class="btn-p" style="width:100%;margin-bottom:9px;">Continuar buscando</button>
+    <button id="gps-fora-btn-forcar" style="width:100%;padding:13px;border-radius:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Confirmar mesmo assim</button>
+  </div>
+</div>
+
+<!-- MODAL MOTIVO DA DIVERGÊNCIA -->
+<div class="modal-base" id="modal-gps-motivo">
+  <div class="modal-sheet">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
+    <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">Por que está confirmando fora do local?</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Isso fica registrado para revisão. Seja honesto — ex: "passageiro pediu para descer antes", "combinamos mudar o destino".</div>
+    <textarea id="gps-motivo-texto" placeholder="Digite o motivo..." style="width:100%;min-height:90px;background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;margin-bottom:16px;"></textarea>
+    <button id="gps-motivo-btn-confirmar" class="btn-p" style="width:100%;margin-bottom:9px;">Confirmar</button>
+    <button id="gps-motivo-btn-cancelar" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Voltar</button>
+  </div>
+</div>
+
+<!-- TOAST / LOADING -->
+<div id="toast"></div>
+<div id="loading"><div class="ld-spin"></div></div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyAts9fsoZ_GrF3MRHDRlAw61Xti2uBkdnM",authDomain:"staffcheck-d6f20.firebaseapp.com",projectId:"staffcheck-d6f20",storageBucket:"staffcheck-d6f20.firebasestorage.app",messagingSenderId:"1055570421019",appId:"1:1055570421019:web:7b5dcc564bfe1c30189fbe"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+// ESTADO
+let user=null;
+let fotoFinalCad=null,cropImg=null,cropScale=1,cropTX=0,cropTY=0,cropBaseScale=1,cropBaseX=0,cropBaseY=0,cropCtx="";
+
+// ── PARTÍCULAS ──
+(function(){
+  const cv=document.getElementById("cv");
+  if(!cv)return;
+  const ctx=cv.getContext("2d");
+  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+  resize();
+  window.addEventListener("resize",resize);
+  const N=52,pts=[];
+  for(let i=0;i<N;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.6+.7});
+  function draw(){
+    ctx.fillStyle="#080f1e";ctx.fillRect(0,0,cv.width,cv.height);
+    for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<125){ctx.strokeStyle=`rgba(251,191,36,${(1-d/125)*.16})`;ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();}
+    }
+    pts.forEach(p=>{
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle="rgba(251,191,36,.28)";ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>cv.width)p.vx*=-1;if(p.y<0||p.y>cv.height)p.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── TOAST / LOADING ──
+function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),3400);}
+function loading(s){document.getElementById("loading").classList.toggle("show",s);}
+
+// ── NAVEGAÇÃO ──
+function mostrarTela(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("ativo"));
+  const el=document.getElementById(id);
+  if(el)el.classList.add("ativo");
+  // Garantia: qualquer troca de tela sempre fecha o menu e qualquer overlay preso
+  const ov=document.getElementById("menu-overlay"),ml=document.getElementById("menu-lateral");
+  if(ov)ov.style.display="none";
+  if(ml)ml.style.display="none";
+}
+function irPara(dest){
+  fecharMenu();
+  switch(dest){
+    case"home":
+      mostrarTela("tela-home");
+      iniciarMapaHome();
+      iniciarGPSInicial();
+      setTimeout(()=>{atualizarHome();atualizarCreditos();carregarGanhosHome();carregarHistHome();renderCardsHome();},50);
+      setTimeout(()=>{if(mapaHome)mapaHome.invalidateSize();},400);
+      break;
+    case"perfil":mostrarTela("tela-perfil");setTimeout(()=>atualizarPerfil(),50);break;
+    case"ganhos":mostrarTela("tela-ganhos");setTimeout(()=>{carregarGanhos();atualizarMetaView();},50);break;
+    case"config":mostrarTela("tela-config");setTimeout(()=>abrirTelaConfig(),50);break;
+  }
+}
+function atualizarHome(){
+  if(!user)return;
+  const h=new Date().getHours();
+  document.getElementById("saudacao").textContent=h<12?"Bom dia!":h<18?"Boa tarde!":"Boa noite!";
+  document.getElementById("home-nome").textContent=(user.nome||"").trim().split(" ")[0];
+  const av=document.getElementById("home-avatar");
+  if(user.foto)av.innerHTML=`<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+  else av.innerHTML=`<span style="font-size:15px;font-weight:700;color:var(--dourado);">${(user.nome||"M")[0].toUpperCase()}</span>`;
+}
+
+// ── MENU ──
+function abrirMenu(){document.getElementById("menu-overlay").style.display="block";document.getElementById("menu-lateral").style.display="block";}
+function fecharMenu(){
+  const ov=document.getElementById("menu-overlay"),ml=document.getElementById("menu-lateral");
+  if(ov)ov.style.display="none";
+  if(ml)ml.style.display="none";
+}
+
+// ── FOTO (crop completo) ──
+let _cropPrevId=null,_cropTxtId=null;
+function processarFoto(inp,prevId,txtId){
+  const f=inp.files[0];if(!f)return;cropCtx="cad";_cropPrevId=prevId;_cropTxtId=txtId;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      cropImg=img;
+      const cw=260,ch=260,sw=cw/img.naturalWidth,sh=ch/img.naturalHeight;
+      cropBaseScale=Math.max(sw,sh);
+      cropBaseX=(cw-img.naturalWidth*cropBaseScale)/2;
+      cropBaseY=(ch-img.naturalHeight*cropBaseScale)/2;
+      cropScale=1;cropTX=0;cropTY=0;
+      desenharCrop();
+      document.getElementById("crop-overlay").style.display="flex";
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f);
+  inp.value="";
+}
+function desenharCrop(){
+  if(!cropImg)return;
+  const cv=document.getElementById("crop-canvas"),ctx=cv.getContext("2d");
+  ctx.clearRect(0,0,260,260);
+  const sc=cropBaseScale*cropScale;
+  ctx.save();
+  ctx.beginPath();ctx.arc(130,130,130,0,Math.PI*2);ctx.clip();
+  ctx.drawImage(cropImg,cropBaseX+cropTX,cropBaseY+cropTY,cropImg.naturalWidth*sc,cropImg.naturalHeight*sc);
+  ctx.restore();
+}
+function cancelarCrop(){document.getElementById("crop-overlay").style.display="none";cropImg=null;}
+function confirmarCrop(){
+  if(!cropImg)return;
+  const cv=document.getElementById("crop-canvas"),out=document.createElement("canvas");
+  out.width=200;out.height=200;
+  const ctx=out.getContext("2d");
+  ctx.save();ctx.beginPath();ctx.arc(100,100,100,0,Math.PI*2);ctx.clip();
+  ctx.drawImage(cv,0,0,260,260,0,0,200,200);
+  ctx.restore();
+  const url=out.toDataURL("image/jpeg",0.75);
+  document.getElementById("crop-overlay").style.display="none";cropImg=null;
+  if(cropCtx==="cad"){
+    fotoFinalCad=url;
+    const prev=document.getElementById(_cropPrevId||"foto-preview-cad");
+    if(prev)prev.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+    const txt=document.getElementById(_cropTxtId||"foto-texto-cad");
+    if(txt)txt.textContent="Foto adicionada ✓";
+  }else if(cropCtx==="perfilmot"){
+    loading(true);
+    db.collection("ej_motoboys").doc(user.id).update({foto:url}).then(()=>{
+      user.foto=url;localStorage.setItem("ejm_user",JSON.stringify(user));
+      atualizarPerfil();atualizarHome();loading(false);toast("Foto atualizada! ✓");
+    }).catch(()=>{loading(false);toast("Erro ao salvar foto.");});
+  }
+}
+(function(){
+  const cont=document.getElementById("crop-container");
+  if(!cont)return;
+  let drag=false,lx=0,ly=0,ld=0;
+  cont.addEventListener("touchstart",e=>{if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY;}else if(e.touches.length===2){drag=false;ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}},{passive:true});
+  cont.addEventListener("touchmove",e=>{e.preventDefault();if(e.touches.length===1&&drag){cropTX+=e.touches[0].clientX-lx;cropTY+=e.touches[0].clientY-ly;lx=e.touches[0].clientX;ly=e.touches[0].clientY;desenharCrop();}else if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(ld){cropScale=Math.min(3,Math.max(.5,cropScale*(d/ld)));desenharCrop();}ld=d;}},{passive:false});
+  cont.addEventListener("touchend",()=>{drag=false;ld=0;});
+  cont.addEventListener("mousedown",e=>{drag=true;lx=e.clientX;ly=e.clientY;});
+  cont.addEventListener("mousemove",e=>{if(!drag)return;cropTX+=e.clientX-lx;cropTY+=e.clientY-ly;lx=e.clientX;ly=e.clientY;desenharCrop();});
+  cont.addEventListener("mouseup",()=>drag=false);
+})();
+
+// ── INIT ──
+function logoFallback(img){img.style.display="none";const p=img.parentElement;p.style.display="flex";p.style.alignItems="center";p.style.justifyContent="center";p.style.fontSize="50px";p.style.background="#1a2a4a";p.textContent="🚗";}
+let _appIniciado=false;
+function _iniciarApp(){
+  if(_appIniciado)return;_appIniciado=true;
+  let s=null;
+  try{s=localStorage.getItem("ejm_user");}catch(e){}
+  if(s){
+    try{user=JSON.parse(s);irPara("home");}
+    catch(e){mostrarTela("tela-login");}
+  }else mostrarTela("tela-login");
+}
+// Múltiplas garantias de que o app SEMPRE inicia, não importa o timing de carregamento:
+if(document.readyState==="complete")setTimeout(_iniciarApp,800);
+else window.addEventListener("load",()=>setTimeout(_iniciarApp,800));
+document.addEventListener("DOMContentLoaded",()=>setTimeout(_iniciarApp,1200));
+setTimeout(_iniciarApp,3500); // rede de segurança absoluta: nunca trava mais que 3.5s
+
+// ── HASH SENHA ──
+function hashSenha(s){
+  let h=5381;const str=String(s);
+  for(let i=0;i<str.length;i++){h=((h<<5)+h+str.charCodeAt(i))>>>0;}
+  let h2=52711;for(let i=str.length-1;i>=0;i--){h2=((h2<<5)+h2+str.charCodeAt(i))>>>0;}
+  return "h"+h.toString(36)+h2.toString(36);
+}
+// ── CPF ──
+function mascaraCPF(el){
+  let v=el.value.replace(/\D/g,"").slice(0,11);
+  v=v.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+  el.value=v;
+}
+function validarCPF(cpf){
+  cpf=(cpf||"").replace(/\D/g,"");
+  if(cpf.length!==11||/^(\d)\1{10}$/.test(cpf))return false;
+  let s=0;for(let i=0;i<9;i++)s+=parseInt(cpf[i])*(10-i);
+  let d1=(s*10)%11;if(d1===10)d1=0;if(d1!==parseInt(cpf[9]))return false;
+  s=0;for(let i=0;i<10;i++)s+=parseInt(cpf[i])*(11-i);
+  let d2=(s*10)%11;if(d2===10)d2=0;if(d2!==parseInt(cpf[10]))return false;
+  return true;
+}
+// ── CADASTRO / LOGIN ──
+function altTab(modo){
+  document.getElementById("tab-cad").classList.toggle("ativo",modo==="cad");
+  document.getElementById("tab-ent").classList.toggle("ativo",modo==="ent");
+  document.getElementById("form-cad").style.display=modo==="cad"?"block":"none";
+  document.getElementById("form-ent").style.display=modo==="ent"?"block":"none";
+}
+async function cadastrar(){
+  const nome=document.getElementById("cad-nome").value.trim();
+  const fone=document.getElementById("cad-fone").value.trim();
+  const cpfVal=(document.getElementById("cad-cpf")?.value||"").trim();
+  const senha=(document.getElementById("cad-senha")?.value||"").trim();
+  const pergunta=(document.getElementById("cad-pergunta")?.value||"").trim();
+  const resposta=(document.getElementById("cad-resposta")?.value||"").trim();
+  const veiculo=document.getElementById("cad-veiculo").value;
+  const placa=(document.getElementById("cad-placa")?.value||"").trim().toUpperCase();
+  if(!nome||!fone){toast("Preencha nome e WhatsApp");return;}
+  if(!validarCPF(cpfVal)){toast("Digite um CPF válido");return;}
+  if(senha.length<4){toast("Crie uma senha de pelo menos 4 dígitos");return;}
+  if(!pergunta){toast("Escolha uma pergunta de segurança");return;}
+  if(!resposta){toast("Responda a pergunta de segurança");return;}
+  if(!placa){toast("Informe a placa do veículo");return;}
+  if(!document.getElementById("cad-termos")?.checked){toast("Você precisa aceitar os Termos de Uso");return;}
+  loading(true);
+  try{
+    const ex=await db.collection("ej_motoboys").where("fone","==",fone).limit(1).get();
+    if(!ex.empty){loading(false);toast("Este WhatsApp já está cadastrado. Use 'Entrar'.");return;}
+    const id="mot_"+Date.now();
+    const dados={id,nome,fone,cpf:cpfVal,
+      senhaHash:hashSenha(senha),
+      pergunta:pergunta,
+      respostaHash:hashSenha(resposta.toLowerCase()),
+      termosAceitos:true,termosData:new Date().toISOString(),
+      veiculo,placa,
+      foto:fotoFinalCad||null,
+      online:false,creditos:0,totalCorridas:0,avaliacao:5,
+      criadoEm:new Date().toISOString()};
+    await db.collection("ej_motoboys").doc(id).set(dados);
+    user=dados;localStorage.setItem("ejm_user",JSON.stringify(user));
+    loading(false);irPara("home");
+  }catch(e){loading(false);toast("Erro: "+e.message);}
+}
+async function entrar(){
+  const fone=document.getElementById("ent-fone").value.trim();
+  const senha=(document.getElementById("ent-senha")?.value||"").trim();
+  if(!fone){toast("Informe seu WhatsApp");return;}
+  if(!senha){toast("Informe sua senha");return;}
+  loading(true);
+  try{
+    const snap=await db.collection("ej_motoboys").where("fone","==",fone).limit(1).get();
+    if(snap.empty){toast("Número não encontrado.");loading(false);return;}
+    const dados={id:snap.docs[0].id,...snap.docs[0].data()};
+    if(!dados.senhaHash){
+      await db.collection("ej_motoboys").doc(dados.id).update({senhaHash:hashSenha(senha)});
+      dados.senhaHash=hashSenha(senha);
+      toast("Senha definida para sua conta! ✓");
+    }else if(dados.senhaHash!==hashSenha(senha)){
+      loading(false);toast("Senha incorreta.");return;
+    }
+    user=dados;localStorage.setItem("ejm_user",JSON.stringify(user));
+    loading(false);irPara("home");
+  }catch(e){loading(false);toast("Erro: "+e.message);}
+}
+function sair(){
+  localStorage.removeItem("ejm_user");
+  user=null;
+  location.reload();
+}
+
+// ── RECUPERAR SENHA ──
+const ADMIN_WHATSAPP="5519982480386";
+let recUserDoc=null;
+function abrirRecuperar(){
+  document.getElementById("modal-recuperar").classList.add("show");
+  document.getElementById("rec-passo1").style.display="block";
+  document.getElementById("rec-passo2").style.display="none";
+  document.getElementById("rec-fone").value=document.getElementById("ent-fone")?.value||"";
+  document.getElementById("rec-resposta").value="";
+  document.getElementById("rec-nova").value="";
+  recUserDoc=null;
+}
+async function recBuscar(){
+  const fone=document.getElementById("rec-fone").value.trim();
+  if(!fone){toast("Informe seu WhatsApp");return;}
+  loading(true);
+  try{
+    const snap=await db.collection("ej_motoboys").where("fone","==",fone).limit(1).get();
+    if(snap.empty){loading(false);toast("Número não encontrado.");return;}
+    recUserDoc={id:snap.docs[0].id,...snap.docs[0].data()};
+    loading(false);
+    if(!recUserDoc.pergunta){
+      toast("Sua conta não tem pergunta de segurança. Fale com o administrador.");
+      return;
+    }
+    document.getElementById("rec-pergunta").textContent=recUserDoc.pergunta;
+    document.getElementById("rec-passo1").style.display="none";
+    document.getElementById("rec-passo2").style.display="block";
+  }catch(e){loading(false);toast("Erro ao buscar.");}
+}
+async function recRedefinir(){
+  const resp=(document.getElementById("rec-resposta").value||"").trim().toLowerCase();
+  const nova=(document.getElementById("rec-nova").value||"").trim();
+  if(!resp){toast("Responda a pergunta");return;}
+  if(nova.length<4){toast("Nova senha: mínimo 4 dígitos");return;}
+  if(!recUserDoc){toast("Erro. Tente novamente.");return;}
+  if(recUserDoc.respostaHash!==hashSenha(resp)){toast("Resposta incorreta.");return;}
+  loading(true);
+  try{
+    await db.collection("ej_motoboys").doc(recUserDoc.id).update({senhaHash:hashSenha(nova)});
+    loading(false);
+    document.getElementById("modal-recuperar").classList.remove("show");
+    toast("Senha redefinida! Faça login. ✓");
+    altTab("ent");
+  }catch(e){loading(false);toast("Erro ao redefinir.");}
+}
+function recFalarAdmin(){
+  const fone=document.getElementById("rec-fone").value.trim();
+  const nome=recUserDoc?recUserDoc.nome:"--";
+  const msg=encodeURIComponent(`Olá! Preciso recuperar minha senha do Entrega Já (Motoboy).\nNome: ${nome}\nWhatsApp: ${fone}`);
+  window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`,"_blank");
+}
+
+// ── SOBRE ──
+function abrirSobre(){document.getElementById("modal-sobre").classList.add("show");}
+
+// ── ESTADO ONLINE/CRÉDITOS ──
+let online=false,posicaoAtual=null,gpsInterval=null,mapaHome=null,mapaFull=null,marcadorPosicao=null;
+// ── NOTIF ──
+async function pedirNotif(){try{if("Notification"in window)await Notification.requestPermission();}catch(e){}}
+function notif(t,b){if(typeof Notification!=="undefined"&&Notification.permission==="granted")try{new Notification(t,{body:b,tag:"cjm",vibrate:[200,100,200]});}catch(e){}}
+const CREDITO_MAX=200; // teto rígido configurável no painel admin futuramente
+
+function alternarOnline(){
+  try{getAC();}catch(e){}
+  if(!online)ficarOnline();else ficarOffline();
+}
+function ficarOnline(){
+  if(!posicaoAtual){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      posicaoAtual=[pos.coords.latitude,pos.coords.longitude];
+      _setOnline();
+    },()=>toast("Ative o GPS para ficar online"));
+    return;
+  }
+  _setOnline();
+}
+async function _setOnline(){
+  online=true;
+  document.getElementById("toggle-btn").classList.add("on");
+  document.getElementById("toggle-label").textContent="Você está online";
+  document.getElementById("toggle-sub").textContent="Aguardando entregas...";
+  try{await db.collection("ej_motoboys").doc(user.id).update({online:true,lat:posicaoAtual[0],lng:posicaoAtual[1]});}catch(e){}
+  iniciarGPS();
+  escutarPedidos();
+  pedirNotif();
+  toast("Você está online! 🟢");
+}
+async function ficarOffline(){
+  online=false;
+  document.getElementById("toggle-btn").classList.remove("on");
+  document.getElementById("toggle-label").textContent="Você está offline";
+  document.getElementById("toggle-sub").textContent="Ative para receber entregas";
+  if(gpsInterval){clearInterval(gpsInterval);gpsInterval=null;}
+  if(unsubPedidos){unsubPedidos();unsubPedidos=null;}
+  try{await db.collection("ej_motoboys").doc(user.id).update({online:false});}catch(e){}
+}
+function iniciarGPS(){
+  if(gpsInterval)clearInterval(gpsInterval);
+  gpsInterval=setInterval(()=>{
+    if(!online||!user)return;
+    navigator.geolocation.getCurrentPosition(pos=>{
+      posicaoAtual=[pos.coords.latitude,pos.coords.longitude];
+      db.collection("ej_motoboys").doc(user.id).update({lat:pos.coords.latitude,lng:pos.coords.longitude}).catch(()=>{});
+      if(mapaHome&&marcadorPosicao)marcadorPosicao.setLatLng(posicaoAtual);
+      if(mapaFull)mapaFull.setView(posicaoAtual);
+    });
+  },8000);
+}
+
+// ── CRÉDITOS ──
+async function atualizarCreditos(){
+  if(!user)return;
+  try{
+    const snap=await db.collection("ej_motoboys").doc(user.id).get();
+    if(snap.exists){user.creditos=snap.data().creditos||0;localStorage.setItem("ejm_user",JSON.stringify(user));}
+  }catch(e){}
+  const cred=user.creditos||0;
+  const g=id=>document.getElementById(id);
+  if(g("creditos-val"))g("creditos-val").textContent="R$ "+cred.toFixed(2).replace(".",",");
+  if(g("creditos-prog"))g("creditos-prog").style.width=Math.min(100,(cred/CREDITO_MAX)*100)+"%";
+  const aviso=g("creditos-aviso");
+  if(aviso){
+    if(cred<=0){aviso.textContent="Sem créditos. Fale com o administrador.";aviso.classList.add("baixo");}
+    else if(cred<10){aviso.textContent="Créditos baixos! Considere recarregar.";aviso.classList.add("baixo");}
+    else{aviso.textContent="Créditos OK";aviso.classList.remove("baixo");}
+  }
+}
+
+// ── GANHOS DO DIA ──
+async function carregarGanhosHome(){
+  if(!user)return;
+  try{
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).where("status","==","concluida").get();
+    let gh=0,ch=0,ta=0,na=0;
+    snap.docs.forEach(d=>{
+      const c=d.data();
+      const dt=c.criadoEm&&c.criadoEm.toDate?c.criadoEm.toDate():new Date(0);
+      if(dt>=hoje){gh+=(c.valor||0);ch++;}
+      if(c.avaliacaoPassageiro){ta+=c.avaliacaoPassageiro;na++;}
+    });
+    const g=id=>document.getElementById(id);
+    if(g("ganhos-hoje"))g("ganhos-hoje").textContent="R$ "+gh.toFixed(2).replace(".",",");
+    if(g("entregas-hoje"))g("entregas-hoje").textContent=ch;
+    if(g("aval-media"))g("aval-media").textContent=na>0?"⭐ "+(ta/na).toFixed(1):(user.avaliacao?"⭐ "+parseFloat(user.avaliacao).toFixed(1):"--");
+  }catch(e){}
+}
+async function carregarHistHome(){
+  if(!user)return;
+  try{
+    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).where("status","==","concluida").orderBy("criadoEm","desc").limit(3).get();
+    const el=document.getElementById("lista-hist-home");if(!el)return;
+    if(snap.empty){el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);font-size:13px;'>Nenhuma entrega ainda</div>";return;}
+    el.innerHTML=snap.docs.map(d=>{
+      const c=d.data();
+      return `<div class="hist-item"><div class="hist-icon">🚗</div><div class="hist-info"><div class="hist-local">${c.destino||"--"}</div><div class="hist-data">${fmtData(c.criadoEm)}</div></div><div class="hist-valor">R$ ${parseFloat(c.valor||0).toFixed(2).replace(".",",")}</div></div>`;
+    }).join("");
+  }catch(e){}
+}
+function fmtData(ts){if(!ts)return"--";const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});}
+
+// ── ÁUDIO (necessário pra desbloquear no iPhone) ──
+let _ac=null;
+function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==="suspended")_ac.resume();return _ac;}
+function nota(f,s,d,v=.7){try{const c=getAC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(f,c.currentTime+s);g.gain.setValueAtTime(0,c.currentTime+s);g.gain.linearRampToValueAtTime(v,c.currentTime+s+.01);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+s+d);o.start(c.currentTime+s);o.stop(c.currentTime+s+d+.05);}catch(e){}}
+function falar(txt){try{if(!("speechSynthesis"in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="pt-BR";u.rate=1;u.pitch=1;const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith("pt"));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
+function somNovoPedido(){
+  if(!getConfigPref("som",true))return;
+  nota(659,0,.12,.85);nota(880,.14,.12,.85);nota(659,.28,.12,.85);nota(880,.42,.4,.8);
+  setTimeout(()=>falar("Entrega Já! Você tem um novo pedido de entrega!"),500);
+}
+function somEntregaConcluida(){
+  nota(523,0,.12,.7);nota(659,.13,.12,.7);nota(784,.26,.4,.7);
+}
+function somCancelamentoMot(){
+  nota(400,0,.15,.7);nota(300,.16,.3,.7);
+}
+function somMsgChatMot(){
+  nota(880,0,.1,.6);nota(1046,.11,.15,.6);
+}
+if("speechSynthesis"in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}
+
+// ── MAPAS ──
+function iniciarMapaHome(){
+  if(mapaHome)return;
+  setTimeout(()=>{
+    mapaHome=L.map("mapa-home",{zoomControl:false,attributionControl:false,dragging:true,touchZoom:true,scrollWheelZoom:false});
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18}).addTo(mapaHome);
+    const centro=posicaoAtual||[-22.655,-47.059];
+    mapaHome.setView(centro,14);
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 42" width="34" height="42"><circle cx="17" cy="9" r="8" fill="#fbbf24" stroke="#fff" stroke-width="2"/><path d="M3 40 Q3 25 17 23 Q31 25 31 40Z" fill="#fbbf24" stroke="#fff" stroke-width="2"/></svg>`;
+    const ic=L.divIcon({html:`<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));">${svg}</div>`,className:"",iconSize:[34,42],iconAnchor:[17,40]});
+    marcadorPosicao=L.marker(centro,{icon:ic}).addTo(mapaHome);
+    setTimeout(()=>{mapaHome.invalidateSize();if(posicaoAtual){mapaHome.setView(posicaoAtual,14);marcadorPosicao.setLatLng(posicaoAtual);}},500);
+  },300);
+}
+function abrirMapaFull(){
+  const m=document.getElementById("modal-mapa-full");m.classList.add("show");
+  if(!mapaFull){
+    mapaFull=L.map("mapa-full-div",{zoomControl:true,attributionControl:false});
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18}).addTo(mapaFull);
+    mapaFull.setView(posicaoAtual||[-22.655,-47.059],14);
+    if(posicaoAtual)L.marker(posicaoAtual).addTo(mapaFull);
+  }else setTimeout(()=>mapaFull.invalidateSize(),100);
+}
+function fecharMapaFull(){document.getElementById("modal-mapa-full").classList.remove("show");}
+
+// ── GPS inicial ──
+function iniciarGPSInicial(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    posicaoAtual=[pos.coords.latitude,pos.coords.longitude];
+    if(mapaHome&&marcadorPosicao){mapaHome.setView(posicaoAtual,14);marcadorPosicao.setLatLng(posicaoAtual);}
+  },()=>{});
+}
+
+
+// ── TABELA DE VALORES E CRÉDITOS POR DISTÂNCIA ──
+// Configurável futuramente no painel admin
+function calcularValorPorDistancia(km){
+  const tabela=[{ate:2,preco:8},{ate:5,preco:12},{ate:10,preco:18},{ate:20,preco:28},{ate:35,preco:40},{ate:50,preco:52},{ate:999,preco:65}];
+  for(const t of tabela){if(km<=t.ate)return t.preco;}
+  return 65;
+}
+function calcularCreditoPorDistancia(km){
+  // Teto de 3 créditos por corrida, mesmo em distâncias longas (Campinas, Mogi Guaçu etc)
+  const tabela=[{ate:5,creditos:1},{ate:15,creditos:2},{ate:999,creditos:3}];
+  for(const t of tabela){if(km<=t.ate)return t.creditos;}
+  return 3;
+}
+function dKmMot(la1,lo1,la2,lo2){
+  const R=6371,dL=(la2-la1)*Math.PI/180,dO=(lo2-lo1)*Math.PI/180;
+  const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function calcularIdade(dataNasc){
+  if(!dataNasc)return null;
+  const hoje=new Date(),nasc=new Date(dataNasc);
+  let idade=hoje.getFullYear()-nasc.getFullYear();
+  const m=hoje.getMonth()-nasc.getMonth();
+  if(m<0||(m===0&&hoje.getDate()<nasc.getDate()))idade--;
+  return idade;
+}
+function nivelPorCorridas(tc){
+  if(tc>=50)return{nivel:"💎 Diamante",grad:"conic-gradient(#b9f2ff,#7fd4e8,#5fa8d3,#a0e9ff,#b9f2ff)"};
+  if(tc>=20)return{nivel:"🥇 Ouro",grad:"conic-gradient(#ffd700,#fff3a0,#daa520,#ffd700)"};
+  if(tc>=5)return{nivel:"🥈 Prata",grad:"conic-gradient(#c0c0c0,#f5f5f5,#a8a8a8,#e8e8e8,#c0c0c0)"};
+  return{nivel:"🥉 Bronze",grad:"conic-gradient(#cd7f32,#f0b97d,#8b5a2b,#cd7f32)"};
+}
+
+// ── ESCUTAR PEDIDOS ──
+let unsubPedidos=null,pedidoAtual=null,entregaAtiva=null,timerPedido=null,_pedSeg=15;
+let _escutaPedidosIniciadaEm=null;
+function escutarPedidos(){
+  if(unsubPedidos)unsubPedidos();
+  _escutaPedidosIniciadaEm=Date.now();
+  unsubPedidos=db.collection("ej_pedidos").where("status","==","aguardando").onSnapshot(snap=>{
+    snap.docChanges().forEach(change=>{
+      if(change.type==="added"&&!pedidoAtual&&!entregaAtiva){
+        const d=change.doc.data();
+        // Ignorar pedidos "presos" antigos: só notificar se foi criado nos últimos 2 minutos
+        const criadoEm=d.criadoEm&&d.criadoEm.toDate?d.criadoEm.toDate().getTime():0;
+        const agora=Date.now();
+        const idadeMin=(agora-criadoEm)/60000;
+        if(criadoEm&&idadeMin>2){
+          return; // pedido velho/preso, ignora silenciosamente
+        }
+        mostrarPedido({...d,id:change.doc.id});
+      }
+      if(change.type==="modified"&&pedidoAtual&&change.doc.id===pedidoAtual.id){
+        const d=change.doc.data();
+        if(d.status==="cancelada_cliente"){
+          recusarEntrega();
+          toast("Passageiro cancelou o pedido.");
+        }
+      }
+    });
+  });
+}
+
+// ── MOSTRAR PEDIDO (card completo) ──
+async function mostrarPedido(entrega){
+  pedidoAtual=entrega;
+  try{getAC();}catch(e){}
+  somNovoPedido();
+  notif("📦 Novo pedido de entrega!",(entrega.clienteNome||"Restaurante")+" tem uma encomenda para retirar");
+  const g=id=>document.getElementById(id);
+
+  g("ped-nome").textContent=entrega.clienteNome||"Restaurante";
+  g("ped-origem").textContent=(entrega.restauranteEndereco||"Endereço do restaurante");
+  g("ped-destino").textContent=entrega.destino||"--";
+
+  // Card enxuto: sem foto, só texto (economiza cota do Firestore e carrega mais rápido)
+  const av=g("ped-foto");
+  if(av)av.innerHTML="<span>🏪</span>";
+
+  // Itens do pedido (detalhados ou texto livre)
+  const obsEl=g("ped-obs");
+  if(entrega.itensDetalhados&&entrega.itensDetalhados.length>0){
+    const linhas=entrega.itensDetalhados.map(i=>`${i.qtd}x ${i.nome}`).join(", ");
+    obsEl.textContent="📦 "+linhas;obsEl.style.display="block";
+  }else if(entrega.obs){
+    obsEl.textContent="📦 "+entrega.obs;obsEl.style.display="block";
+  }else obsEl.style.display="none";
+
+  // Valor total do pedido (subtotal + taxa de entrega, se houver)
+  const valorTotal=entrega.valorTotal||entrega.valorPedido;
+  g("ped-valor").textContent=valorTotal?("R$ "+valorTotal.toFixed(2).replace(".",",")):"Não informado";
+
+  // Nível do restaurante (por nº de pedidos feitos)
+  let dadosRest=null;
+  try{
+    if(entrega.clienteId){
+      const snap=await db.collection("ej_restaurantes").doc(entrega.clienteId).get();
+      if(snap.exists)dadosRest=snap.data();
+    }
+  }catch(e){}
+  const tc=dadosRest?.totalPedidos||0;
+  const {nivel,grad}=nivelPorEntregas(tc);
+  g("ped-nivel").textContent=nivel;
+  const ring=g("ped-av-ring");if(ring)ring.style.setProperty("--nivel-grad",grad);
+  g("ped-idade").style.display="none"; // idade não se aplica a restaurante
+
+  const aval=(dadosRest?.avaliacao||5).toFixed(1);
+  g("ped-stats").textContent=`⭐ ${aval} · ${tc} pedido${tc!==1?"s":""}`;
+
+  const comentWrap=g("ped-comentario-wrap");
+  comentWrap.style.display="none"; // sem comentário aqui, mantém card enxuto
+
+  // Forma de pagamento em destaque
+  const pgtoIcones={Dinheiro:"💵",Pix:"📱",Débito:"💳",Crédito:"💳"};
+  g("ped-pgto").textContent=(pgtoIcones[entrega.formaPgto]||"💰")+" "+(entrega.formaPgto||"Não informado");
+  const trocoEl=g("ped-troco");
+  if(entrega.formaPgto==="Dinheiro"&&entrega.trocoPara){
+    trocoEl.textContent="Troco para: "+entrega.trocoPara;
+    trocoEl.style.display="block";
+  }else trocoEl.style.display="none";
+
+  // Aviso de maquininha (se precisa levar)
+  const maquininhaEl=g("ped-maquininha");
+  if(maquininhaEl){
+    if(entrega.precisaMaquininha){maquininhaEl.textContent="🖥️ Levar a maquininha do restaurante";maquininhaEl.style.display="block";}
+    else maquininhaEl.style.display="none";
+  }
+
+  // Custo em créditos (pela distância)
+  const km=parseFloat(entrega.distanciaKm)||5;
+  const custoCred=calcularCreditoPorDistancia(km);
+  g("ped-credito-custo").textContent=custoCred+" créd.";
+  pedidoAtual._custoCredito=custoCred;
+
+  document.getElementById("modal-pedido").classList.add("show");
+  iniciarTimerPedido();
+}
+
+
+// ── TIMER DO PEDIDO ──
+function iniciarTimerPedido(){
+  _pedSeg=15;
+  const ring=document.getElementById("ped-sheet")?.querySelector(".ped-timer-ring");
+  atualizarTimerVisual();
+  if(timerPedido)clearInterval(timerPedido);
+  timerPedido=setInterval(()=>{
+    _pedSeg--;
+    atualizarTimerVisual();
+    if(_pedSeg<=0){recusarCorrida();}
+  },1000);
+}
+function atualizarTimerVisual(){
+  const num=document.getElementById("ped-timer");
+  if(num)num.textContent=_pedSeg;
+  const ring=document.querySelector(".ped-timer-ring");
+  if(ring){
+    const pct=(_pedSeg/15)*360;
+    ring.style.background=`conic-gradient(var(--dourado) ${pct}deg,var(--card2) ${pct}deg)`;
+  }
+}
+function pararTimerPedido(){if(timerPedido){clearInterval(timerPedido);timerPedido=null;}}
+
+// ── RECUSAR ──
+function recusarCorrida(){
+  pararTimerPedido();
+  document.getElementById("modal-pedido").classList.remove("show");
+  pedidoAtual=null;
+}
+
+// ── ACEITAR (com desconto de crédito) ──
+async function aceitarCorrida(){
+  if(!pedidoAtual)return;
+  pararTimerPedido();
+  const custoCred=pedidoAtual._custoCredito||1;
+  const credAtual=user.creditos||0;
+  if(credAtual<custoCred){
+    pararTimerPedido();
+    document.getElementById("modal-pedido").classList.remove("show");
+    pedidoAtual=null;
+    setTimeout(()=>{
+      alert("😅 Ih, você não tem créditos suficientes pra aceitar essa entrega!\n\nRecarregue seus créditos para continuar recebendo pedidos.");
+    },300);
+    return;
+  }
+  loading(true);
+  try{
+    const novoCredito=credAtual-custoCred;
+    await db.collection("ej_pedidos").doc(pedidoAtual.id).update({
+      status:"aceita",
+      motoboy:{id:user.id,nome:user.nome,foto:user.foto||null,fone:user.fone,placa:user.placa,veiculo:user.veiculo,avaliacao:user.avaliacao||5.0,lat:posicaoAtual?posicaoAtual[0]:null,lng:posicaoAtual?posicaoAtual[1]:null},
+      creditoDescontado:custoCred,
+      aceitoEm:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection("ej_motoboys").doc(user.id).update({creditos:novoCredito});
+    user.creditos=novoCredito;
+    localStorage.setItem("ejm_user",JSON.stringify(user));
+
+    entregaAtiva={...pedidoAtual,id:pedidoAtual.id};pedidoAtual=null;
+    document.getElementById("modal-pedido").classList.remove("show");
+    if(unsubPedidos){unsubPedidos();unsubPedidos=null;}
+
+    loading(false);
+    atualizarCreditos();
+    toast(`Entrega aceita! ${custoCred} crédito(s) descontado(s). ✓`);
+    entrarTelaEntrega();
+  }catch(e){loading(false);toast("Erro ao aceitar: "+e.message);}
+}
+
+// ── DEVOLVER CRÉDITO (se entrega cancelada após aceita) ──
+async function devolverCredito(entregaId,valor){
+  if(!user||!valor)return;
+  try{
+    const novoCredito=(user.creditos||0)+valor;
+    await db.collection("ej_motoboys").doc(user.id).update({creditos:novoCredito});
+    user.creditos=novoCredito;
+    localStorage.setItem("ejm_user",JSON.stringify(user));
+    atualizarCreditos();
+    toast(valor+" crédito(s) devolvido(s) — entrega cancelada.");
+  }catch(e){}
+}
+
+
+// ── ATUALIZAR aceitarEntrega pra entrar na tela de entrega (estende a versão da Fatia 3) ──
+async function entrarTelaEntrega(){
+  if(!entregaAtiva)return;
+  const g=id=>document.getElementById(id);
+  g("pass-nome").textContent=entregaAtiva.clienteNome||"Passageiro";
+  g("pass-destino").textContent=entregaAtiva.destino||"--";
+  if(entregaAtiva.clienteFoto)g("pass-foto").innerHTML=`<img src="${corridaAtiva.clienteFoto}"/>`;
+  else g("pass-foto").innerHTML="<span>👤</span>";
+  if(entregaAtiva.obs){g("pass-obs").textContent="📝 "+entregaAtiva.obs;g("pass-obs").style.display="block";}else g("pass-obs").style.display="none";
+
+  const pgtoIcones={Dinheiro:"💵",Pix:"📱",Débito:"💳",Crédito:"💳"};
+  let txtPgto=(pgtoIcones[entregaAtiva.formaPgto]||"💰")+" "+(entregaAtiva.formaPgto||"Não informado");
+  if(entregaAtiva.formaPgto==="Dinheiro"&&entregaAtiva.trocoPara)txtPgto+=" · Troco p/ "+entregaAtiva.trocoPara;
+  g("entrega-pgto-info").textContent=txtPgto;
+
+  // Valor inicial sugerido
+  if(entregaAtiva.origemLat&&entregaAtiva.origemLng&&posicaoAtual){
+    const km=dKmMot(posicaoAtual[0],posicaoAtual[1],entregaAtiva.origemLat,entregaAtiva.origemLng);
+    g("valor-entrega").value=calcularValorPorDistancia(km).toFixed(2);
+  }else if(entregaAtiva.valorEstimado){
+    const v=parseFloat((entregaAtiva.valorEstimado||"").replace("R$","").replace(",",".").trim());
+    if(!isNaN(v))g("valor-entrega").value=v.toFixed(2);
+  }
+
+  statusAtual="a_caminho";
+  g("entrega-status-txt").textContent="A caminho do passageiro";
+  const btn=g("btn-etapa-unica");
+  if(btn){btn.textContent="📍 Cheguei ao passageiro";btn.className="btn-etapa-unica";}
+  pararContadorEspera();
+
+  mostrarTela("tela-entrega-mot");
+  iniciarMapaEntregaMot();
+  escutarEntregaAtivaMot(entregaAtiva.id);
+  escutarNotifChatMot(entregaAtiva.id);
+}
+
+// ── NOTIFICAÇÃO DE NOVAS MENSAGENS (mesmo com chat fechado) ──
+let unsubNotifChatMot=null,_chatMotAberto=false;
+function escutarNotifChatMot(cId){
+  if(unsubNotifChatMot)unsubNotifChatMot();
+  let primeira=true;
+  unsubNotifChatMot=db.collection("ej_pedidos").doc(cId).collection("chat").orderBy("ts").onSnapshot(snap=>{
+    if(primeira){primeira=false;return;} // ignora histórico ao conectar
+    snap.docChanges().forEach(ch=>{
+      if(ch.type==="added"){
+        const m=ch.doc.data();
+        if(m.de==="motoboy")return; // não notifica a própria mensagem
+        if(!_chatMotAberto){
+          try{getAC();}catch(e){}
+          somMsgChatMot();
+          notif("💬 Nova mensagem",m.texto||"O passageiro enviou uma mensagem.");
+        }
+      }
+    });
+  });
+}
+
+// ── ETAPAS (botão único, progride sozinho, estilo Uber/99) ──
+let statusAtual="a_caminho",_contEspera=null,_segEspera=0;
+const RAIO_VALIDACAO_GPS=150; // metros de tolerância pra considerar "chegou"
+
+async function avancarEtapa(){
+  if(!entregaAtiva)return;
+  const btn=document.getElementById("btn-etapa-unica");
+  if(btn)btn.disabled=true;
+
+  if(statusAtual==="a_caminho"){
+    // Etapa 1 -> 2: precisa estar perto do PASSAGEIRO
+    const res=await validarProximidadeGPS(entregaAtiva.origemLat,entregaAtiva.origemLng,"o local do passageiro");
+    if(!res){if(btn)btn.disabled=false;return;}
+    statusAtual="cheguei";
+    document.getElementById("entrega-status-txt").textContent="Cheguei no local!";
+    if(btn){btn.textContent="🚗 Iniciar entrega";btn.className="btn-etapa-unica etapa-embarque";}
+    iniciarContadorEspera();
+    try{
+      const upd={statusEtapa:"cheguei",status:"motoboy_chegou"};
+      if(res&&res.forcado)upd.divergenciaChegada={motivo:res.motivo,distanciaM:res.distanciaM,em:new Date().toISOString()};
+      await db.collection("ej_pedidos").doc(entregaAtiva.id).update(upd);
+    }catch(e){}
+
+  }else if(statusAtual==="cheguei"){
+    // Etapa 2 -> 3: iniciar entrega, sem validação de GPS (passageiro já embarcou aqui mesmo)
+    statusAtual="no_carro";
+    document.getElementById("entrega-status-txt").textContent="A caminho do destino";
+    pararContadorEspera();
+    if(btn){btn.textContent="🏁 Concluir entrega";btn.className="btn-etapa-unica etapa-concluir";}
+    // Trocar a rota do mapa para o DESTINO agora
+    atualizarRotaParaDestino();
+    try{await db.collection("ej_pedidos").doc(entregaAtiva.id).update({statusEtapa:"no_carro",status:"a_caminho"});}catch(e){}
+
+  }else if(statusAtual==="no_carro"){
+    // Etapa 3 -> concluir: precisa estar perto do DESTINO
+    if(btn)btn.disabled=false;
+    concluirEntrega();
+    return;
+  }
+  if(btn)btn.disabled=false;
+}
+
+function atualizarRotaParaDestino(){
+  // Atualiza o marcador de destino no mapa (a navegação externa já foi ajustada em abrirNavegacao)
+  if(mapaEntregaMot&&entregaAtiva?.destinoLat&&entregaAtiva?.destinoLng){
+    if(marcDestinoMot)mapaEntregaMot.removeLayer(marcDestinoMot);
+    marcDestinoMot=L.marker([entregaAtiva.destinoLat,entregaAtiva.destinoLng]).addTo(mapaEntregaMot);
+    mapaEntregaMot.setView([entregaAtiva.destinoLat,entregaAtiva.destinoLng],14);
+  }
+}
+
+// Verifica se a posição atual do GPS está dentro do raio de tolerância de um ponto alvo
+function validarProximidadeGPS(alvoLat,alvoLng,nomeLocal,ehConclusao=false){
+  return new Promise(resolve=>{
+    if(!alvoLat||!alvoLng){resolve(true);return;} // sem coordenada salva, não bloqueia
+    if(!navigator.geolocation){resolve(true);return;}
+    toast("Verificando sua localização...");
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const distKm=dKmMot(pos.coords.latitude,pos.coords.longitude,alvoLat,alvoLng);
+      const distM=distKm*1000;
+      if(distM<=RAIO_VALIDACAO_GPS){
+        resolve(true);
+      }else{
+        mostrarModalGpsFora(nomeLocal,Math.round(distM),resolve,ehConclusao);
+      }
+    },()=>{
+      alert("Não foi possível confirmar sua localização. Ative o GPS e tente novamente.");
+      resolve(false);
+    },{enableHighAccuracy:true,timeout:8000});
+  });
+}
+
+function mostrarModalGpsFora(nomeLocal,distM,resolve,ehConclusao){
+  document.getElementById("gps-fora-titulo").textContent="Você ainda não chegou em "+nomeLocal;
+  document.getElementById("gps-fora-desc").textContent=`Você está a ${distM}m de distância.`;
+  document.getElementById("modal-gps-fora").classList.add("show");
+
+  const btnContinuar=document.getElementById("gps-fora-btn-continuar");
+  const btnForcar=document.getElementById("gps-fora-btn-forcar");
+  btnContinuar.textContent=ehConclusao?"Continuar a entrega":"Continuar buscando";
+  btnForcar.textContent=ehConclusao?"Encerrar entrega mesmo assim":"Confirmar mesmo assim";
+
+  const limpar=()=>{
+    btnContinuar.onclick=null;
+    btnForcar.onclick=null;
+    document.getElementById("modal-gps-fora").classList.remove("show");
+  };
+
+  btnContinuar.onclick=()=>{
+    limpar();
+    resolve(false); // vai tentar de novo
+  };
+  btnForcar.onclick=()=>{
+    limpar();
+    mostrarModalGpsMotivo(distM,resolve);
+  };
+}
+
+function mostrarModalGpsMotivo(distM,resolve){
+  document.getElementById("gps-motivo-texto").value="";
+  document.getElementById("modal-gps-motivo").classList.add("show");
+
+  const btnConfirmar=document.getElementById("gps-motivo-btn-confirmar");
+  const btnCancelar=document.getElementById("gps-motivo-btn-cancelar");
+
+  const limpar=()=>{
+    btnConfirmar.onclick=null;
+    btnCancelar.onclick=null;
+    document.getElementById("modal-gps-motivo").classList.remove("show");
+  };
+
+  btnConfirmar.onclick=()=>{
+    const motivo=document.getElementById("gps-motivo-texto").value.trim();
+    if(!motivo){toast("É necessário informar um motivo para continuar.");return;}
+    limpar();
+    resolve({forcado:true,motivo,distanciaM:distM});
+  };
+  btnCancelar.onclick=()=>{
+    limpar();
+    resolve(false);
+  };
+}
+
+function iniciarContadorEspera(){
+  _segEspera=0;
+  document.getElementById("contador-espera").style.display="block";
+  if(_contEspera)clearInterval(_contEspera);
+  _contEspera=setInterval(()=>{
+    _segEspera++;
+    const m=Math.floor(_segEspera/60),s=_segEspera%60;
+    document.getElementById("contador-espera-num").textContent=m+":"+(s<10?"0":"")+s;
+  },1000);
+}
+function pararContadorEspera(){
+  if(_contEspera){clearInterval(_contEspera);_contEspera=null;}
+  document.getElementById("contador-espera").style.display="none";
+}
+
+// ── NAVEGAÇÃO ──
+function abrirNavegacao(){
+  if(!corridaAtiva)return;
+  // Enquanto não iniciou a corrida (ainda buscando o passageiro), navega até o PASSAGEIRO.
+  // Depois de "no_carro" (corrida iniciada), navega até o DESTINO final.
+  if(statusAtual==="no_carro"){
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(corridaAtiva.destino)}&travelmode=driving`,"_blank");
+  }else if(corridaAtiva.origemLat&&corridaAtiva.origemLng){
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${corridaAtiva.origemLat},${corridaAtiva.origemLng}&travelmode=driving`,"_blank");
+  }else{
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(corridaAtiva.destino)}&travelmode=driving`,"_blank");
+  }
+}
+
+// ── CONCLUIR CORRIDA ──
+async function concluirCorrida(){
+  const valor=parseFloat(document.getElementById("valor-corrida").value);
+  if(!valor||valor<=0){toast("Informe o valor da corrida");return;}
+  if(!corridaAtiva)return;
+
+  // Validação por GPS: só pode concluir se estiver perto do DESTINO
+  const resDestino=await validarProximidadeGPS(corridaAtiva.destinoLat,corridaAtiva.destinoLng,"o destino da corrida",true);
+  if(!resDestino)return;
+
+  loading(true);
+  try{
+    const updConclusao={status:"concluida",valor,concluidoEm:firebase.firestore.FieldValue.serverTimestamp()};
+    if(resDestino&&resDestino.forcado)updConclusao.divergenciaConclusao={motivo:resDestino.motivo,distanciaM:resDestino.distanciaM,em:new Date().toISOString()};
+    await db.collection("ej_pedidos").doc(corridaAtiva.id).update(updConclusao);
+    const ng=(user.totalGanhos||0)+valor,nco=(user.totalCorridas||0)+1;
+    await db.collection("ej_motoboys").doc(user.id).update({totalGanhos:ng,totalCorridas:nco});
+    user.totalGanhos=ng;user.totalCorridas=nco;
+    localStorage.setItem("ejm_user",JSON.stringify(user));
+
+    const cIdConcluida=corridaAtiva.id,nomeConcluido=corridaAtiva.clienteNome;
+    somCorridaConcluida();
+    pararContadorEspera();
+    if(unsubCorridaAtivaMot){unsubCorridaAtivaMot();unsubCorridaAtivaMot=null;}
+    if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
+    if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
+    corridaAtiva=null;
+    statusAtual="a_caminho";
+    loading(false);
+    toast("Corrida concluída! 🎉");
+    // Reiniciar a escuta de novos pedidos (garante que não fique "surda" após concluir)
+    if(online)escutarPedidos();
+    // Avaliação obrigatória antes de continuar
+    setTimeout(()=>mostrarAvalMot(cIdConcluida,nomeConcluido),700);
+  }catch(e){loading(false);toast("Erro: "+e.message);}
+}
+
+// ── CANCELAR (com devolução de crédito) ──
+async function cancelarEntregaMotoboy(){
+  if(!entregaAtiva)return;
+  loading(true);
+  try{
+    const credDevolver=entregaAtiva.creditoDescontado||0;
+    await db.collection("ej_pedidos").doc(entregaAtiva.id).update({status:"cancelada_motoboy"});
+    if(credDevolver>0)await devolverCredito(entregaAtiva.id,credDevolver);
+    pararContadorEspera();
+    if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
+    if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
+    if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
+    entregaAtiva=null;
+    loading(false);
+    irPara("home");
+    if(online)escutarPedidos();
+  }catch(e){loading(false);irPara("home");}
+}
+
+// ── ESCUTAR CORRIDA ATIVA (detectar cancelamento do passageiro) ──
+let unsubEntregaAtivaMot=null;
+function escutarEntregaAtivaMot(id){
+  if(unsubEntregaAtivaMot)unsubEntregaAtivaMot();
+  unsubEntregaAtivaMot=db.collection("ej_pedidos").doc(id).onSnapshot(snap=>{
+    const d=snap.data();if(!d)return;
+    if(d.status==="cancelada_cliente"){
+      try{getAC();}catch(e){}
+      somCancelamentoMot();
+      notif("❌ Entrega cancelada","O passageiro cancelou a entrega.");
+      toast("Passageiro cancelou a entrega.");
+      pararContadorEspera();
+      if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
+      if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
+      if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
+      entregaAtiva=null;
+      irPara("home");
+      if(online)escutarPedidos();
+    }
+  });
+}
+
+// ── MAPA DA CORRIDA ──
+let mapaEntregaMot=null,marcDestinoMot=null;
+function iniciarMapaEntregaMot(){
+  if(!mapaEntregaMot){
+    mapaEntregaMot=L.map("mapa-entrega-mot",{zoomControl:true,attributionControl:false});
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18}).addTo(mapaEntregaMot);
+  }
+  setTimeout(()=>mapaEntregaMot.invalidateSize(),200);
+  if(posicaoAtual){
+    mapaEntregaMot.setView(posicaoAtual,14);
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 42" width="34" height="42"><circle cx="17" cy="9" r="8" fill="#fbbf24" stroke="#fff" stroke-width="2"/><path d="M3 40 Q3 25 17 23 Q31 25 31 40Z" fill="#fbbf24" stroke="#fff" stroke-width="2"/></svg>`;
+    L.marker(posicaoAtual,{icon:L.divIcon({html:`<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));">${svg}</div>`,className:"",iconSize:[34,42],iconAnchor:[17,40]})}).addTo(mapaEntregaMot);
+  }
+  if(entregaAtiva?.destinoLat&&entregaAtiva?.destinoLng){
+    marcDestinoMot=L.marker([entregaAtiva.destinoLat,entregaAtiva.destinoLng]).addTo(mapaEntregaMot);
+  }
+}
+
+// ── CHAT (motoboy) ──
+let unsubChatMot=null;
+function iniciarChatMot(cId){
+  if(unsubChatMot)unsubChatMot();
+  unsubChatMot=db.collection("ej_pedidos").doc(cId).collection("chat").orderBy("ts").onSnapshot(snap=>{
+    const msgs=document.getElementById("chat-msgs-mot");if(!msgs)return;
+    snap.docChanges().forEach(ch=>{
+      if(ch.type==="added"){
+        const m=ch.doc.data();
+        const isMinha=m.de==="motoboy";
+        const div=document.createElement("div");
+        div.className="msg "+(isMinha?"minha":"dele");
+        div.innerHTML=m.texto+`<div class="msg-time">${m.ts?new Date(m.ts.toDate()).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):"--"}</div>`;
+        msgs.appendChild(div);
+        msgs.scrollTop=msgs.scrollHeight;
+      }
+    });
+  });
+}
+function abrirChatMot(){
+  if(!entregaAtiva)return;
+  _chatMotAberto=true;
+  document.getElementById("modal-chat-mot").classList.add("show");
+  iniciarChatMot(entregaAtiva.id);
+}
+function fecharChatMot(){_chatMotAberto=false;document.getElementById("modal-chat-mot").classList.remove("show");}
+async function enviarMsgMot(){
+  const inp=document.getElementById("chat-inp-mot");
+  const txt=inp.value.trim();
+  if(!txt||!entregaAtiva)return;
+  inp.value="";
+  try{
+    await db.collection("ej_pedidos").doc(entregaAtiva.id).collection("chat").add({
+      texto:txt,de:"motoboy",nome:user?.nome||"Motoboy",ts:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(e){toast("Erro ao enviar: "+e.message);}
+}
+
+// ── AVALIAÇÃO OBRIGATÓRIA (motoboy avalia passageiro) ──
+let _avalMotNota=5,_avalMotEntregaId=null;
+function mostrarAvalMot(entregaId,nomePassageiro){
+  _avalMotEntregaId=entregaId;_avalMotNota=5;
+  document.getElementById("aval-mot-nome").textContent=nomePassageiro||"o passageiro";
+  document.getElementById("aval-mot-comentario").value="";
+  selEstrelaMot(5);
+  document.getElementById("modal-aval-mot").classList.add("show");
+}
+function selEstrelaMot(n){
+  _avalMotNota=n;
+  document.querySelectorAll(".estrela-mot").forEach((e,i)=>e.classList.toggle("on",i<n));
+}
+async function enviarAvalMot(){
+  if(!_avalMotCorridaId)return;
+  const comentario=document.getElementById("aval-mot-comentario").value.trim();
+  loading(true);
+  try{
+    await db.collection("ej_pedidos").doc(_avalMotCorridaId).update({
+      avaliacaoMotoboy:_avalMotNota,
+      comentarioMotoboy:comentario||null
+    });
+    // Atualiza o último comentário recebido pelo passageiro (se houver corrida + clienteId)
+    if(comentario){
+      try{
+        const cSnap=await db.collection("ej_pedidos").doc(_avalMotCorridaId).get();
+        const cData=cSnap.data();
+        if(cData?.clienteId&&!cData.clienteId.startsWith("anon_")){
+          await db.collection("ej_restaurantes").doc(cData.clienteId).update({ultimoComentario:comentario});
+        }
+      }catch(e){}
+    }
+    loading(false);
+    fecharAvalMot();
+    toast("Avaliação enviada! Obrigado. ⭐");
+    localStorage.removeItem("ejm_aval_pendente");
+    irPara("home");
+  }catch(e){loading(false);toast("Erro ao enviar avaliação.");}
+}
+function fecharAvalMot(){document.getElementById("modal-aval-mot").classList.remove("show");}
+
+
+// ── GANHOS COMPLETO ──
+async function carregarGanhos(){
+  if(!user)return;
+  const el=document.getElementById("lista-corridas-ganhos");
+  el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);'>Carregando...</div>";
+  try{
+    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).orderBy("criadoEm","desc").limit(30).get();
+    document.getElementById("total-ganhos").textContent="R$ "+(user.totalGanhos||0).toFixed(2).replace(".",",");
+    document.getElementById("total-entregas").textContent=user.totalEntregas||0;
+    document.getElementById("total-aval").textContent=user.avaliacao?"⭐ "+parseFloat(user.avaliacao).toFixed(1):"--";
+    document.getElementById("total-creditos").textContent="R$ "+(user.creditos||0).toFixed(0);
+    if(snap.empty){
+      el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);'>Nenhuma entrega ainda</div>";
+    }else{
+      el.innerHTML=snap.docs.map(d=>{
+        const c=d.data();
+        const concluida=c.status==="concluida";
+        const sc=concluida?"s-concluida":"s-cancelada";
+        const sl=concluida?"CONCLUÍDA":"CANCELADA";
+        return `<div class="corrida-hist-card">
+          <div class="corrida-hist-top"><div class="corrida-hist-status ${sc}">${sl}</div><div class="corrida-hist-data">${fmtData(c.criadoEm)}</div></div>
+          <div class="corrida-hist-rota">${(c.origem||"Origem")} → ${c.destino||"--"}</div>
+          <div class="corrida-hist-bottom"><div class="corrida-hist-passageiro">${c.clienteNome||"Anônimo"}</div><div class="corrida-hist-valor">R$ ${parseFloat(c.valor||0).toFixed(2).replace(".",",")}</div></div>
+        </div>`;
+      }).join("");
+    }
+    montarGrafico(snap.docs);
+  }catch(e){el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);'>Erro ao carregar</div>";}
+}
+
+// ── GRÁFICO (últimos 7 dias) ──
+function montarGrafico(docs){
+  const dias=[];
+  const hoje=new Date();
+  for(let i=6;i>=0;i--){
+    const d=new Date(hoje);d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
+    dias.push({data:d,total:0,label:d.toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","").slice(0,3)});
+  }
+  docs.forEach(doc=>{
+    const c=doc.data();
+    if(c.status!=="concluida"||!c.criadoEm)return;
+    const dt=c.criadoEm.toDate?c.criadoEm.toDate():new Date(c.criadoEm);
+    dt.setHours(0,0,0,0);
+    const dia=dias.find(d=>d.data.getTime()===dt.getTime());
+    if(dia)dia.total+=(c.valor||0);
+  });
+  const max=Math.max(...dias.map(d=>d.total),1);
+  const cont=document.getElementById("grafico-barras");
+  if(!cont)return;
+  cont.innerHTML=dias.map(d=>{
+    const altura=Math.max(3,(d.total/max)*90);
+    return `<div class="grafico-col"><div class="grafico-bar" style="height:${altura}px;" title="R$ ${d.total.toFixed(2)}"></div><div class="grafico-lb">${d.label}</div></div>`;
+  }).join("");
+}
+
+// ── META ──
+let metaPeriodoAtual="dia";
+function trocarPeriodoMeta(per){
+  metaPeriodoAtual=per;
+  document.querySelectorAll(".meta-per").forEach(b=>b.classList.toggle("ativo",b.dataset.per===per));
+  atualizarMetaView();
+}
+function abrirDefinirMeta(){
+  document.getElementById("meta-periodo-sel").value=metaPeriodoAtual;
+  const metas=JSON.parse(localStorage.getItem("ejm_metas")||"{}");
+  document.getElementById("meta-valor-input").value=metas[metaPeriodoAtual]||"";
+  document.getElementById("modal-meta").classList.add("show");
+}
+function salvarMeta(){
+  const per=document.getElementById("meta-periodo-sel").value;
+  const val=parseFloat(document.getElementById("meta-valor-input").value);
+  if(!val||val<=0){toast("Informe um valor válido");return;}
+  const metas=JSON.parse(localStorage.getItem("ejm_metas")||"{}");
+  metas[per]=val;
+  localStorage.setItem("ejm_metas",JSON.stringify(metas));
+  document.getElementById("modal-meta").classList.remove("show");
+  trocarPeriodoMeta(per);
+  toast("Meta salva! 🎯");
+}
+async function atualizarMetaView(){
+  const metas=JSON.parse(localStorage.getItem("ejm_metas")||"{}");
+  const alvo=metas[metaPeriodoAtual];
+  const semVal=document.getElementById("meta-sem-valor");
+  const comVal=document.getElementById("meta-com-valor");
+  if(!alvo){semVal.style.display="block";comVal.style.display="none";return;}
+  semVal.style.display="none";comVal.style.display="block";
+
+  // Calcular ganho do período
+  if(!user)return;
+  let inicio=new Date();
+  if(metaPeriodoAtual==="dia")inicio.setHours(0,0,0,0);
+  else if(metaPeriodoAtual==="semana"){const dia=inicio.getDay();inicio.setDate(inicio.getDate()-dia);inicio.setHours(0,0,0,0);}
+  else if(metaPeriodoAtual==="mes"){inicio.setDate(1);inicio.setHours(0,0,0,0);}
+
+  let atual=0;
+  try{
+    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).where("status","==","concluida").get();
+    snap.docs.forEach(d=>{
+      const c=d.data();
+      const dt=c.criadoEm&&c.criadoEm.toDate?c.criadoEm.toDate():new Date(0);
+      if(dt>=inicio)atual+=(c.valor||0);
+    });
+  }catch(e){}
+
+  document.getElementById("meta-atual-val").textContent="R$ "+atual.toFixed(2).replace(".",",");
+  document.getElementById("meta-alvo-val").textContent="R$ "+alvo.toFixed(2).replace(".",",");
+  const pct=Math.min(100,(atual/alvo)*100);
+  document.getElementById("meta-barra-prog").style.width=pct+"%";
+
+  const flagKey="ejm_meta_atingida_"+metaPeriodoAtual+"_"+inicio.toDateString();
+  if(atual>=alvo&&!localStorage.getItem(flagKey)){
+    localStorage.setItem(flagKey,"1");
+    tocarSomMeta();
+  }
+}
+function tocarSomMeta(){
+  try{
+    const c=getAC();
+    [523,659,784,1047].forEach((f,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);
+      o.frequency.setValueAtTime(f,c.currentTime+i*0.12);
+      g.gain.setValueAtTime(0,c.currentTime+i*0.12);
+      g.gain.linearRampToValueAtTime(0.7,c.currentTime+i*0.12+0.01);
+      g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+i*0.12+0.3);
+      o.start(c.currentTime+i*0.12);o.stop(c.currentTime+i*0.12+0.35);
+    });
+  }catch(e){}
+  toast("🎉 Meta atingida! Parabéns!");
+  if("speechSynthesis"in window){
+    try{const u=new SpeechSynthesisUtterance("Parabéns! Meta atingida!");u.lang="pt-BR";speechSynthesis.speak(u);}catch(e){}
+  }
+}
+
+// ── PERFIL COMPLETO ──
+function atualizarPerfil(){
+  if(!user)return;
+  const g=id=>document.getElementById(id);
+  g("perf-nome").textContent=user.nome||"--";
+  const av=g("perf-av");
+  if(user.foto)av.innerHTML=`<img src="${user.foto}"/>`;
+  else g("perf-initial").textContent="🚗";
+
+  const tc=user.totalEntregas||0;
+  const {nivel,grad}=nivelPorEntregas(tc);
+  if(g("perf-nivel"))g("perf-nivel").textContent="Motoboy "+nivel.split(" ")[1];
+  const ring=g("perf-av-ring");
+  if(ring)ring.style.setProperty("--nivel-grad",grad);
+
+  if(g("ps-entregas"))g("ps-entregas").textContent=tc;
+  if(g("ps-aval"))g("ps-aval").textContent=(user.avaliacao||5).toFixed(1);
+  if(g("ps-membro")){
+    let m="--";
+    if(user.criadoEm){const d=new Date(user.criadoEm);m=d.toLocaleDateString("pt-BR",{month:"short",year:"2-digit"});}
+    g("ps-membro").textContent=m;
+  }
+
+  if(g("pi-nome"))g("pi-nome").textContent=user.nome||"--";
+  if(g("pi-fone"))g("pi-fone").textContent=user.fone||"--";
+  if(g("pi-cpf"))g("pi-cpf").textContent=user.cpf||"Não informado";
+  const vMap={carro:"🚗 Carro",moto:"🏍️ Moto",van:"🚐 Van"};
+  if(g("pi-veiculo"))g("pi-veiculo").textContent=vMap[user.veiculo]||user.veiculo||"--";
+  if(g("pi-placa"))g("pi-placa").textContent=user.placa||"--";
+
+  // Alerta de avaliação baixa
+  const alerta=g("alerta-aval-baixa");
+  if(alerta)alerta.style.display=(user.avaliacao&&user.avaliacao<3.5)?"block":"none";
+}
+async function enviarExplicacaoAval(){
+  const txt=document.getElementById("explicacao-aval").value.trim();
+  if(!txt){toast("Escreva uma explicação antes de enviar");return;}
+  loading(true);
+  try{
+    await db.collection("ej_motoboys").doc(user.id).update({explicacaoAvaliacao:txt,explicacaoData:new Date().toISOString()});
+    loading(false);
+    toast("Explicação enviada ao administrador. ✓");
+    document.getElementById("explicacao-aval").value="";
+  }catch(e){loading(false);toast("Erro ao enviar.");}
+}
+
+function abrirEditarPerfilMot(){
+  if(!user)return;
+  document.getElementById("modal-editar-mot").classList.add("show");
+  document.getElementById("ed-nome-mot").value=user.nome||"";
+  document.getElementById("ed-fone-mot").value=user.fone||"";
+  document.getElementById("ed-cpf-mot").value=user.cpf||"";
+  document.getElementById("ed-veiculo-mot").value=user.veiculo||"carro";
+  document.getElementById("ed-placa-mot").value=user.placa||"";
+}
+async function salvarPerfilMot(){
+  const nome=document.getElementById("ed-nome-mot").value.trim();
+  const fone=document.getElementById("ed-fone-mot").value.trim();
+  const cpf=document.getElementById("ed-cpf-mot").value.trim();
+  const veiculo=document.getElementById("ed-veiculo-mot").value;
+  const placa=document.getElementById("ed-placa-mot").value.trim().toUpperCase();
+  if(!nome){toast("Informe seu nome");return;}
+  if(cpf&&!validarCPF(cpf)){toast("CPF inválido");return;}
+  loading(true);
+  try{
+    const upd={nome,fone,cpf,veiculo,placa};
+    await db.collection("ej_motoboys").doc(user.id).update(upd);
+    Object.assign(user,upd);
+    localStorage.setItem("ejm_user",JSON.stringify(user));
+    atualizarPerfil();atualizarHome();
+    document.getElementById("modal-editar-mot").classList.remove("show");
+    loading(false);
+    toast("Perfil atualizado! ✓");
+  }catch(e){loading(false);toast("Erro ao salvar.");}
+}
+function atualizarFotoPerfilMot(inp){
+  const f=inp.files[0];if(!f||!user)return;cropCtx="perfilmot";
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      cropImg=img;
+      const cw=260,ch=260,sw=cw/img.naturalWidth,sh=ch/img.naturalHeight;
+      cropBaseScale=Math.max(sw,sh);
+      cropBaseX=(cw-img.naturalWidth*cropBaseScale)/2;
+      cropBaseY=(ch-img.naturalHeight*cropBaseScale)/2;
+      cropScale=1;cropTX=0;cropTY=0;
+      desenharCrop();
+      document.getElementById("crop-overlay").style.display="flex";
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f);
+  inp.value="";
+}
+
+
+// ── COMPRAR CRÉDITOS ──
+let _credValorSel=100;
+function abrirComprarCreditosMot(){
+  document.getElementById("cred-valor-custom").value="";
+  document.getElementById("modal-cred-mot").classList.add("show");
+}
+function selCredValor(v,btn){
+  _credValorSel=v;
+  document.querySelectorAll(".cred-op").forEach(b=>b.classList.remove("ativo"));
+  btn.classList.add("ativo");
+  document.getElementById("cred-valor-custom").value="";
+}
+function copiarPixMot(){
+  navigator.clipboard.writeText("19982480386").then(()=>toast("Chave Pix copiada!")).catch(()=>toast("Chave: 19982480386"));
+}
+function avisarPagamentoMot(){
+  const custom=parseFloat(document.getElementById("cred-valor-custom").value);
+  const valor=custom>0?custom:_credValorSel;
+  const saldoAtual=user?.creditos||0;
+  if(saldoAtual+valor>CREDITO_MAX){
+    toast(`Saldo máximo é R$ ${CREDITO_MAX}. Você já tem R$ ${saldoAtual.toFixed(2)}.`);
+    return;
+  }
+  const msg=encodeURIComponent(`Olá! Fiz um Pix de R$ ${valor.toFixed(2)} para adicionar créditos no Entrega Já.\nMotoboy: ${user?.nome||""}\nWhatsApp: ${user?.fone||""}`);
+  window.open(`https://wa.me/5519982480386?text=${msg}`,"_blank");
+}
+
+// ── PWA ──
+(function(){
+  const logoUrl="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png";
+  document.getElementById("pwa-logo-img").src=logoUrl;
+  if(document.getElementById("apple-icon"))document.getElementById("apple-icon").href=logoUrl;
+  const m={name:"Entrega Já Motoboy",short_name:"CJ Motoboy",start_url:"./",display:"standalone",background_color:"#080f1e",theme_color:"#0f1a2e",lang:"pt-BR",icons:[{src:logoUrl,sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
+  document.getElementById("manifest-link").href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/json"}));
+  // Service Worker DESATIVADO temporariamente + remove qualquer SW antigo já instalado
+  // (evita ficar preso em cache de versões antigas enquanto o app está em desenvolvimento ativo)
+  if("serviceWorker"in navigator){
+    navigator.serviceWorker.getRegistrations().then(regs=>{
+      regs.forEach(reg=>reg.unregister());
+    }).catch(()=>{});
+    if(window.caches){
+      caches.keys().then(names=>{names.forEach(n=>caches.delete(n));}).catch(()=>{});
+    }
+  }
+  const dismissed=localStorage.getItem("ejm_pwa_ok");
+  const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+  let dp=null;
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;if(!standalone&&!dismissed)setTimeout(()=>{document.getElementById("pwa-banner").classList.add("show");setTimeout(()=>document.getElementById("pwa-banner").classList.remove("show"),5000);},3000);});
+  document.getElementById("btn-inst").addEventListener("click",async()=>{if(!dp)return;dp.prompt();const{outcome}=await dp.userChoice;dp=null;fecharPWA();if(outcome==="accepted")localStorage.setItem("ejm_pwa_ok","1");});
+  if(isIOS&&!standalone&&!dismissed)setTimeout(()=>{document.getElementById("ios-guide").classList.add("show");setTimeout(()=>document.getElementById("ios-guide").classList.remove("show"),8000);},3000);
+})();
+function fecharPWA(){document.getElementById("pwa-banner").classList.remove("show");document.getElementById("ios-guide").classList.remove("show");localStorage.setItem("ejm_pwa_ok","1");}
+
+// ── HISTÓRICO DE CORRIDAS (modal) ──
+async function abrirHistoricoMot(){
+  document.getElementById("modal-hist-mot").classList.add("show");
+  const el=document.getElementById("lista-hist-mot");
+  el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);font-size:13px;'>Carregando...</div>";
+  if(!user)return;
+  try{
+    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).orderBy("criadoEm","desc").limit(30).get();
+    if(snap.empty){el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);font-size:13px;'>Nenhuma entrega ainda</div>";return;}
+    el.innerHTML=snap.docs.map(d=>{
+      const c=d.data();
+      const concluida=c.status==="concluida";
+      const sc=concluida?"s-concluida":"s-cancelada";
+      const sl=concluida?"CONCLUÍDA":"CANCELADA";
+      return `<div class="corrida-hist-card">
+        <div class="corrida-hist-top"><div class="corrida-hist-status ${sc}">${sl}</div><div class="corrida-hist-data">${fmtData(c.criadoEm)}</div></div>
+        <div class="corrida-hist-rota">${(c.origem||"Origem")} → ${c.destino||"--"}</div>
+        <div class="corrida-hist-bottom"><div class="corrida-hist-passageiro">${c.clienteNome||"Anônimo"}</div><div class="corrida-hist-valor">R$ ${parseFloat(c.valor||0).toFixed(2).replace(".",",")}</div></div>
+      </div>`;
+    }).join("");
+  }catch(e){el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);font-size:13px;'>Erro ao carregar</div>";}
+}
+
+// ── CARDS WIDGET (home customizável) ──
+const CARDS_DISPONIVEIS=[
+  {id:"meta_dia",nome:"Meta do dia",desc:"Progresso da meta diária",icon:"🎯"},
+  {id:"meta_semana",nome:"Meta da semana",desc:"Progresso da meta semanal",icon:"🎯"},
+  {id:"meta_mes",nome:"Meta do mês",desc:"Progresso da meta mensal",icon:"🎯"},
+  {id:"ganhos_hoje",nome:"Ganhos de hoje",desc:"Total ganho no dia",icon:"💰"},
+  {id:"ganhos_semana",nome:"Ganhos da semana",desc:"Total ganho na semana",icon:"💰"},
+  {id:"entregas_hoje",nome:"Entregas hoje",desc:"Nº de entregas do dia",icon:"🚗"},
+  {id:"entregas_total",nome:"Total de entregas",desc:"Entregas desde o início",icon:"🚗"},
+  {id:"avaliacao",nome:"Avaliação",desc:"Sua nota média",icon:"⭐"},
+  {id:"grafico_semana",nome:"Gráfico da semana",desc:"Ganhos dos últimos 7 dias",icon:"📊"},
+];
+
+function getConfigCards(){
+  try{
+    const s=localStorage.getItem("ejm_cards");
+    if(s)return JSON.parse(s);
+  }catch(e){}
+  // padrão inicial: NENHUM card ativo (home começa vazia até o motoboy escolher)
+  const def=CARDS_DISPONIVEIS.map((c,i)=>({id:c.id,ativo:false,tam:1,ordem:i}));
+  localStorage.setItem("ejm_cards",JSON.stringify(def));
+  return def;
+}
+function saveConfigCards(cards){localStorage.setItem("ejm_cards",JSON.stringify(cards));}
+
+function getConfigPref(k,def){
+  const s=localStorage.getItem("ejm_pref_"+k);
+  return s===null?def:s==="1";
+}
+function setConfigPref(k,v){localStorage.setItem("ejm_pref_"+k,v?"1":"0");}
+
+// ── RENDERIZAR CARDS NA HOME ──
+async function renderCardsHome(){
+  const cont=document.getElementById("cards-container");
+  if(!cont||!user)return;
+  const cards=getConfigCards().filter(c=>c.ativo).sort((a,b)=>a.ordem-b.ordem);
+  if(cards.length===0){cont.innerHTML="";return;}
+
+  // Buscar dados necessários
+  const dados=await calcularDadosCards();
+
+  cont.innerHTML=cards.map((c,i)=>{
+    const info=CARDS_DISPONIVEIS.find(x=>x.id===c.id);
+    if(!info)return"";
+    const d=dados[c.id]||{val:"--",sub:""};
+    const tam=c.tam||1;
+    return `<div class="card-widget tam-${tam}" data-idx="${i}" data-id="${c.id}" ontouchstart="iniciaDragCard(event,${i})" ontouchmove="moveDragCard(event)" ontouchend="fimDragCard(event)">
+      <div class="card-widget-header"><div class="card-widget-titulo">${info.nome}</div><div class="card-widget-icon">${info.icon}</div></div>
+      <div class="card-widget-val">${d.val}</div>
+      <div class="card-widget-sub">${d.sub}</div>
+    </div>`;
+  }).join("");
+}
+
+async function calcularDadosCards(){
+  const dados={};
+  const tc=user?.totalEntregas||0;
+  dados.entregas_total={val:tc,sub:"desde o início"};
+  dados.avaliacao={val:(user?.avaliacao||5).toFixed(1)+" ⭐",sub:"média geral"};
+
+  if(!user)return dados;
+  try{
+    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).where("status","==","concluida").get();
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const inicioSemana=new Date(hoje);inicioSemana.setDate(inicioSemana.getDate()-inicioSemana.getDay());
+    const inicioMes=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+
+    let gHoje=0,gSemana=0,gMes=0,cHoje=0;
+    snap.docs.forEach(d=>{
+      const c=d.data();
+      const dt=c.criadoEm&&c.criadoEm.toDate?c.criadoEm.toDate():new Date(0);
+      const v=c.valor||0;
+      if(dt>=hoje){gHoje+=v;cHoje++;}
+      if(dt>=inicioSemana)gSemana+=v;
+      if(dt>=inicioMes)gMes+=v;
+    });
+    dados.ganhos_hoje={val:"R$ "+gHoje.toFixed(2).replace(".",","),sub:"hoje"};
+    dados.ganhos_semana={val:"R$ "+gSemana.toFixed(2).replace(".",","),sub:"esta semana"};
+    dados.entregas_hoje={val:cHoje,sub:"hoje"};
+
+    const metas=JSON.parse(localStorage.getItem("ejm_metas")||"{}");
+    if(metas.dia)dados.meta_dia={val:Math.round((gHoje/metas.dia)*100)+"%",sub:"R$ "+gHoje.toFixed(0)+" de R$ "+metas.dia.toFixed(0)};
+    else dados.meta_dia={val:"--",sub:"Defina em Meus Ganhos"};
+    if(metas.semana)dados.meta_semana={val:Math.round((gSemana/metas.semana)*100)+"%",sub:"R$ "+gSemana.toFixed(0)+" de R$ "+metas.semana.toFixed(0)};
+    else dados.meta_semana={val:"--",sub:"Defina em Meus Ganhos"};
+    if(metas.mes)dados.meta_mes={val:Math.round((gMes/metas.mes)*100)+"%",sub:"R$ "+gMes.toFixed(0)+" de R$ "+metas.mes.toFixed(0)};
+    else dados.meta_mes={val:"--",sub:"Defina em Meus Ganhos"};
+
+    dados.grafico_semana={val:"R$ "+gSemana.toFixed(2).replace(".",","),sub:"toque em Meus Ganhos p/ gráfico"};
+  }catch(e){}
+  return dados;
+}
+
+// ── DRAG DOS CARDS (segue o dedo de verdade, position:fixed) ──
+let _cardDragTO=null,_cardDragging=false,_cardDragIdx=null,_cardDragEl=null,_cardDragMoved=false;
+let _cardDragStartX=0,_cardDragStartY=0,_cardOffsetX=0,_cardOffsetY=0,_cardW=0,_cardH=0,_cardPlaceholder=null;
+
+function iniciaDragCard(e,idx){
+  const t=e.touches?e.touches[0]:e;
+  _cardDragStartX=t.clientX;_cardDragStartY=t.clientY;_cardDragMoved=false;
+  clearTimeout(_cardDragTO);
+  _cardDragTO=setTimeout(()=>{
+    if(_cardDragMoved)return;
+    _cardDragging=true;_cardDragIdx=idx;
+    _cardDragEl=document.querySelector(`.card-widget[data-idx="${idx}"]`);
+    if(!_cardDragEl)return;
+    const r=_cardDragEl.getBoundingClientRect();
+    _cardW=r.width;_cardH=r.height;
+    _cardOffsetX=t.clientX-r.left;_cardOffsetY=t.clientY-r.top;
+
+    // placeholder ocupa o lugar do card enquanto ele "flutua"
+    _cardPlaceholder=document.createElement("div");
+    _cardPlaceholder.className="card-widget-placeholder "+_cardDragEl.className.replace("card-widget","").trim();
+    _cardPlaceholder.style.width=r.width+"px";
+    _cardPlaceholder.style.height=r.height+"px";
+    _cardDragEl.parentNode.insertBefore(_cardPlaceholder,_cardDragEl);
+
+    _cardDragEl.style.width=r.width+"px";
+    _cardDragEl.style.height=r.height+"px";
+    _cardDragEl.style.left=r.left+"px";
+    _cardDragEl.style.top=r.top+"px";
+    _cardDragEl.classList.add("drag-ativo");
+
+    const cont=document.getElementById("cards-container");
+    if(cont)cont.classList.add("reordenando");
+    if(getConfigPref("vibra",true)&&navigator.vibrate)navigator.vibrate([50,20,50]);
+  },500);
+}
+
+function moveDragCard(e){
+  const t=e.touches?e.touches[0]:e;
+  if(!_cardDragging){
+    const dx=Math.abs(t.clientX-_cardDragStartX),dy=Math.abs(t.clientY-_cardDragStartY);
+    if(dx>10||dy>10){_cardDragMoved=true;clearTimeout(_cardDragTO);}
+    return;
+  }
+  e.preventDefault();
+  if(!_cardDragEl)return;
+
+  // O card flutuante segue o dedo de verdade (posição real, sem deformar)
+  _cardDragEl.style.left=(t.clientX-_cardOffsetX)+"px";
+  _cardDragEl.style.top=(t.clientY-_cardOffsetY)+"px";
+
+  // Detectar sobre qual outro card o dedo está passando, pra trocar o placeholder de lugar
+  const cont=document.getElementById("cards-container");
+  const items=[...cont.querySelectorAll(".card-widget:not(.drag-ativo)")];
+  for(const item of items){
+    const r=item.getBoundingClientRect();
+    if(t.clientX>r.left&&t.clientX<r.right&&t.clientY>r.top&&t.clientY<r.bottom){
+      const rectPh=_cardPlaceholder.getBoundingClientRect();
+      const goingDown=r.top>rectPh.top||(r.top===rectPh.top&&r.left>rectPh.left);
+      if(goingDown)item.after(_cardPlaceholder);else item.before(_cardPlaceholder);
+      break;
+    }
+  }
+}
+
+function fimDragCard(e){
+  clearTimeout(_cardDragTO);
+  const cont=document.getElementById("cards-container");
+  if(cont)cont.classList.remove("reordenando");
+  if(_cardDragging&&_cardDragEl&&_cardPlaceholder){
+    _cardDragging=false;
+    // Salvar nova ordem com base na posição final do placeholder no DOM
+    _cardPlaceholder.replaceWith(_cardDragEl);
+    _cardDragEl.classList.remove("drag-ativo");
+    _cardDragEl.style.position="";_cardDragEl.style.left="";_cardDragEl.style.top="";_cardDragEl.style.width="";_cardDragEl.style.height="";
+
+    const novaOrdemIds=[...cont.querySelectorAll(".card-widget")].map(el=>el.dataset.id);
+    const todos=getConfigCards();
+    novaOrdemIds.forEach((id,i)=>{
+      const c=todos.find(x=>x.id===id);
+      if(c)c.ordem=i;
+    });
+    saveConfigCards(todos);
+    if(getConfigPref("vibra",true)&&navigator.vibrate)navigator.vibrate(15);
+    renderCardsHome();
+  }
+  _cardDragEl=null;_cardPlaceholder=null;_cardDragMoved=false;
+}
+
+// ── TELA DE CONFIGURAÇÕES ──
+function renderConfigCards(){
+  const el=document.getElementById("lista-config-cards");
+  if(!el)return;
+  const cards=getConfigCards();
+  el.innerHTML=CARDS_DISPONIVEIS.map(info=>{
+    const c=cards.find(x=>x.id===info.id)||{ativo:false,tam:1};
+    const tam=c.tam||1;
+    return `<div class="config-card-item">
+      <div class="config-card-icon">${info.icon}</div>
+      <div class="config-card-info">
+        <div class="config-card-nome">${info.nome}</div>
+        <div class="config-card-desc">${info.desc}</div>
+        ${c.ativo?`<div class="config-tam-sel">
+          <button class="config-tam-btn ${tam===1?'ativo':''}" onclick="setTamCard('${info.id}',1)">Linha inteira</button>
+          <button class="config-tam-btn ${tam===2?'ativo':''}" onclick="setTamCard('${info.id}',2)">Metade (2 lado a lado)</button>
+          <button class="config-tam-btn ${tam===3?'ativo':''}" onclick="setTamCard('${info.id}',3)">Terço (3 lado a lado)</button>
+        </div>`:""}
+      </div>
+      <div class="config-toggle ${c.ativo?'on':''}" onclick="toggleCard('${info.id}')"></div>
+    </div>`;
+  }).join("");
+}
+function toggleCard(id){
+  const cards=getConfigCards();
+  const c=cards.find(x=>x.id===id);
+  if(c){
+    c.ativo=!c.ativo;
+    if(c.ativo&&!c.tam)c.tam=1;
+    if(c.ativo&&(c.ordem===undefined||c.ordem===null))c.ordem=Math.max(0,...cards.map(x=>x.ordem||0))+1;
+    saveConfigCards(cards);
+    renderConfigCards();
+    if(getConfigPref("vibra",true)&&navigator.vibrate)navigator.vibrate(20);
+  }
+}
+function setTamCard(id,tam){
+  const cards=getConfigCards();
+  const c=cards.find(x=>x.id===id);
+  if(c){c.tam=tam;saveConfigCards(cards);renderConfigCards();}
+}
+function toggleConfigPref(k){
+  const atual=getConfigPref(k,true);
+  setConfigPref(k,!atual);
+  const el=document.getElementById("cfg-"+k);
+  if(el)el.classList.toggle("on",!atual);
+  if(k==="notif"&&!atual)pedirNotif();
+}
+function abrirTelaConfig(){
+  renderConfigCards();
+  ["som","vibra","notif"].forEach(k=>{
+    const el=document.getElementById("cfg-"+k);
+    if(el)el.classList.toggle("on",getConfigPref(k,true));
+  });
+}
+
+
+function abrirCoberturaMot(){
+  toast("📍 Cobertura: Holambra, Jaguariúna, Arthur Nogueira, Mogi Mirim, Mogi Guaçu e Campinas");
+}
+
+// Reconectar a escuta de pedidos sempre que a aba voltar a ficar visível
+// (mitigação: navegadores pausam listeners em segundo plano)
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible"&&online&&!entregaAtiva){
+    escutarPedidos();
+  }
+});
+</script>
+</body>
+</html>
