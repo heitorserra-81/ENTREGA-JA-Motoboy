@@ -586,6 +586,10 @@ input[type=file]{display:none;}
 .btn-etapa-unica{width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#1a1a1a;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:14px;box-shadow:0 6px 18px rgba(245,158,11,0.4);transition:background 0.3s,box-shadow 0.3s;}
 .btn-etapa-unica.etapa-embarque{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 6px 18px rgba(59,130,246,0.4);}
 .btn-etapa-unica.etapa-concluir{background:linear-gradient(135deg,#22c55e,#4ade80);box-shadow:0 6px 18px rgba(34,197,94,0.4);color:#fff;}
+.motivo-cancel-btn{width:100%;padding:14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;}
+.motivo-cancel-btn.selecionado{background:rgba(239,68,68,0.1);border-color:#ef4444;color:#ef4444;}
+.modal-din{display:none!important;}
+.modal-din.show{display:flex!important;}
 </style></head>
 <body>
 <!-- CANVAS PARTÍCULAS -->
@@ -754,7 +758,7 @@ input[type=file]{display:none;}
     </div>
 
     <!-- BOTÃO ÚNICO DE PROGRESSO (muda de ação sozinho, como Uber/99) -->
-    <button class="btn-etapa-unica" id="btn-etapa-unica" onclick="avancarEtapa()">📍 Cheguei ao passageiro</button>
+    <button class="btn-etapa-unica" id="btn-etapa-unica" onclick="avancarEtapa()">📍 Cheguei ao restaurante</button>
 
     <div id="contador-espera" style="display:none;">
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Aguardando passageiro</div>
@@ -1256,6 +1260,72 @@ input[type=file]{display:none;}
 </div>
 
 <!-- TOAST / LOADING -->
+<!-- MODAL: RETIRADA DA ENCOMENDA -->
+<div id="modal-retirada" class="modal-din" style="position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="width:100%;max-width:400px;padding:0 18px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:22px;padding:24px;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:32px;margin-bottom:8px;">📦</div>
+        <div style="font-size:17px;font-weight:800;color:#fff;">Pronto para retirada</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;" id="retirada-restaurante-nome">--</div>
+      </div>
+      <div style="background:var(--card2);border-radius:14px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Itens</div>
+        <div id="retirada-itens" style="font-size:13px;color:var(--text);line-height:1.6;">--</div>
+      </div>
+      <div id="retirada-maquininha-aviso" style="display:none;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:11px;margin-bottom:14px;font-size:12px;color:#f59e0b;font-weight:700;">🖥️ Não esqueça de levar a maquininha do restaurante</div>
+      <button onclick="confirmarRetiradaEncomenda()" class="btn-p" style="width:100%;">✅ Retirei a encomenda</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAÇÃO DE PAGAMENTO (motoboy) -->
+<div id="modal-confirma-pgto" class="modal-din" style="position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="width:100%;max-width:400px;padding:0 18px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:22px;padding:24px;">
+      <div style="text-align:center;margin-bottom:18px;">
+        <div style="font-size:32px;margin-bottom:8px;">💰</div>
+        <div style="font-size:17px;font-weight:800;color:#fff;">Confirme para liberar sua rota</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px;">Você já recebeu o valor desta entrega do restaurante?</div>
+      </div>
+      <button onclick="confirmarPagamentoRecebido()" class="btn-p" style="width:100%;margin-bottom:10px;">✅ Sim, recebi</button>
+      <button onclick="abrirNaoRecebi()" style="width:100%;padding:13px;border-radius:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">❌ Não recebi ainda</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NÃO RECEBI - PERGUNTA SE QUER CANCELAR -->
+<div id="modal-nao-recebi" class="modal-din" style="position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="width:100%;max-width:400px;padding:0 18px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:22px;padding:24px;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;">Deseja cancelar esta entrega?</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;">Cancelamentos por falta de pagamento geram multa ao restaurante e ficam registrados. Use esse recurso apenas quando o pagamento realmente não foi realizado — isso ajuda a manter os melhores restaurantes na plataforma, tanto quanto os melhores motoboys.</div>
+      </div>
+      <button onclick="abrirMotivoCancelamentoPgto()" style="width:100%;padding:14px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;">Sim, cancelar entrega</button>
+      <button onclick="fecharNaoRecebi()" class="btn-p" style="width:100%;">Aguardar mais um pouco</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MOTIVO DO CANCELAMENTO POR NÃO PAGAMENTO -->
+<div id="modal-motivo-cancel-pgto" class="modal-din" style="position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.94);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;">
+  <div style="background:var(--card);border-radius:24px 24px 0 0;border-top:1px solid var(--border);padding:22px;padding-bottom:max(30px,calc(env(safe-area-inset-bottom,0px)+22px));width:100%;">
+    <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:14px;">Qual foi o motivo?</div>
+    <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px;">
+      <button onclick="selecionarMotivoCancelPgto('Restaurante não realizou o pagamento')" class="motivo-cancel-btn">Restaurante não realizou o pagamento</button>
+      <button onclick="selecionarMotivoCancelPgto('Não consegui contato com o restaurante')" class="motivo-cancel-btn">Não consegui contato com o restaurante</button>
+      <button onclick="selecionarMotivoCancelPgto('Outro motivo')" class="motivo-cancel-btn">Outro motivo</button>
+    </div>
+    <div id="motivo-cancel-outro-campo" style="display:none;margin-bottom:16px;">
+      <textarea id="motivo-cancel-texto" placeholder="Descreva o que aconteceu..." style="width:100%;min-height:80px;background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;"></textarea>
+    </div>
+    <button onclick="confirmarCancelamentoPorPagamento()" style="width:100%;padding:14px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:9px;">Confirmar cancelamento</button>
+    <button onclick="fecharMotivoCancelPgto()" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Voltar</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 <div id="loading"><div class="ld-spin"></div></div>
 
@@ -1963,30 +2033,30 @@ async function devolverCredito(entregaId,valor){
 async function entrarTelaEntrega(){
   if(!entregaAtiva)return;
   const g=id=>document.getElementById(id);
-  g("pass-nome").textContent=entregaAtiva.clienteNome||"Passageiro";
+  g("pass-nome").textContent=entregaAtiva.clienteNome||"Restaurante";
   g("pass-destino").textContent=entregaAtiva.destino||"--";
-  if(entregaAtiva.clienteFoto)g("pass-foto").innerHTML=`<img src="${corridaAtiva.clienteFoto}"/>`;
-  else g("pass-foto").innerHTML="<span>👤</span>";
-  if(entregaAtiva.obs){g("pass-obs").textContent="📝 "+entregaAtiva.obs;g("pass-obs").style.display="block";}else g("pass-obs").style.display="none";
+  g("pass-foto").innerHTML="<span>🏪</span>"; // card enxuto, sem foto
+
+  if(entregaAtiva.itensDetalhados&&entregaAtiva.itensDetalhados.length>0){
+    const linhas=entregaAtiva.itensDetalhados.map(i=>`${i.qtd}x ${i.nome}`).join(", ");
+    g("pass-obs").textContent="📦 "+linhas;g("pass-obs").style.display="block";
+  }else if(entregaAtiva.obs){
+    g("pass-obs").textContent="📦 "+entregaAtiva.obs;g("pass-obs").style.display="block";
+  }else g("pass-obs").style.display="none";
 
   const pgtoIcones={Dinheiro:"💵",Pix:"📱",Débito:"💳",Crédito:"💳"};
   let txtPgto=(pgtoIcones[entregaAtiva.formaPgto]||"💰")+" "+(entregaAtiva.formaPgto||"Não informado");
   if(entregaAtiva.formaPgto==="Dinheiro"&&entregaAtiva.trocoPara)txtPgto+=" · Troco p/ "+entregaAtiva.trocoPara;
   g("entrega-pgto-info").textContent=txtPgto;
 
-  // Valor inicial sugerido
-  if(entregaAtiva.origemLat&&entregaAtiva.origemLng&&posicaoAtual){
-    const km=dKmMot(posicaoAtual[0],posicaoAtual[1],entregaAtiva.origemLat,entregaAtiva.origemLng);
-    g("valor-entrega").value=calcularValorPorDistancia(km).toFixed(2);
-  }else if(entregaAtiva.valorEstimado){
-    const v=parseFloat((entregaAtiva.valorEstimado||"").replace("R$","").replace(",",".").trim());
-    if(!isNaN(v))g("valor-entrega").value=v.toFixed(2);
-  }
+  // Valor total já vem definido pelo restaurante (subtotal + taxa de entrega, se houver)
+  const valorTotal=entregaAtiva.valorTotal||entregaAtiva.valorPedido;
+  if(g("valor-entrega"))g("valor-entrega").value=valorTotal?valorTotal.toFixed(2):"";
 
   statusAtual="a_caminho";
-  g("entrega-status-txt").textContent="A caminho do passageiro";
+  g("entrega-status-txt").textContent="A caminho do restaurante";
   const btn=g("btn-etapa-unica");
-  if(btn){btn.textContent="📍 Cheguei ao passageiro";btn.className="btn-etapa-unica";}
+  if(btn){btn.textContent="📍 Cheguei ao restaurante";btn.className="btn-etapa-unica";}
   pararContadorEspera();
 
   mostrarTela("tela-entrega-mot");
@@ -2026,28 +2096,25 @@ async function avancarEtapa(){
   if(btn)btn.disabled=true;
 
   if(statusAtual==="a_caminho"){
-    // Etapa 1 -> 2: precisa estar perto do PASSAGEIRO
-    const res=await validarProximidadeGPS(entregaAtiva.origemLat,entregaAtiva.origemLng,"o local do passageiro");
+    // Etapa 1 -> 2: precisa estar perto do RESTAURANTE
+    const res=await validarProximidadeGPS(entregaAtiva.origemLat,entregaAtiva.origemLng,"o restaurante");
     if(!res){if(btn)btn.disabled=false;return;}
     statusAtual="cheguei";
-    document.getElementById("entrega-status-txt").textContent="Cheguei no local!";
-    if(btn){btn.textContent="🚗 Iniciar entrega";btn.className="btn-etapa-unica etapa-embarque";}
-    iniciarContadorEspera();
+    document.getElementById("entrega-status-txt").textContent="Chegou no restaurante!";
     try{
       const upd={statusEtapa:"cheguei",status:"motoboy_chegou"};
       if(res&&res.forcado)upd.divergenciaChegada={motivo:res.motivo,distanciaM:res.distanciaM,em:new Date().toISOString()};
       await db.collection("ej_pedidos").doc(entregaAtiva.id).update(upd);
     }catch(e){}
+    // Abre a tela de retirada da encomenda (não libera o botão único ainda)
+    abrirModalRetirada();
+    if(btn)btn.disabled=false;
+    return;
 
   }else if(statusAtual==="cheguei"){
-    // Etapa 2 -> 3: iniciar entrega, sem validação de GPS (passageiro já embarcou aqui mesmo)
-    statusAtual="no_carro";
-    document.getElementById("entrega-status-txt").textContent="A caminho do destino";
-    pararContadorEspera();
-    if(btn){btn.textContent="🏁 Concluir entrega";btn.className="btn-etapa-unica etapa-concluir";}
-    // Trocar a rota do mapa para o DESTINO agora
-    atualizarRotaParaDestino();
-    try{await db.collection("ej_pedidos").doc(entregaAtiva.id).update({statusEtapa:"no_carro",status:"a_caminho"});}catch(e){}
+    // Não deveria chegar aqui diretamente - o fluxo passa por confirmarRetiradaEncomenda() e confirmarPagamentoRecebido()
+    if(btn)btn.disabled=false;
+    return;
 
   }else if(statusAtual==="no_carro"){
     // Etapa 3 -> concluir: precisa estar perto do DESTINO
@@ -2056,6 +2123,108 @@ async function avancarEtapa(){
     return;
   }
   if(btn)btn.disabled=false;
+}
+
+// ── RETIRADA DA ENCOMENDA ──
+function abrirModalRetirada(){
+  document.getElementById("retirada-restaurante-nome").textContent=entregaAtiva.clienteNome||"Restaurante";
+  const itensEl=document.getElementById("retirada-itens");
+  if(entregaAtiva.itensDetalhados&&entregaAtiva.itensDetalhados.length>0){
+    itensEl.innerHTML=entregaAtiva.itensDetalhados.map(i=>`${i.qtd}x ${i.nome}`).join("<br/>");
+  }else{
+    itensEl.textContent=entregaAtiva.obs||"Não especificado";
+  }
+  const maqEl=document.getElementById("retirada-maquininha-aviso");
+  maqEl.style.display=entregaAtiva.precisaMaquininha?"block":"none";
+  document.getElementById("modal-retirada").classList.add("show");
+}
+function confirmarRetiradaEncomenda(){
+  document.getElementById("modal-retirada").classList.remove("show");
+  abrirModalConfirmaPgto();
+}
+
+// ── CONFIRMAÇÃO DE PAGAMENTO ──
+function abrirModalConfirmaPgto(){
+  document.getElementById("modal-confirma-pgto").classList.add("show");
+}
+async function confirmarPagamentoRecebido(){
+  document.getElementById("modal-confirma-pgto").classList.remove("show");
+  statusAtual="no_carro";
+  document.getElementById("entrega-status-txt").textContent="A caminho do cliente";
+  const btn=document.getElementById("btn-etapa-unica");
+  if(btn){btn.textContent="🏁 Concluir entrega";btn.className="btn-etapa-unica etapa-concluir";}
+  atualizarRotaParaDestino();
+  try{
+    await db.collection("ej_pedidos").doc(entregaAtiva.id).update({statusEtapa:"no_carro",status:"a_caminho",pagamentoConfirmado:true});
+  }catch(e){}
+}
+
+function abrirNaoRecebi(){
+  document.getElementById("modal-confirma-pgto").classList.remove("show");
+  document.getElementById("modal-nao-recebi").classList.add("show");
+}
+function fecharNaoRecebi(){
+  document.getElementById("modal-nao-recebi").classList.remove("show");
+  document.getElementById("modal-confirma-pgto").classList.add("show");
+}
+
+let _motivoCancelPgtoSel=null;
+function abrirMotivoCancelamentoPgto(){
+  document.getElementById("modal-nao-recebi").classList.remove("show");
+  document.getElementById("modal-motivo-cancel-pgto").classList.add("show");
+  _motivoCancelPgtoSel=null;
+  document.getElementById("motivo-cancel-outro-campo").style.display="none";
+  document.getElementById("motivo-cancel-texto").value="";
+  document.querySelectorAll(".motivo-cancel-btn").forEach(b=>b.classList.remove("selecionado"));
+}
+function selecionarMotivoCancelPgto(motivo){
+  _motivoCancelPgtoSel=motivo;
+  document.querySelectorAll(".motivo-cancel-btn").forEach(b=>b.classList.toggle("selecionado",b.textContent===motivo));
+  document.getElementById("motivo-cancel-outro-campo").style.display=motivo==="Outro motivo"?"block":"none";
+}
+function fecharMotivoCancelPgto(){
+  document.getElementById("modal-motivo-cancel-pgto").classList.remove("show");
+  document.getElementById("modal-nao-recebi").classList.add("show");
+}
+async function confirmarCancelamentoPorPagamento(){
+  if(!_motivoCancelPgtoSel){toast("Selecione um motivo");return;}
+  let motivoFinal=_motivoCancelPgtoSel;
+  if(_motivoCancelPgtoSel==="Outro motivo"){
+    const texto=document.getElementById("motivo-cancel-texto").value.trim();
+    if(!texto){toast("Descreva o motivo");return;}
+    motivoFinal=texto;
+  }
+  loading(true);
+  try{
+    const credDevolver=entregaAtiva.creditoDescontado||0;
+    await db.collection("ej_pedidos").doc(entregaAtiva.id).update({
+      status:"cancelada_pagamento_nao_realizado",
+      motivoCancelamentoMotoboy:motivoFinal,
+      canceladoEm:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Devolve o crédito ao motoboy (ele não recebeu, não deveria pagar pela tentativa)
+    if(credDevolver>0)await devolverCredito(entregaAtiva.id,credDevolver);
+    // Registra a multa pendente do restaurante (revisável pelo admin no painel)
+    try{
+      await db.collection("ej_pedidos").doc(entregaAtiva.id).collection("multas").add({
+        restauranteId:entregaAtiva.clienteId,
+        motoboyId:user.id,
+        motivo:motivoFinal,
+        status:"pendente_revisao",
+        criadoEm:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }catch(e){}
+
+    document.getElementById("modal-motivo-cancel-pgto").classList.remove("show");
+    pararContadorEspera();
+    if(unsubEntregaAtivaMot){unsubEntregaAtivaMot();unsubEntregaAtivaMot=null;}
+    if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
+    entregaAtiva=null;statusAtual="a_caminho";
+    loading(false);
+    irPara("home");
+    if(online)escutarPedidos();
+    toast("Entrega cancelada. Créditos devolvidos.");
+  }catch(e){loading(false);toast("Erro: "+e.message);}
 }
 
 function atualizarRotaParaDestino(){
@@ -2156,45 +2325,45 @@ function pararContadorEspera(){
 
 // ── NAVEGAÇÃO ──
 function abrirNavegacao(){
-  if(!corridaAtiva)return;
+  if(!entregaAtiva)return;
   // Enquanto não iniciou a corrida (ainda buscando o passageiro), navega até o PASSAGEIRO.
   // Depois de "no_carro" (corrida iniciada), navega até o DESTINO final.
   if(statusAtual==="no_carro"){
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(corridaAtiva.destino)}&travelmode=driving`,"_blank");
-  }else if(corridaAtiva.origemLat&&corridaAtiva.origemLng){
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${corridaAtiva.origemLat},${corridaAtiva.origemLng}&travelmode=driving`,"_blank");
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(entregaAtiva.destino)}&travelmode=driving`,"_blank");
+  }else if(entregaAtiva.origemLat&&entregaAtiva.origemLng){
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${entregaAtiva.origemLat},${entregaAtiva.origemLng}&travelmode=driving`,"_blank");
   }else{
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(corridaAtiva.destino)}&travelmode=driving`,"_blank");
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(entregaAtiva.destino)}&travelmode=driving`,"_blank");
   }
 }
 
 // ── CONCLUIR CORRIDA ──
-async function concluirCorrida(){
+async function concluirEntrega(){
   const valor=parseFloat(document.getElementById("valor-corrida").value);
   if(!valor||valor<=0){toast("Informe o valor da corrida");return;}
-  if(!corridaAtiva)return;
+  if(!entregaAtiva)return;
 
   // Validação por GPS: só pode concluir se estiver perto do DESTINO
-  const resDestino=await validarProximidadeGPS(corridaAtiva.destinoLat,corridaAtiva.destinoLng,"o destino da corrida",true);
+  const resDestino=await validarProximidadeGPS(entregaAtiva.destinoLat,entregaAtiva.destinoLng,"o destino da corrida",true);
   if(!resDestino)return;
 
   loading(true);
   try{
     const updConclusao={status:"concluida",valor,concluidoEm:firebase.firestore.FieldValue.serverTimestamp()};
     if(resDestino&&resDestino.forcado)updConclusao.divergenciaConclusao={motivo:resDestino.motivo,distanciaM:resDestino.distanciaM,em:new Date().toISOString()};
-    await db.collection("ej_pedidos").doc(corridaAtiva.id).update(updConclusao);
+    await db.collection("ej_pedidos").doc(entregaAtiva.id).update(updConclusao);
     const ng=(user.totalGanhos||0)+valor,nco=(user.totalCorridas||0)+1;
     await db.collection("ej_motoboys").doc(user.id).update({totalGanhos:ng,totalCorridas:nco});
     user.totalGanhos=ng;user.totalCorridas=nco;
     localStorage.setItem("ejm_user",JSON.stringify(user));
 
-    const cIdConcluida=corridaAtiva.id,nomeConcluido=corridaAtiva.clienteNome;
+    const cIdConcluida=entregaAtiva.id,nomeConcluido=entregaAtiva.clienteNome;
     somCorridaConcluida();
     pararContadorEspera();
     if(unsubCorridaAtivaMot){unsubCorridaAtivaMot();unsubCorridaAtivaMot=null;}
     if(unsubChatMot){unsubChatMot();unsubChatMot=null;}
     if(unsubNotifChatMot){unsubNotifChatMot();unsubNotifChatMot=null;}
-    corridaAtiva=null;
+    entregaAtiva=null;
     statusAtual="a_caminho";
     loading(false);
     toast("Corrida concluída! 🎉");
