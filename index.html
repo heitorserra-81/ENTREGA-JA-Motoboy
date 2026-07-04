@@ -2660,16 +2660,25 @@ async function enviarAvalMot(){
       avaliacaoMotoboy:_avalMotNota,
       comentarioMotoboy:comentario||null
     });
-    // Atualiza o último comentário recebido pelo passageiro (se houver corrida + clienteId)
-    if(comentario){
-      try{
-        const cSnap=await db.collection("ej_pedidos").doc(_avalMotEntregaId).get();
-        const cData=cSnap.data();
-        if(cData?.clienteId&&!cData.clienteId.startsWith("anon_")){
-          await db.collection("ej_restaurantes").doc(cData.clienteId).update({ultimoComentario:comentario});
+    // Atualiza a média de avaliação do restaurante (rolling average) e o último comentário, se houver
+    try{
+      const cSnap=await db.collection("ej_pedidos").doc(_avalMotEntregaId).get();
+      const cData=cSnap.data();
+      if(cData?.clienteId&&!cData.clienteId.startsWith("anon_")){
+        const restRef=db.collection("ej_restaurantes").doc(cData.clienteId);
+        const restSnap=await restRef.get();
+        if(restSnap.exists){
+          const rd=restSnap.data();
+          const totalAtual=rd.totalAvaliacoes||0;
+          const mediaAtual=rd.avaliacao||5;
+          const novoTotal=totalAtual+1;
+          const novaMedia=((mediaAtual*totalAtual)+_avalMotNota)/novoTotal;
+          const upd={avaliacao:novaMedia,totalAvaliacoes:novoTotal};
+          if(comentario)upd.ultimoComentario=comentario;
+          await restRef.update(upd);
         }
-      }catch(e){}
-    }
+      }
+    }catch(e){}
     loading(false);
     fecharAvalMot();
     toast("Avaliação enviada! Obrigado. ⭐");
