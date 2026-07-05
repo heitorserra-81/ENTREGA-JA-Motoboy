@@ -1030,11 +1030,19 @@ input[type=file]{display:none;}
     </div>
   </div>
 
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin:0 14px 14px;font-size:12px;color:var(--text);text-align:center;" id="ganhos-comparativo">Carregando comparativo...</div>
+
   <!-- GRÁFICO -->
   <div class="grafico-card">
     <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Ganhos dos últimos 7 dias</div>
     <div id="grafico-barras" class="grafico-barras"></div>
   </div>
+
+  <div class="secao-titulo">🏪 Quem mais paga</div>
+  <div id="ganhos-ranking-restaurantes" style="margin:0 14px 14px;"></div>
+
+  <div class="secao-titulo">⏰ Seu horário de pico</div>
+  <div id="ganhos-horario-pico" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin:0 14px 14px;"></div>
 
   <div class="secao-titulo">Histórico de entregas</div>
   <div id="lista-corridas-ganhos"></div>
@@ -3067,7 +3075,8 @@ async function carregarGanhos(){
   const el=document.getElementById("lista-corridas-ganhos");
   el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);'>Carregando...</div>";
   try{
-    const lista=(await _getPedidosMot()).slice(0,30);
+    const todos=await _getPedidosMot();
+    const lista=todos.slice(0,30);
     document.getElementById("total-ganhos").textContent="R$ "+(user.totalGanhos||0).toFixed(2).replace(".",",");
     document.getElementById("total-entregas").textContent=user.totalEntregas||0;
     document.getElementById("total-aval").textContent=user.avaliacao?"⭐ "+parseFloat(user.avaliacao).toFixed(1):"--";
@@ -3086,20 +3095,75 @@ async function carregarGanhos(){
         </div>`;
       }).join("");
     }
-    montarGrafico(snap.docs);
+    montarGrafico(todos);
+
+    // ── Comparado a ontem ──
+    const concluidos=todos.filter(c=>c.status==="concluida");
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const ontem=new Date(hoje);ontem.setDate(ontem.getDate()-1);
+    const dtDe=c=>c.criadoEm&&c.criadoEm.toDate?c.criadoEm.toDate():new Date(0);
+    const gHoje=concluidos.filter(c=>dtDe(c)>=hoje).reduce((s,c)=>s+(c.valor||0),0);
+    const gOntem=concluidos.filter(c=>dtDe(c)>=ontem&&dtDe(c)<hoje).reduce((s,c)=>s+(c.valor||0),0);
+    const elComp=document.getElementById("ganhos-comparativo");
+    if(elComp){
+      if(gOntem>0){
+        const pct=Math.round(((gHoje-gOntem)/gOntem)*100);
+        elComp.innerHTML=`Hoje: <b style="color:var(--dourado);">R$ ${gHoje.toFixed(2).replace(".",",")}</b> · Ontem: R$ ${gOntem.toFixed(2).replace(".",",")} · <b style="color:${pct>=0?"var(--verde)":"#ef4444"};">${pct>=0?"+":""}${pct}%</b>`;
+      }else{
+        elComp.innerHTML=gHoje>0?`Hoje: <b style="color:var(--dourado);">R$ ${gHoje.toFixed(2).replace(".",",")}</b> · sem dados de ontem pra comparar`:"Ainda sem entregas hoje";
+      }
+    }
+
+    // ── Ranking de restaurantes que mais pagam/mais chamam ──
+    const restaurantes={};
+    concluidos.forEach(c=>{
+      const nome=c.clienteNome;if(!nome)return;
+      if(!restaurantes[nome])restaurantes[nome]={qtd:0,valor:0};
+      restaurantes[nome].qtd++;restaurantes[nome].valor+=(c.valor||0);
+    });
+    const rankingRest=Object.entries(restaurantes).sort((a,b)=>b[1].valor-a[1].valor).slice(0,5);
+    const elRankRest=document.getElementById("ganhos-ranking-restaurantes");
+    if(elRankRest){
+      elRankRest.innerHTML=rankingRest.length?rankingRest.map(([nome,d],i)=>`
+        <div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:11px;margin-bottom:7px;">
+          <div style="font-size:16px;">${i===0?"👑":"🏪"}</div>
+          <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;">${nome}</div><div style="font-size:10px;color:var(--muted);">${d.qtd} entrega${d.qtd!==1?"s":""}</div></div>
+          <div style="font-size:12px;font-weight:800;color:var(--dourado);">R$ ${d.valor.toFixed(2).replace(".",",")}</div>
+        </div>`).join(""):"<div style='text-align:center;padding:14px;color:var(--muted);font-size:12px;'>Sem dados ainda</div>";
+    }
+
+    // ── Horário de pico (quando mais ganha) ──
+    const porHora=new Array(24).fill(0);
+    concluidos.forEach(c=>{porHora[dtDe(c).getHours()]++;});
+    const maxHora=Math.max(...porHora);
+    const elPico=document.getElementById("ganhos-horario-pico");
+    if(elPico){
+      if(maxHora===0){
+        elPico.innerHTML="<div style='text-align:center;padding:14px;color:var(--muted);font-size:12px;'>Sem dados ainda</div>";
+      }else{
+        elPico.innerHTML=porHora.map((qtd,h)=>{
+          if(qtd===0)return"";
+          const pct=Math.round(qtd/maxHora*100);
+          return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="width:42px;font-size:10px;font-weight:700;color:var(--muted);text-align:right;flex-shrink:0;">${h}h-${h+1}h</div>
+            <div style="flex:1;height:18px;background:var(--card2);border-radius:6px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--dourado2),var(--dourado));"></div></div>
+            <div style="width:22px;font-size:10px;font-weight:800;color:var(--dourado);flex-shrink:0;">${qtd}</div>
+          </div>`;
+        }).join("");
+      }
+    }
   }catch(e){el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);'>Erro ao carregar</div>";}
 }
 
 // ── GRÁFICO (últimos 7 dias) ──
-function montarGrafico(docs){
+function montarGrafico(lista){
   const dias=[];
   const hoje=new Date();
   for(let i=6;i>=0;i--){
     const d=new Date(hoje);d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
     dias.push({data:d,total:0,label:d.toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","").slice(0,3)});
   }
-  docs.forEach(doc=>{
-    const c=doc.data();
+  lista.forEach(c=>{
     if(c.status!=="concluida"||!c.criadoEm)return;
     const dt=c.criadoEm.toDate?c.criadoEm.toDate():new Date(c.criadoEm);
     dt.setHours(0,0,0,0);
@@ -3369,15 +3433,23 @@ async function abrirHistoricoMot(){
 
 // ── CARDS WIDGET (home customizável) ──
 const CARDS_DISPONIVEIS=[
-  {id:"meta_dia",nome:"Meta do dia",desc:"Progresso da meta diária",icon:"🎯"},
-  {id:"meta_semana",nome:"Meta da semana",desc:"Progresso da meta semanal",icon:"🎯"},
-  {id:"meta_mes",nome:"Meta do mês",desc:"Progresso da meta mensal",icon:"🎯"},
-  {id:"ganhos_hoje",nome:"Ganhos de hoje",desc:"Total ganho no dia",icon:"💰"},
-  {id:"ganhos_semana",nome:"Ganhos da semana",desc:"Total ganho na semana",icon:"💰"},
-  {id:"entregas_hoje",nome:"Entregas hoje",desc:"Nº de entregas do dia",icon:"🚗"},
-  {id:"entregas_total",nome:"Total de entregas",desc:"Entregas desde o início",icon:"🚗"},
-  {id:"avaliacao",nome:"Avaliação",desc:"Sua nota média",icon:"⭐"},
-  {id:"grafico_semana",nome:"Gráfico da semana",desc:"Ganhos dos últimos 7 dias",icon:"📊"},
+  {id:"ganhos_hoje",nome:"Ganhos de hoje",desc:"Total ganho no dia",icon:"💰",cat:"💰 Ganhos"},
+  {id:"ganhos_semana",nome:"Ganhos da semana",desc:"Total ganho na semana",icon:"💰",cat:"💰 Ganhos"},
+  {id:"ganhos_mes",nome:"Ganhos do mês",desc:"Total ganho no mês",icon:"💰",cat:"💰 Ganhos"},
+  {id:"comparativo_ontem",nome:"Comparado a ontem",desc:"Ganhos vs. ontem",icon:"📈",cat:"💰 Ganhos"},
+  {id:"ticket_medio",nome:"Ganho médio por entrega",desc:"Valor médio de cada corrida",icon:"🧾",cat:"💰 Ganhos"},
+  {id:"meta_dia",nome:"Meta do dia",desc:"Progresso da meta diária",icon:"🎯",cat:"💰 Ganhos"},
+  {id:"meta_semana",nome:"Meta da semana",desc:"Progresso da meta semanal",icon:"🎯",cat:"💰 Ganhos"},
+  {id:"meta_mes",nome:"Meta do mês",desc:"Progresso da meta mensal",icon:"🎯",cat:"💰 Ganhos"},
+  {id:"entregas_hoje",nome:"Entregas hoje",desc:"Nº de entregas do dia",icon:"🚗",cat:"📦 Entregas"},
+  {id:"entregas_semana",nome:"Entregas da semana",desc:"Nº de entregas na semana",icon:"🚗",cat:"📦 Entregas"},
+  {id:"entregas_total",nome:"Total de entregas",desc:"Entregas desde o início",icon:"🚗",cat:"📦 Entregas"},
+  {id:"ultima_entrega",nome:"Última entrega",desc:"Status da mais recente",icon:"🕐",cat:"📦 Entregas"},
+  {id:"grafico_semana",nome:"Gráfico da semana",desc:"Ganhos dos últimos 7 dias",icon:"📊",cat:"📦 Entregas"},
+  {id:"avaliacao",nome:"Avaliação",desc:"Sua nota média",icon:"⭐",cat:"🏆 Desempenho"},
+  {id:"melhor_cliente",nome:"Quem mais paga",desc:"Restaurante que mais te paga",icon:"👑",cat:"🏆 Desempenho"},
+  {id:"horario_pico",nome:"Seu horário de pico",desc:"Quando você mais ganha",icon:"⏰",cat:"🏆 Desempenho"},
+  {id:"credito_saldo",nome:"Saldo de créditos",desc:"Créditos disponíveis",icon:"💳",cat:"🏆 Desempenho"},
 ];
 
 function getConfigCards(){
@@ -3385,8 +3457,8 @@ function getConfigCards(){
     const s=localStorage.getItem("ejm_cards");
     if(s)return JSON.parse(s);
   }catch(e){}
-  // padrão inicial: NENHUM card ativo (home começa vazia até o motoboy escolher)
-  const def=CARDS_DISPONIVEIS.map((c,i)=>({id:c.id,ativo:false,tam:1,ordem:i}));
+  // padrão inicial: alguns cards úteis já ligados, o resto o motoboy escolhe
+  const def=CARDS_DISPONIVEIS.map((c,i)=>({id:c.id,ativo:["ganhos_hoje","entregas_hoje","avaliacao","meta_dia"].includes(c.id),tam:1,ordem:i}));
   localStorage.setItem("ejm_cards",JSON.stringify(def));
   return def;
 }
@@ -3413,7 +3485,7 @@ async function renderCardsHome(){
     if(!info)return"";
     const d=dados[c.id]||{val:"--",sub:""};
     const tam=c.tam||1;
-    return `<div class="card-widget tam-${tam}" data-idx="${i}" data-id="${c.id}" ontouchstart="iniciaDragCard(event,${i})" ontouchmove="moveDragCard(event)" ontouchend="fimDragCard(event)">
+    return `<div class="card-widget tam-${tam}" data-idx="${i}" data-id="${c.id}" onclick="abrirDetalheCardMot('${c.id}')" ontouchstart="iniciaDragCard(event,${i})" ontouchmove="moveDragCard(event)" ontouchend="fimDragCard(event)">
       <div class="card-widget-header"><div class="card-widget-titulo">${info.nome}</div><div class="card-widget-icon">${info.icon}</div></div>
       <div class="card-widget-val">${d.val}</div>
       <div class="card-widget-sub">${d.sub}</div>
@@ -3423,29 +3495,54 @@ async function renderCardsHome(){
 
 async function calcularDadosCards(){
   const dados={};
-  const tc=user?.totalEntregas||0;
-  dados.entregas_total={val:tc,sub:"desde o início"};
   dados.avaliacao={val:(user?.avaliacao||5).toFixed(1)+" ⭐",sub:"média geral"};
+  dados.credito_saldo={val:"R$ "+(user?.creditos||0).toFixed(0),sub:"disponível"};
 
   if(!user)return dados;
   try{
-    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).where("status","==","concluida").get();
+    const todos=await _getPedidosMot();
+    const concluidos=todos.filter(c=>c.status==="concluida");
+    dados.entregas_total={val:concluidos.length,sub:"desde o início"};
+
     const hoje=new Date();hoje.setHours(0,0,0,0);
+    const ontem=new Date(hoje);ontem.setDate(ontem.getDate()-1);
     const inicioSemana=new Date(hoje);inicioSemana.setDate(inicioSemana.getDate()-inicioSemana.getDay());
     const inicioMes=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+    const dtDe=c=>c.criadoEm&&c.criadoEm.toDate?c.criadoEm.toDate():new Date(0);
 
-    let gHoje=0,gSemana=0,gMes=0,cHoje=0;
-    snap.docs.forEach(d=>{
-      const c=d.data();
-      const dt=c.criadoEm&&c.criadoEm.toDate?c.criadoEm.toDate():new Date(0);
-      const v=c.valor||0;
-      if(dt>=hoje){gHoje+=v;cHoje++;}
-      if(dt>=inicioSemana)gSemana+=v;
+    let gHoje=0,gOntem=0,gSemana=0,gMes=0,cHoje=0,cSemana=0;
+    const clientesContagem={};
+    const porHora=new Array(24).fill(0);
+    concluidos.forEach(c=>{
+      const dt=dtDe(c);const v=c.valor||0;
+      if(dt>=hoje){gHoje+=v;cHoje++;porHora[dt.getHours()]++;}
+      if(dt>=ontem&&dt<hoje)gOntem+=v;
+      if(dt>=inicioSemana){gSemana+=v;cSemana++;}
       if(dt>=inicioMes)gMes+=v;
+      if(c.clienteNome){if(!clientesContagem[c.clienteNome])clientesContagem[c.clienteNome]={qtd:0,valor:0};clientesContagem[c.clienteNome].qtd++;clientesContagem[c.clienteNome].valor+=v;}
     });
     dados.ganhos_hoje={val:"R$ "+gHoje.toFixed(2).replace(".",","),sub:"hoje"};
     dados.ganhos_semana={val:"R$ "+gSemana.toFixed(2).replace(".",","),sub:"esta semana"};
+    dados.ganhos_mes={val:"R$ "+gMes.toFixed(2).replace(".",","),sub:"este mês"};
     dados.entregas_hoje={val:cHoje,sub:"hoje"};
+    dados.entregas_semana={val:cSemana,sub:"esta semana"};
+    dados.ticket_medio={val:cHoje>0?"R$ "+(gHoje/cHoje).toFixed(2).replace(".",","):"--",sub:"por entrega hoje"};
+
+    if(gOntem>0){
+      const pct=Math.round(((gHoje-gOntem)/gOntem)*100);
+      dados.comparativo_ontem={val:(pct>=0?"+":"")+pct+"%",sub:"vs. ontem"};
+    }else{
+      dados.comparativo_ontem={val:gHoje>0?"🎉":"--",sub:"sem dados de ontem"};
+    }
+
+    const rankingClientes=Object.entries(clientesContagem).sort((a,b)=>b[1].valor-a[1].valor);
+    dados.melhor_cliente=rankingClientes.length?{val:rankingClientes[0][0],sub:"R$ "+rankingClientes[0][1].valor.toFixed(2).replace(".",",")+" no total"}:{val:"--",sub:"sem dados ainda"};
+
+    const picoIdx=porHora.indexOf(Math.max(...porHora));
+    dados.horario_pico=Math.max(...porHora)>0?{val:picoIdx+"h-"+(picoIdx+1)+"h",sub:"mais entregas hoje"}:{val:"--",sub:"sem dados ainda"};
+
+    if(todos[0])dados.ultima_entrega={val:todos[0].status==="concluida"?"Concluída":"Cancelada",sub:(todos[0].destino||"").split(",")[0]||"--"};
+    else dados.ultima_entrega={val:"--",sub:"nenhuma ainda"};
 
     const metas=JSON.parse(localStorage.getItem("ejm_metas")||"{}");
     if(metas.dia)dados.meta_dia={val:Math.round((gHoje/metas.dia)*100)+"%",sub:"R$ "+gHoje.toFixed(0)+" de R$ "+metas.dia.toFixed(0)};
@@ -3459,9 +3556,31 @@ async function calcularDadosCards(){
   }catch(e){}
   return dados;
 }
+// ── DRILL-DOWN DOS CARDS DO MOTOBOY ──
+function abrirDetalheCardMot(cardId){
+  if(_cardFoiDrag){_cardFoiDrag=false;return;}
+  if(!user)return;
+  // Cards que já têm tela própria: leva direto pra ela em vez de um drill genérico
+  if(["meta_dia","meta_semana","meta_mes","grafico_semana","ganhos_hoje","ganhos_semana","ganhos_mes","comparativo_ontem","ticket_medio","entregas_hoje","entregas_semana","entregas_total","melhor_cliente","horario_pico"].includes(cardId)){
+    irPara("ganhos");
+    return;
+  }
+  if(cardId==="ultima_entrega"){
+    irPara("ganhos");
+    return;
+  }
+  if(cardId==="credito_saldo"){
+    abrirTelaConfig();
+    return;
+  }
+  if(cardId==="avaliacao"){
+    irPara("ganhos");
+    return;
+  }
+}
 
 // ── DRAG DOS CARDS (segue o dedo de verdade, position:fixed) ──
-let _cardDragTO=null,_cardDragging=false,_cardDragIdx=null,_cardDragEl=null,_cardDragMoved=false;
+let _cardDragTO=null,_cardDragging=false,_cardDragIdx=null,_cardDragEl=null,_cardDragMoved=false,_cardFoiDrag=false;
 let _cardDragStartX=0,_cardDragStartY=0,_cardOffsetX=0,_cardOffsetY=0,_cardW=0,_cardH=0,_cardPlaceholder=null;
 
 function iniciaDragCard(e,idx){
@@ -3530,6 +3649,7 @@ function fimDragCard(e){
   if(cont)cont.classList.remove("reordenando");
   if(_cardDragging&&_cardDragEl&&_cardPlaceholder){
     _cardDragging=false;
+    _cardFoiDrag=true;
     // Salvar nova ordem com base na posição final do placeholder no DOM
     _cardPlaceholder.replaceWith(_cardDragEl);
     _cardDragEl.classList.remove("drag-ativo");
@@ -3553,22 +3673,27 @@ function renderConfigCards(){
   const el=document.getElementById("lista-config-cards");
   if(!el)return;
   const cards=getConfigCards();
-  el.innerHTML=CARDS_DISPONIVEIS.map(info=>{
-    const c=cards.find(x=>x.id===info.id)||{ativo:false,tam:1};
-    const tam=c.tam||1;
-    return `<div class="config-card-item">
-      <div class="config-card-icon">${info.icon}</div>
-      <div class="config-card-info">
-        <div class="config-card-nome">${info.nome}</div>
-        <div class="config-card-desc">${info.desc}</div>
-        ${c.ativo?`<div class="config-tam-sel">
-          <button class="config-tam-btn ${tam===1?'ativo':''}" onclick="setTamCard('${info.id}',1)">Linha inteira</button>
-          <button class="config-tam-btn ${tam===2?'ativo':''}" onclick="setTamCard('${info.id}',2)">Metade (2 lado a lado)</button>
-          <button class="config-tam-btn ${tam===3?'ativo':''}" onclick="setTamCard('${info.id}',3)">Terço (3 lado a lado)</button>
-        </div>`:""}
-      </div>
-      <div class="config-toggle ${c.ativo?'on':''}" onclick="toggleCard('${info.id}')"></div>
-    </div>`;
+  const categorias=[...new Set(CARDS_DISPONIVEIS.map(c=>c.cat))];
+  el.innerHTML=categorias.map(cat=>{
+    const doGrupo=CARDS_DISPONIVEIS.filter(info=>info.cat===cat);
+    return`<div style="font-size:11px;font-weight:800;color:var(--dourado);text-transform:uppercase;letter-spacing:0.5px;margin:16px 16px 8px;">${cat}</div>`+
+    doGrupo.map(info=>{
+      const c=cards.find(x=>x.id===info.id)||{ativo:false,tam:1};
+      const tam=c.tam||1;
+      return `<div class="config-card-item">
+        <div class="config-card-icon">${info.icon}</div>
+        <div class="config-card-info">
+          <div class="config-card-nome">${info.nome}</div>
+          <div class="config-card-desc">${info.desc}</div>
+          ${c.ativo?`<div class="config-tam-sel">
+            <button class="config-tam-btn ${tam===1?'ativo':''}" onclick="setTamCard('${info.id}',1)">Linha inteira</button>
+            <button class="config-tam-btn ${tam===2?'ativo':''}" onclick="setTamCard('${info.id}',2)">Metade (2 lado a lado)</button>
+            <button class="config-tam-btn ${tam===3?'ativo':''}" onclick="setTamCard('${info.id}',3)">Terço (3 lado a lado)</button>
+          </div>`:""}
+        </div>
+        <div class="config-toggle ${c.ativo?'on':''}" onclick="toggleCard('${info.id}')"></div>
+      </div>`;
+    }).join("");
   }).join("");
 }
 function toggleCard(id){
