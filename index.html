@@ -1202,6 +1202,7 @@ input[type=file]{display:none;}
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:6px;" id="ped-stats">⭐ 5.0 · 0 entregas</div>
       <div id="ped-espera" style="display:none;font-size:11px;font-weight:700;color:#f59e0b;margin-top:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:20px;padding:3px 12px;"></div>
+      <div id="ped-favorito" style="display:none;font-size:11px;font-weight:700;color:var(--dourado);margin-top:4px;background:rgba(251,191,36,0.12);border:1px solid var(--dourado);border-radius:20px;padding:3px 12px;">⭐ Você é o favorito deste negócio!</div>
     </div>
 
     <!-- Último comentário -->
@@ -1978,6 +1979,40 @@ async function carregarConfigRotaAuto(){
   }catch(e){}
 }
 let _escutaPedidosIniciadaEm=null;
+let _pedidosEsperandoFavorito={};
+function _avaliarEExibirPedido(entregaComId){
+  if(entregaAtiva&&CONFIG_ROTA_AUTO.ativa&&posicaoAtual){
+    calcularSugestaoRota(entregaComId).then(sugestao=>{
+      if(sugestao){
+        if(!pedidoAtual)mostrarSugestaoRota(entregaComId,sugestao);
+      }else{
+        if(!pedidoAtual&&(!entregaAtiva||(multiStopAtivo()&&filaEntregas.length===0)))mostrarPedido(entregaComId);
+      }
+    });
+    return;
+  }
+  mostrarPedido(entregaComId);
+}
+// A cada 5s, reavalia pedidos que estavam na janela exclusiva de outro motoboy favorito — se já passou dos 30s
+// e ninguém aceitou ainda, libera pra este motoboy ver normalmente.
+setInterval(async()=>{
+  const ids=Object.keys(_pedidosEsperandoFavorito);
+  for(const id of ids){
+    const item=_pedidosEsperandoFavorito[id];
+    const expiraEm=item.favoritoExpiraEm&&item.favoritoExpiraEm.toDate?item.favoritoExpiraEm.toDate().getTime():0;
+    if(Date.now()<expiraEm)continue;
+    delete _pedidosEsperandoFavorito[id];
+    try{
+      const snap=await db.collection("ej_pedidos").doc(id).get();
+      if(!snap.exists)continue;
+      const d=snap.data();
+      if(d.status!=="aguardando")continue; // já foi aceito ou cancelado nesse meio tempo
+      const podeReceberNovo=!pedidoAtual&&(!entregaAtiva||(multiStopAtivo()&&filaEntregas.length===0));
+      if(!podeReceberNovo)continue;
+      _avaliarEExibirPedido({...d,id});
+    }catch(e){}
+  }
+},5000);
 function escutarPedidos(){
   if(unsubPedidos)unsubPedidos();
   _escutaPedidosIniciadaEm=Date.now();
@@ -1996,19 +2031,16 @@ function escutarPedidos(){
           return; // pedido abandonado há mais de 20min, provavelmente lixo de teste
         }
         const entregaComId={...d,id:change.doc.id,_idadeMin:idadeMin};
-        // Se já tem uma entrega em foco, multi-stop ligado e detecção automática ativa no painel,
-        // primeiro avalia se esse novo pedido está "no caminho" da rota atual antes do card padrão.
-        if(entregaAtiva&&CONFIG_ROTA_AUTO.ativa&&posicaoAtual){
-          calcularSugestaoRota(entregaComId).then(sugestao=>{
-            if(sugestao){
-              if(!pedidoAtual)mostrarSugestaoRota(entregaComId,sugestao);
-            }else{
-              if(!pedidoAtual&&(!entregaAtiva||(multiStopAtivo()&&filaEntregas.length===0)))mostrarPedido(entregaComId);
-            }
-          });
+
+        // Motoboy favorito: se o restaurante tem um favorito e não sou eu, aguardo os 30s de exclusividade dele.
+        const temFavorito=d.motoboyFavoritoId;
+        const souFavorito=temFavorito===user.id;
+        const expiraFavorito=d.favoritoExpiraEm&&d.favoritoExpiraEm.toDate?d.favoritoExpiraEm.toDate().getTime():0;
+        if(temFavorito&&!souFavorito&&expiraFavorito>Date.now()){
+          _pedidosEsperandoFavorito[entregaComId.id]=entregaComId;
           return;
         }
-        mostrarPedido(entregaComId);
+        _avaliarEExibirPedido(entregaComId);
       }
       if(change.type==="modified"&&pedidoAtual&&change.doc.id===pedidoAtual.id){
         const d=change.doc.data();
@@ -2115,6 +2147,7 @@ async function mostrarPedido(entrega){
   }else{
     esperaEl.style.display="none";
   }
+  g("ped-favorito").style.display=(entrega.motoboyFavoritoId===user.id)?"inline-block":"none";
 
   // Card enxuto: sem foto, só texto (economiza cota do Firestore e carrega mais rápido)
   const av=g("ped-foto");
@@ -2442,7 +2475,7 @@ async function avancarEtapa(){
   }else if(statusAtual==="no_carro"){
     // Etapa 3 -> concluir: precisa estar perto do DESTINO
     if(btn)btn.disabled=false;
-    concluirEntrega();
+    abrirFotoComprovante();
     return;
   }
   if(btn)btn.disabled=false;
@@ -2702,6 +2735,10 @@ function criarModalNotinhaMot(){
             <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Cliente</div>
             <div id="nm-cliente" style="font-size:13px;color:#333;font-weight:700;">--</div>
           </div>
+          <div style="background:#fff8e1;border-radius:10px;padding:10px 12px;margin-bottom:10px;border:1px dashed #e8c766;" id="nm-obsextra-row">
+            <div style="font-size:10px;color:#9a7b0f;font-weight:700;text-transform:uppercase;margin-bottom:3px;">📝 Observações</div>
+            <div id="nm-obsextra" style="font-size:13px;color:#333;font-weight:600;">--</div>
+          </div>
           <div style="background:#f7f7f7;border-radius:10px;padding:10px 12px;">
             <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Entregar em</div>
             <div id="nm-endereco" style="font-size:12px;color:#333;">--</div>
@@ -2743,6 +2780,10 @@ function abrirNotinhaMot(){
   if(d.nomeClienteFinal){clienteRow.style.display="block";document.getElementById("nm-cliente").textContent=d.nomeClienteFinal;}
   else clienteRow.style.display="none";
 
+  const obsExtraRow=document.getElementById("nm-obsextra-row");
+  if(d.obsExtra){obsExtraRow.style.display="block";document.getElementById("nm-obsextra").textContent=d.obsExtra;}
+  else obsExtraRow.style.display="none";
+
   document.getElementById("nm-endereco").textContent=d.destino||"--";
   document.getElementById("modal-notinha-mot").classList.add("show");
 }
@@ -2783,7 +2824,62 @@ function avancarProximaDaFilaOuHome(){
     if(online)escutarPedidos();
   }
 }
-async function concluirEntrega(){
+// ── FOTO DE COMPROVANTE DA ENTREGA (prova se o cliente disser que não recebeu) ──
+let _fotoComprovanteCanvas=null;
+function criarModalFotoComprovante(){
+  const div=document.createElement("div");
+  div.innerHTML=`<div class="modal-base" id="modal-foto-comprovante">
+    <div class="modal-sheet">
+      <div style="text-align:center;font-size:36px;margin-bottom:8px;">📸</div>
+      <div style="font-size:16px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;">Foto da entrega</div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.5;">Tire uma foto de onde deixou a encomenda — serve como prova caso o cliente diga que não recebeu.</div>
+      <div id="fc-preview" onclick="document.getElementById('fc-input').click()" style="width:100%;height:180px;border-radius:16px;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--muted);margin-bottom:14px;overflow:hidden;cursor:pointer;">📷</div>
+      <input type="file" id="fc-input" accept="image/*" capture="environment" style="display:none;" onchange="processarFotoComprovante(this)"/>
+      <button id="fc-btn-concluir" onclick="confirmarConclusaoComFoto()" style="width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;">✓ Concluir entrega</button>
+      <button onclick="document.getElementById('modal-foto-comprovante').classList.remove('show')" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Cancelar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+function abrirFotoComprovante(){
+  if(!document.getElementById("modal-foto-comprovante"))criarModalFotoComprovante();
+  _fotoComprovanteCanvas=null;
+  document.getElementById("fc-preview").innerHTML="📷";
+  document.getElementById("fc-btn-concluir").textContent="✓ Concluir entrega (sem foto)";
+  document.getElementById("modal-foto-comprovante").classList.add("show");
+}
+function processarFotoComprovante(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const cv=document.createElement("canvas");
+      const maxW=640,scale=Math.min(1,maxW/img.naturalWidth);
+      cv.width=img.naturalWidth*scale;cv.height=img.naturalHeight*scale;
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      _fotoComprovanteCanvas=cv;
+      document.getElementById("fc-preview").innerHTML=`<img src="${cv.toDataURL("image/jpeg",0.8)}" style="width:100%;height:100%;object-fit:cover;"/>`;
+      document.getElementById("fc-btn-concluir").textContent="✓ Concluir entrega";
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f);
+  inp.value="";
+}
+async function confirmarConclusaoComFoto(){
+  document.getElementById("modal-foto-comprovante").classList.remove("show");
+  if(_fotoComprovanteCanvas){
+    loading(true);
+    try{
+      const url=await uploadFotoSupabase(_fotoComprovanteCanvas,"comprovantes/"+entregaAtiva.id);
+      await concluirEntrega(url);
+    }catch(e){loading(false);toast("Não foi possível enviar a foto, concluindo sem ela: "+e.message);await concluirEntrega(null);}
+  }else{
+    await concluirEntrega(null);
+  }
+}
+async function concluirEntrega(fotoComprovante){
   const valor=parseFloat(document.getElementById("valor-corrida").value);
   if(!valor||valor<=0){toast("Informe o valor da corrida");return;}
   if(!entregaAtiva)return;
@@ -2795,6 +2891,7 @@ async function concluirEntrega(){
   loading(true);
   try{
     const updConclusao={status:"concluida",valor,concluidoEm:firebase.firestore.FieldValue.serverTimestamp()};
+    if(fotoComprovante)updConclusao.fotoComprovante=fotoComprovante;
     if(resDestino&&resDestino.forcado)updConclusao.divergenciaConclusao={motivo:resDestino.motivo,distanciaM:resDestino.distanciaM,em:new Date().toISOString()};
     await db.collection("ej_pedidos").doc(entregaAtiva.id).update(updConclusao);
     const ng=(user.totalGanhos||0)+valor,nco=(user.totalCorridas||0)+1;
