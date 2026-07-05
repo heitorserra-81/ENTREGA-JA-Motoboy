@@ -1779,14 +1779,25 @@ async function carregarGanhosHome(){
     if(g("aval-media"))g("aval-media").textContent=na>0?"⭐ "+(ta/na).toFixed(1):(user.avaliacao?"⭐ "+parseFloat(user.avaliacao).toFixed(1):"--");
   }catch(e){}
 }
+let _drillPedidosMotCache=null,_drillPedidosMotTs=0;
+async function _getPedidosMot(){
+  if(_drillPedidosMotCache&&Date.now()-_drillPedidosMotTs<60000)return _drillPedidosMotCache;
+  const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).get();
+  _drillPedidosMotCache=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>{
+    const ta=a.criadoEm&&a.criadoEm.toMillis?a.criadoEm.toMillis():0,tb=b.criadoEm&&b.criadoEm.toMillis?b.criadoEm.toMillis():0;
+    return tb-ta;
+  });
+  _drillPedidosMotTs=Date.now();
+  return _drillPedidosMotCache;
+}
 async function carregarHistHome(){
   if(!user)return;
   try{
-    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).where("status","==","concluida").orderBy("criadoEm","desc").limit(3).get();
+    const todos=await _getPedidosMot();
+    const lista=todos.filter(c=>c.status==="concluida").slice(0,3);
     const el=document.getElementById("lista-hist-home");if(!el)return;
-    if(snap.empty){el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);font-size:13px;'>Nenhuma entrega ainda</div>";return;}
-    el.innerHTML=snap.docs.map(d=>{
-      const c=d.data();
+    if(lista.length===0){el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);font-size:13px;'>Nenhuma entrega ainda</div>";return;}
+    el.innerHTML=lista.map(c=>{
       return `<div class="hist-item"><div class="hist-icon">🚗</div><div class="hist-info"><div class="hist-local">${c.destino||"--"}</div><div class="hist-data">${fmtData(c.criadoEm)}</div></div><div class="hist-valor">R$ ${parseFloat(c.valor||0).toFixed(2).replace(".",",")}</div></div>`;
     }).join("");
   }catch(e){}
@@ -2716,16 +2727,15 @@ async function carregarGanhos(){
   const el=document.getElementById("lista-corridas-ganhos");
   el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);'>Carregando...</div>";
   try{
-    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).orderBy("criadoEm","desc").limit(30).get();
+    const lista=(await _getPedidosMot()).slice(0,30);
     document.getElementById("total-ganhos").textContent="R$ "+(user.totalGanhos||0).toFixed(2).replace(".",",");
     document.getElementById("total-entregas").textContent=user.totalEntregas||0;
     document.getElementById("total-aval").textContent=user.avaliacao?"⭐ "+parseFloat(user.avaliacao).toFixed(1):"--";
     document.getElementById("total-creditos").textContent="R$ "+(user.creditos||0).toFixed(0);
-    if(snap.empty){
+    if(lista.length===0){
       el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);'>Nenhuma entrega ainda</div>";
     }else{
-      el.innerHTML=snap.docs.map(d=>{
-        const c=d.data();
+      el.innerHTML=lista.map(c=>{
         const concluida=c.status==="concluida";
         const sc=concluida?"s-concluida":"s-cancelada";
         const sl=concluida?"CONCLUÍDA":"CANCELADA";
@@ -3002,10 +3012,9 @@ async function abrirHistoricoMot(){
   el.innerHTML="<div style='padding:20px;text-align:center;color:var(--muted);font-size:13px;'>Carregando...</div>";
   if(!user)return;
   try{
-    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).orderBy("criadoEm","desc").limit(30).get();
-    if(snap.empty){el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);font-size:13px;'>Nenhuma entrega ainda</div>";return;}
-    el.innerHTML=snap.docs.map(d=>{
-      const c=d.data();
+    const lista=(await _getPedidosMot()).slice(0,30);
+    if(lista.length===0){el.innerHTML="<div style='padding:40px;text-align:center;color:var(--muted);font-size:13px;'>Nenhuma entrega ainda</div>";return;}
+    el.innerHTML=lista.map(c=>{
       const concluida=c.status==="concluida";
       const sc=concluida?"s-concluida":"s-cancelada";
       const sl=concluida?"CONCLUÍDA":"CANCELADA";
