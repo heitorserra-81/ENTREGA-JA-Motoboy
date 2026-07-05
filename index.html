@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -1564,13 +1565,28 @@ async function confirmarCrop(){
 // ── INIT ──
 function logoFallback(img){img.style.display="none";const p=img.parentElement;p.style.display="flex";p.style.alignItems="center";p.style.justifyContent="center";p.style.fontSize="50px";p.style.background="#1a2a4a";p.textContent="🚗";}
 let _appIniciado=false;
+// ── ONESIGNAL (notificacoes push mesmo com app fechado) ──
+const ONESIGNAL_APP_ID="b912066a-e08a-42a3-9239-58ebd3e55949";
+window.OneSignalDeferred=window.OneSignalDeferred||[];
+OneSignalDeferred.push(async function(OS){
+  await OS.init({appId:ONESIGNAL_APP_ID});
+  window._oneSignalPronto=true;
+  if(user&&user.id)vincularOneSignal();
+});
+async function vincularOneSignal(){
+  if(!window.OneSignal||!user||!user.id)return;
+  try{
+    await OneSignal.login(user.id);
+    await OneSignal.Notifications.requestPermission();
+  }catch(e){}
+}
 function _iniciarApp(){
   if(_appIniciado)return;_appIniciado=true;
   carregarConfigRotaAuto();
   let s=null;
   try{s=localStorage.getItem("ejm_user");}catch(e){}
   if(s){
-    try{user=JSON.parse(s);irPara("home");}
+    try{user=JSON.parse(s);irPara("home");vincularOneSignal();}
     catch(e){mostrarTela("tela-login");}
   }else mostrarTela("tela-login");
 }
@@ -1658,7 +1674,7 @@ async function cadastrar(){
       criadoEm:new Date().toISOString()};
     await db.collection("ej_motoboys").doc(id).set(dados);
     user=dados;localStorage.setItem("ejm_user",JSON.stringify(user));
-    loading(false);irPara("home");
+    loading(false);irPara("home");vincularOneSignal();
   }catch(e){loading(false);toast("Erro: "+e.message);}
 }
 async function entrar(){
@@ -1679,7 +1695,7 @@ async function entrar(){
       loading(false);toast("Senha incorreta.");return;
     }
     user=dados;localStorage.setItem("ejm_user",JSON.stringify(user));
-    loading(false);irPara("home");
+    loading(false);irPara("home");vincularOneSignal();
   }catch(e){loading(false);toast("Erro: "+e.message);}
 }
 function sair(){
