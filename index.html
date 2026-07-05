@@ -695,6 +695,20 @@ input[type=file]{display:none;}
     </div>
   </div>
 
+  <div id="clima-widget" style="position:relative;margin:12px 14px 14px;border-radius:20px;padding:2px;overflow:hidden;display:none;">
+    <div id="clima-luz" style="position:absolute;top:50%;left:50%;width:220%;height:220%;background:conic-gradient(var(--dourado2),var(--dourado),#fff8e1,var(--dourado),var(--dourado2));animation:gira 4s linear infinite;opacity:0.6;"></div>
+    <div style="position:relative;z-index:1;background:linear-gradient(135deg,var(--card),var(--card2));border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px;">
+      <div id="clima-icone" style="font-size:40px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(251,191,36,0.4));">☀️</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div id="clima-hora" style="font-size:26px;font-weight:900;color:#fff;">--:--</div>
+          <div id="clima-temp" style="font-size:16px;font-weight:800;color:var(--dourado);">--°</div>
+        </div>
+        <div id="clima-desc" style="font-size:12px;color:var(--muted);margin-top:1px;">Carregando clima...</div>
+      </div>
+    </div>
+  </div>
+
   <div id="cards-container"></div>
 
   <div class="creditos-bar" onclick="abrirComprarCreditosMot()" style="cursor:pointer;">
@@ -1428,7 +1442,7 @@ function irPara(dest){
       mostrarTela("tela-home");
       iniciarMapaHome();
       iniciarGPSInicial();
-      setTimeout(()=>{atualizarHome();atualizarCreditos();carregarGanhosHome();carregarHistHome();renderCardsHome();},50);
+      setTimeout(()=>{atualizarHome();atualizarCreditos();carregarGanhosHome();carregarHistHome();renderCardsHome();carregarClimaHome();},50);
       setTimeout(()=>{if(mapaHome)mapaHome.invalidateSize();},400);
       break;
     case"perfil":mostrarTela("tela-perfil");setTimeout(()=>atualizarPerfil(),50);break;
@@ -1794,6 +1808,55 @@ async function ficarOffline(){
   if(unsubPedidos){unsubPedidos();unsubPedidos=null;}
   try{await db.collection("ej_motoboys").doc(user.id).update({online:false});}catch(e){}
 }
+// ── CLIMA NA HOME (mesma API gratuita do Mesa Certa, sem chave) ──
+const ICONES_CLIMA={
+  clear:{dia:"☀️",noite:"🌙"},
+  poucasNuvens:{dia:"🌤️",noite:"☁️"},
+  nublado:{dia:"☁️",noite:"☁️"},
+  neblina:{dia:"🌫️",noite:"🌫️"},
+  chuva:{dia:"🌧️",noite:"🌧️"},
+  tempestade:{dia:"⛈️",noite:"⛈️"},
+};
+function _climaIconeDescricao(codigo,ehDia){
+  // Códigos WMO simplificados (mesmo padrão usado no Mesa Certa)
+  let grupo="clear",desc="Céu limpo";
+  if(codigo===0){grupo="clear";desc="Céu limpo";}
+  else if(codigo<=3){grupo="poucasNuvens";desc="Poucas nuvens";}
+  else if(codigo<=48){grupo="neblina";desc="Neblina";}
+  else if(codigo<=67){grupo="chuva";desc="Chuva";}
+  else if(codigo<=77){grupo="chuva";desc="Neve/chuva fraca";}
+  else if(codigo<=82){grupo="chuva";desc="Chuva forte";}
+  else if(codigo<=99){grupo="tempestade";desc="Tempestade";}
+  const icone=ICONES_CLIMA[grupo][ehDia?"dia":"noite"];
+  return{icone,desc,chovendo:grupo==="chuva"||grupo==="tempestade"};
+}
+async function carregarClimaHome(){
+  const wrap=document.getElementById("clima-widget");
+  if(!wrap)return;
+  try{
+    const lat=posicaoAtual?posicaoAtual[0]:-22.655,lng=posicaoAtual?posicaoAtual[1]:-47.059;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code,is_day&timezone=America%2FSao_Paulo`;
+    const res=await fetch(url);
+    const data=await res.json();
+    const cur=data.current;
+    if(!cur)return;
+    const ehDia=cur.is_day===1;
+    const{icone,desc}=_climaIconeDescricao(cur.weather_code,ehDia);
+    document.getElementById("clima-icone").textContent=icone;
+    document.getElementById("clima-temp").textContent=Math.round(cur.temperature_2m)+"°";
+    document.getElementById("clima-desc").textContent=desc;
+    const agora=new Date();
+    document.getElementById("clima-hora").textContent=agora.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    wrap.style.display="block";
+  }catch(e){}
+}
+setInterval(()=>{
+  const el=document.getElementById("clima-hora");
+  if(el&&document.getElementById("clima-widget").style.display==="block"){
+    el.textContent=new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  }
+},30000);
+
 function iniciarGPS(){
   if(gpsInterval)clearInterval(gpsInterval);
   gpsInterval=setInterval(()=>{
