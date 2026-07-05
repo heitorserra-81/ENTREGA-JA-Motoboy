@@ -15,6 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -589,6 +590,9 @@ input[type=file]{display:none;}
 .motivo-cancel-btn{width:100%;padding:14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;}
 .motivo-cancel-btn.selecionado{background:rgba(239,68,68,0.1);border-color:#ef4444;color:#ef4444;}
 .modal-din{display:none!important;}
+.notinha-papel{background:#fdfdfb;border-radius:4px;box-shadow:0 20px 50px rgba(0,0,0,0.5);position:relative;}
+.notinha-serrilha-topo,.notinha-serrilha-baixo{height:10px;background:repeating-linear-gradient(90deg,transparent,transparent 6px,var(--bg) 6px,var(--bg) 8px),radial-gradient(circle at 5px 0,transparent 5px,#fdfdfb 5px);background-size:16px 100%,16px 100%;}
+.notinha-serrilha-baixo{transform:rotate(180deg);}
 .modal-din.show{display:flex!important;}
 </style></head>
 <body>
@@ -753,8 +757,13 @@ input[type=file]{display:none;}
     </div>
 
     <div class="ped-pgto-card" style="margin-bottom:10px;">
-      <div style="font-size:11px;color:var(--muted);font-weight:700;">PAGAMENTO COMBINADO</div>
-      <div style="font-size:15px;font-weight:900;color:var(--dourado);margin-top:2px;" id="corrida-pgto-info">--</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700;">PAGAMENTO COMBINADO</div>
+          <div style="font-size:15px;font-weight:900;color:var(--dourado);margin-top:2px;" id="corrida-pgto-info">--</div>
+        </div>
+        <button onclick="abrirNotinhaMot()" style="background:rgba(251,191,36,0.1);border:1px solid var(--border);color:var(--dourado);font-size:11px;font-weight:700;padding:8px 12px;border-radius:11px;cursor:pointer;font-family:inherit;flex-shrink:0;">🧾 Ver notinha</button>
+      </div>
     </div>
 
     <div class="corrida-acoes">
@@ -1469,7 +1478,28 @@ function desenharCrop(){
   ctx.restore();
 }
 function cancelarCrop(){document.getElementById("crop-overlay").style.display="none";cropImg=null;}
-function confirmarCrop(){
+// ── SUPABASE STORAGE (fotos reais, sem base64) ──
+const SUPABASE_URL="https://prizqulyuqkhuwbjrckv.supabase.co";
+const SUPABASE_KEY="sb_publishable_ldNovdxDU9W5SIE1GXM1rw_g2rmuWtb";
+let _supabaseClient=null;
+function getSupabase(){
+  if(!_supabaseClient)_supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  return _supabaseClient;
+}
+function _canvasParaBlob(canvas){
+  return new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.85));
+}
+async function uploadFotoSupabase(canvas,pastaArquivo){
+  const blob=await _canvasParaBlob(canvas);
+  if(!blob)throw new Error("Não foi possível processar a imagem.");
+  const sb=getSupabase();
+  const caminho=pastaArquivo+"_"+Date.now()+".jpg";
+  const{error}=await sb.storage.from("entrega-ja-bucket").upload(caminho,blob,{contentType:"image/jpeg",upsert:true});
+  if(error)throw error;
+  const{data}=sb.storage.from("entrega-ja-bucket").getPublicUrl(caminho);
+  return data.publicUrl;
+}
+async function confirmarCrop(){
   if(!cropImg)return;
   const cv=document.getElementById("crop-canvas"),out=document.createElement("canvas");
   out.width=200;out.height=200;
@@ -1477,21 +1507,24 @@ function confirmarCrop(){
   ctx.save();ctx.beginPath();ctx.arc(100,100,100,0,Math.PI*2);ctx.clip();
   ctx.drawImage(cv,0,0,260,260,0,0,200,200);
   ctx.restore();
-  const url=out.toDataURL("image/jpeg",0.75);
   document.getElementById("crop-overlay").style.display="none";cropImg=null;
-  if(cropCtx==="cad"){
-    fotoFinalCad=url;
-    const prev=document.getElementById(_cropPrevId||"foto-preview-cad");
-    if(prev)prev.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
-    const txt=document.getElementById(_cropTxtId||"foto-texto-cad");
-    if(txt)txt.textContent="Foto adicionada ✓";
-  }else if(cropCtx==="perfilmot"){
-    loading(true);
-    db.collection("ej_motoboys").doc(user.id).update({foto:url}).then(()=>{
+  loading(true);
+  try{
+    const pasta=cropCtx==="perfilmot"&&user?"motoboys/"+user.id:"motoboys/cad_"+Date.now()+"_"+Math.floor(Math.random()*10000);
+    const url=await uploadFotoSupabase(out,pasta);
+    if(cropCtx==="cad"){
+      fotoFinalCad=url;
+      const prev=document.getElementById(_cropPrevId||"foto-preview-cad");
+      if(prev)prev.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+      const txt=document.getElementById(_cropTxtId||"foto-texto-cad");
+      if(txt)txt.textContent="Foto adicionada ✓";
+      loading(false);
+    }else if(cropCtx==="perfilmot"){
+      await db.collection("ej_motoboys").doc(user.id).update({foto:url});
       user.foto=url;localStorage.setItem("ejm_user",JSON.stringify(user));
       atualizarPerfil();atualizarHome();loading(false);toast("Foto atualizada! ✓");
-    }).catch(()=>{loading(false);toast("Erro ao salvar foto.");});
-  }
+    }
+  }catch(e){loading(false);toast("Erro ao enviar a foto: "+e.message);}
 }
 (function(){
   const cont=document.getElementById("crop-container");
@@ -1510,6 +1543,7 @@ function logoFallback(img){img.style.display="none";const p=img.parentElement;p.
 let _appIniciado=false;
 function _iniciarApp(){
   if(_appIniciado)return;_appIniciado=true;
+  carregarConfigRotaAuto();
   let s=null;
   try{s=localStorage.getItem("ejm_user");}catch(e){}
   if(s){
@@ -1633,6 +1667,29 @@ function sair(){
 
 // ── RECUPERAR SENHA ──
 const ADMIN_WHATSAPP="5519982480386";
+// ── MODAL DE CRÉDITO INSUFICIENTE (troca o alert() feio por algo bonito) ──
+function criarModalSemCredito(){
+  const div=document.createElement("div");
+  div.innerHTML=`<div class="modal-base" id="modal-sem-credito">
+    <div class="modal-sheet">
+      <div style="text-align:center;font-size:40px;margin-bottom:10px;">😅</div>
+      <div style="font-size:16px;font-weight:900;color:#fff;text-align:center;margin-bottom:6px;">Créditos insuficientes</div>
+      <div id="sc-texto" style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5;"></div>
+      <button onclick="pedirRecargaCreditos();document.getElementById('modal-sem-credito').classList.remove('show')" style="width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;">💬 Recarregar pelo WhatsApp</button>
+      <button onclick="document.getElementById('modal-sem-credito').classList.remove('show')" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Entendi</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+function abrirModalSemCredito(custo,atual){
+  if(!document.getElementById("modal-sem-credito"))criarModalSemCredito();
+  document.getElementById("sc-texto").textContent="Essa entrega custa "+custo+" crédito(s), e você tem "+atual+". Recarregue pra continuar recebendo pedidos.";
+  document.getElementById("modal-sem-credito").classList.add("show");
+}
+function pedirRecargaCreditos(){
+  const msg=encodeURIComponent("Olá! Meu saldo de créditos no Entrega Já acabou e eu quero recarregar. Meu nome é "+(user?.nome||"")+".");
+  window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`,"_blank");
+}
 let recUserDoc=null;
 function abrirRecuperar(){
   document.getElementById("modal-recuperar").classList.add("show");
@@ -1897,6 +1954,29 @@ function nivelPorCorridas(tc){
 let unsubPedidos=null,pedidoAtual=null,entregaAtiva=null,timerPedido=null,_pedSeg=15;
 let filaEntregas=[]; // entregas já aceitas aguardando o motoboy focar nelas (paradas múltiplas)
 function multiStopAtivo(){return getConfigPref("multistop",false);}
+// Calcula distância de rota real via OSRM, com timeout curto e fallback em linha reta se falhar/demorar.
+async function _distanciaRotaKm(lat1,lng1,lat2,lng2){
+  try{
+    const ctrl=new AbortController();
+    const timeoutId=setTimeout(()=>ctrl.abort(),4000);
+    const res=await fetch(`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=false`,{signal:ctrl.signal});
+    clearTimeout(timeoutId);
+    const data=await res.json();
+    if(data.routes&&data.routes[0])return data.routes[0].distance/1000;
+  }catch(e){}
+  return dKmMot(lat1,lng1,lat2,lng2)*1.3;
+}
+let CONFIG_ROTA_AUTO={ativa:false,desvioMaxKm:2};
+async function carregarConfigRotaAuto(){
+  try{
+    const snap=await db.collection("ej_config").doc("geral").get();
+    if(snap.exists){
+      const d=snap.data();
+      CONFIG_ROTA_AUTO.ativa=d.deteccaoRotaAuto===true;
+      CONFIG_ROTA_AUTO.desvioMaxKm=d.desvioMaxKm!==undefined?d.desvioMaxKm:2;
+    }
+  }catch(e){}
+}
 let _escutaPedidosIniciadaEm=null;
 function escutarPedidos(){
   if(unsubPedidos)unsubPedidos();
@@ -1915,7 +1995,20 @@ function escutarPedidos(){
         if(criadoEm&&idadeMin>20){
           return; // pedido abandonado há mais de 20min, provavelmente lixo de teste
         }
-        mostrarPedido({...d,id:change.doc.id,_idadeMin:idadeMin});
+        const entregaComId={...d,id:change.doc.id,_idadeMin:idadeMin};
+        // Se já tem uma entrega em foco, multi-stop ligado e detecção automática ativa no painel,
+        // primeiro avalia se esse novo pedido está "no caminho" da rota atual antes do card padrão.
+        if(entregaAtiva&&CONFIG_ROTA_AUTO.ativa&&posicaoAtual){
+          calcularSugestaoRota(entregaComId).then(sugestao=>{
+            if(sugestao){
+              if(!pedidoAtual)mostrarSugestaoRota(entregaComId,sugestao);
+            }else{
+              if(!pedidoAtual&&(!entregaAtiva||(multiStopAtivo()&&filaEntregas.length===0)))mostrarPedido(entregaComId);
+            }
+          });
+          return;
+        }
+        mostrarPedido(entregaComId);
       }
       if(change.type==="modified"&&pedidoAtual&&change.doc.id===pedidoAtual.id){
         const d=change.doc.data();
@@ -1928,7 +2021,81 @@ function escutarPedidos(){
   });
 }
 
-// ── MOSTRAR PEDIDO (card completo) ──
+// ── PARADAS MÚLTIPLAS: detecção automática de rota ──
+// Compara a rota atual do motoboy com o desvio necessário para também atender esse novo pedido.
+async function calcularSugestaoRota(novoPedido){
+  if(!novoPedido.origemLat||!novoPedido.origemLng)return null;
+  // Próximo ponto da rota atual: se ainda não coletou, é o restaurante; se já coletou, é o destino do cliente.
+  const proxLat=statusAtual==="no_carro"?entregaAtiva.destinoLat:entregaAtiva.origemLat;
+  const proxLng=statusAtual==="no_carro"?entregaAtiva.destinoLng:entregaAtiva.origemLng;
+  if(!proxLat||!proxLng)return null;
+
+  // Distância de rota real (com fallback em linha reta se o OSRM falhar/demorar)
+  const[dAtual,dPontoNovoAteProx]=await Promise.all([
+    _distanciaRotaKm(posicaoAtual[0],posicaoAtual[1],proxLat,proxLng),
+    _distanciaRotaKm(novoPedido.origemLat,novoPedido.origemLng,proxLat,proxLng)
+  ]);
+  const dAteNovo=await _distanciaRotaKm(posicaoAtual[0],posicaoAtual[1],novoPedido.origemLat,novoPedido.origemLng);
+  const dComDesvio=dAteNovo+dPontoNovoAteProx;
+  const desvioExtra=dComDesvio-dAtual;
+  if(desvioExtra>CONFIG_ROTA_AUTO.desvioMaxKm||desvioExtra<0)return null;
+
+  // Reaproveita a distância já calculada pelo restaurante ao criar o pedido (evita uma chamada extra ao OSRM)
+  const dNovoSolo=parseFloat(novoPedido.distanciaKm)||(novoPedido.destinoLat?dKmMot(novoPedido.origemLat,novoPedido.origemLng,novoPedido.destinoLat,novoPedido.destinoLng):0);
+  const kmEconomizado=Math.max(0,dNovoSolo-desvioExtra);
+  return{desvioExtra,kmEconomizado};
+}
+function criarModalSugestaoRota(){
+  const div=document.createElement("div");
+  div.innerHTML=`<div class="modal-base" id="modal-sugestao-rota">
+    <div class="modal-sheet">
+      <div style="text-align:center;font-size:38px;margin-bottom:8px;">🎯</div>
+      <div style="font-size:16px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;">Pedido no seu caminho!</div>
+      <div id="sr-nome" style="font-size:13px;font-weight:700;color:var(--dourado);text-align:center;margin-bottom:10px;">--</div>
+      <div id="sr-detalhe" style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5;"></div>
+      <button id="sr-btn-primeiro" style="width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;">🎯 Aceitar e ir lá primeiro</button>
+      <button id="sr-btn-depois" style="width:100%;padding:13px;border-radius:14px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:9px;">📋 Aceitar e fazer depois</button>
+      <button id="sr-btn-recusar" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Recusar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+function mostrarSugestaoRota(entrega,sugestao){
+  if(!document.getElementById("modal-sugestao-rota"))criarModalSugestaoRota();
+  try{getAC();}catch(e){}
+  somNovoPedido();
+  document.getElementById("sr-nome").textContent=(entrega.clienteNome||"Restaurante")+" → "+(entrega.destino||"").split(",")[0];
+  document.getElementById("sr-detalhe").textContent="Fica a só "+sugestao.desvioExtra.toFixed(1)+"km de desvio da sua rota atual"+(sugestao.kmEconomizado>0.3?" — você economiza cerca de "+sugestao.kmEconomizado.toFixed(1)+"km fazendo os dois juntos.":".");
+  document.getElementById("sr-btn-primeiro").onclick=()=>{
+    document.getElementById("modal-sugestao-rota").classList.remove("show");
+    aceitarComoSugestaoRota(entrega,true);
+  };
+  document.getElementById("sr-btn-depois").onclick=()=>{
+    document.getElementById("modal-sugestao-rota").classList.remove("show");
+    aceitarComoSugestaoRota(entrega,false);
+  };
+  document.getElementById("sr-btn-recusar").onclick=()=>{
+    document.getElementById("modal-sugestao-rota").classList.remove("show");
+  };
+  document.getElementById("modal-sugestao-rota").classList.add("show");
+}
+async function aceitarComoSugestaoRota(entrega,irPrimeiro){
+  const km=parseFloat(entrega.distanciaKm)||5;
+  entrega._custoCredito=calcularCreditoPorDistancia(km);
+  pedidoAtual=entrega;
+  await aceitarCorrida();
+  // aceitarCorrida() já coloca o pedido novo na fila (pois entregaAtiva existe).
+  // Se o motoboy escolheu ir lá primeiro, troca o foco agora: o novo vai pra frente, o atual entra na fila.
+  if(irPrimeiro&&filaEntregas.length>0){
+    const idx=filaEntregas.findIndex(p=>p.id===entrega.id);
+    if(idx>=0){
+      const novaFocada=filaEntregas.splice(idx,1)[0];
+      filaEntregas.push(entregaAtiva);
+      focarEntrega(novaFocada);
+    }
+  }
+}
+
 async function mostrarPedido(entrega){
   pedidoAtual=entrega;
   try{getAC();}catch(e){}
@@ -2054,7 +2221,7 @@ async function aceitarCorrida(){
     document.getElementById("modal-pedido").classList.remove("show");
     pedidoAtual=null;
     setTimeout(()=>{
-      alert("😅 Ih, você não tem créditos suficientes pra aceitar essa entrega!\n\nRecarregue seus créditos para continuar recebendo pedidos.");
+      abrirModalSemCredito(custoCred,credAtual);
     },300);
     return;
   }
@@ -2505,6 +2672,82 @@ function renderConfigNavApps(){
       </div>
     </div>`).join("");
 }
+// ── NOTINHA COMPLETA (mesmo formato bonito que o restaurante vê, com troco) ──
+function criarModalNotinhaMot(){
+  const div=document.createElement("div");
+  div.innerHTML=`<div id="modal-notinha-mot" class="modal-din" style="position:fixed;inset:0;z-index:9655;background:rgba(0,0,0,0.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+    <div style="width:100%;max-width:400px;padding:0 18px;max-height:90vh;overflow-y:auto;">
+      <div class="notinha-papel">
+        <div class="notinha-serrilha-topo"></div>
+        <div style="text-align:center;padding:18px 20px 14px;border-bottom:1px dashed rgba(0,0,0,0.15);">
+          <div id="nm-logo" style="width:44px;height:44px;border-radius:11px;margin:0 auto 8px;overflow:hidden;background:#f3f3f3;display:flex;align-items:center;justify-content:center;font-size:20px;">🏪</div>
+          <div id="nm-nome-rest" style="font-size:15px;font-weight:800;color:#1a1a1a;">Restaurante</div>
+          <div style="font-size:10px;color:#888;margin-top:2px;">NOTINHA DO PEDIDO</div>
+        </div>
+        <div style="padding:16px 20px;">
+          <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Itens</div>
+          <div id="nm-itens" style="font-size:13px;color:#333;margin-bottom:14px;line-height:1.7;"></div>
+          <div style="border-top:1px dashed rgba(0,0,0,0.15);padding-top:10px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:#1a1a1a;"><span>Total a receber</span><span id="nm-total">R$ 0,00</span></div>
+          </div>
+          <div style="background:#f7f7f7;border-radius:10px;padding:10px 12px;margin-bottom:10px;" id="nm-troco-row">
+            <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">💵 Levar troco para</div>
+            <div id="nm-troco" style="font-size:15px;color:#1a1a1a;font-weight:900;">--</div>
+          </div>
+          <div style="background:#f7f7f7;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+            <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Pagamento</div>
+            <div id="nm-pgto" style="font-size:13px;color:#333;font-weight:700;">--</div>
+          </div>
+          <div style="background:#f7f7f7;border-radius:10px;padding:10px 12px;margin-bottom:10px;" id="nm-cliente-row">
+            <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Cliente</div>
+            <div id="nm-cliente" style="font-size:13px;color:#333;font-weight:700;">--</div>
+          </div>
+          <div style="background:#f7f7f7;border-radius:10px;padding:10px 12px;">
+            <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Entregar em</div>
+            <div id="nm-endereco" style="font-size:12px;color:#333;">--</div>
+          </div>
+        </div>
+        <div class="notinha-serrilha-baixo"></div>
+      </div>
+      <button onclick="fecharNotinhaMot()" style="width:100%;margin-top:16px;padding:14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Fechar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+function abrirNotinhaMot(){
+  if(!entregaAtiva)return;
+  if(!document.getElementById("modal-notinha-mot"))criarModalNotinhaMot();
+  const d=entregaAtiva;
+  document.getElementById("nm-nome-rest").textContent=d.clienteNome||"Restaurante";
+  const logoEl=document.getElementById("nm-logo");
+  logoEl.innerHTML=d.clienteFoto?`<img src="${d.clienteFoto}" style="width:100%;height:100%;object-fit:cover;"/>`:"🏪";
+
+  const itensEl=document.getElementById("nm-itens");
+  if(d.itensDetalhados&&d.itensDetalhados.length){
+    itensEl.innerHTML=d.itensDetalhados.map(i=>`<div style="display:flex;justify-content:space-between;"><span>${i.qtd}x ${i.nome}</span>${i.preco?`<span>R$ ${((i.preco||0)*i.qtd).toFixed(2).replace(".",",")}</span>`:""}</div>`).join("");
+  }else{
+    itensEl.innerHTML=`<div>${d.obs||"Não especificado"}</div>`;
+  }
+
+  const total=d.valorTotal||d.valorPedido||d.valorEstimado||0;
+  document.getElementById("nm-total").textContent="R$ "+parseFloat(total).toFixed(2).replace(".",",");
+  document.getElementById("nm-pgto").textContent=d.formaPgto||"--";
+
+  const trocoRow=document.getElementById("nm-troco-row");
+  if(d.formaPgto==="Dinheiro"&&d.trocoPara){
+    trocoRow.style.display="block";
+    document.getElementById("nm-troco").textContent="R$ "+d.trocoPara;
+  }else trocoRow.style.display="none";
+
+  const clienteRow=document.getElementById("nm-cliente-row");
+  if(d.nomeClienteFinal){clienteRow.style.display="block";document.getElementById("nm-cliente").textContent=d.nomeClienteFinal;}
+  else clienteRow.style.display="none";
+
+  document.getElementById("nm-endereco").textContent=d.destino||"--";
+  document.getElementById("modal-notinha-mot").classList.add("show");
+}
+function fecharNotinhaMot(){document.getElementById("modal-notinha-mot").classList.remove("show");}
+
 function abrirNavegacao(){
   if(!entregaAtiva)return;
   // Enquanto não iniciou a corrida (ainda buscando o restaurante), navega até o RESTAURANTE.
