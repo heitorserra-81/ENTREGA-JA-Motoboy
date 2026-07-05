@@ -1607,9 +1607,27 @@ function _iniciarApp(){
   let s=null;
   try{s=localStorage.getItem("ejm_user");}catch(e){}
   if(s){
-    try{user=JSON.parse(s);irPara("home");vincularOneSignal();}
+    try{user=JSON.parse(s);irPara("home");vincularOneSignal();restaurarStatusOnline();}
     catch(e){mostrarTela("tela-login");}
   }else mostrarTela("tela-login");
+}
+// Ao reabrir o app, confere no banco se o motoboy estava online e restaura o estado de verdade
+// (antes disso, o app sempre voltava mostrando "offline" na tela mesmo quando o banco dizia online).
+async function restaurarStatusOnline(){
+  if(!user||!user.id)return;
+  try{
+    const snap=await db.collection("ej_motoboys").doc(user.id).get();
+    if(!snap.exists)return;
+    const dados=snap.data();
+    if(dados.online===true){
+      online=true;
+      document.getElementById("toggle-btn").classList.add("on");
+      document.getElementById("toggle-label").textContent="Você está online";
+      document.getElementById("toggle-sub").textContent="Aguardando entregas...";
+      iniciarGPS();
+      escutarPedidos();
+    }
+  }catch(e){}
 }
 // Múltiplas garantias de que o app SEMPRE inicia, não importa o timing de carregamento:
 if(document.readyState==="complete")setTimeout(_iniciarApp,800);
