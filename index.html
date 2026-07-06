@@ -29,6 +29,7 @@
 html,body{height:100%;font-family:-apple-system,sans-serif;color:var(--text);overflow:hidden;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;background:#080f1e;}
 input,textarea{-webkit-user-select:text!important;user-select:text!important;}
 @keyframes gira{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+@keyframes entradaAviso3D{0%{opacity:0;transform:perspective(800px) rotateX(35deg) scale(0.85) translateY(30px);}100%{opacity:1;transform:perspective(800px) rotateX(0deg) scale(1) translateY(0);}}
 @keyframes luzReluzenteMot{0%,100%{transform:translateX(-60%);}50%{transform:translateX(60%);}}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
@@ -808,7 +809,7 @@ input[type=file]{display:none;}
     </div>
 
     <button class="btn-cancelar-corrida" onclick="cancelarEntregaMotoboy()">Cancelar entrega</button>
-    <button onclick="abrirChatMot()" style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬</button>
+    <button onclick="abrirChatMot()" style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬<div id="chat-badge-mot" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg);">0</div></button>
   </div>
 </div>
 
@@ -1237,6 +1238,15 @@ input[type=file]{display:none;}
       <div id="ped-favorito" style="display:none;font-size:11px;font-weight:700;color:var(--dourado);margin-top:4px;background:rgba(251,191,36,0.12);border:1px solid var(--dourado);border-radius:20px;padding:3px 12px;">⭐ Você é o favorito deste negócio!</div>
     </div>
 
+    <div id="ped-taxa-row" style="display:none;position:relative;overflow:hidden;background:linear-gradient(135deg,#3d2e0a,#5c4310);border:2px solid var(--dourado);border-radius:16px;padding:16px;margin-bottom:9px;text-align:center;">
+      <div style="position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:linear-gradient(45deg,transparent 42%,rgba(255,255,255,0.35) 50%,transparent 58%);animation:luzReluzenteMot 2.6s linear infinite;pointer-events:none;"></div>
+      <div style="position:relative;z-index:1;">
+        <div style="font-size:12px;color:var(--dourado);font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">💰 Você vai receber por essa entrega</div>
+        <div id="ped-taxa-valor" style="font-size:34px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
+        <div id="ped-taxa-km" style="font-size:13px;color:var(--dourado);font-weight:700;margin-top:4px;">-- km</div>
+      </div>
+    </div>
+
     <!-- Último comentário -->
     <div class="ped-comentario" id="ped-comentario-wrap" style="display:none;">
       <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:3px;">💬 ÚLTIMO COMENTÁRIO RECEBIDO</div>
@@ -1258,14 +1268,6 @@ input[type=file]{display:none;}
     </div>
 
     <div class="pedido-obs" id="ped-obs" style="display:none;"></div>
-
-    <div id="ped-taxa-row" style="display:none;position:relative;overflow:hidden;background:linear-gradient(135deg,#3d2e0a,#5c4310);border:2px solid var(--dourado);border-radius:16px;padding:16px;margin-bottom:9px;text-align:center;">
-      <div style="position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:linear-gradient(45deg,transparent 42%,rgba(255,255,255,0.35) 50%,transparent 58%);animation:luzReluzenteMot 2.6s linear infinite;pointer-events:none;"></div>
-      <div style="position:relative;z-index:1;">
-        <div style="font-size:11px;color:var(--dourado);font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">💰 Você vai receber por essa entrega</div>
-        <div id="ped-taxa-valor" style="font-size:30px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
-      </div>
-    </div>
 
     <!-- Valor do pedido (informativo) -->
     <div class="pedido-valor-row">
@@ -1605,6 +1607,36 @@ function notificarRestaurante(titulo,mensagem){
   if(!entregaAtiva||!entregaAtiva.clienteId||entregaAtiva.clienteId.startsWith("anon_"))return;
   enviarNotificacaoOneSignal([entregaAtiva.clienteId],titulo,mensagem);
 }
+// ── AVISO IMPORTANTE (fixo na tela até confirmar leitura) ──
+async function conferirAvisoImportante(){
+  try{
+    const snap=await db.collection("ej_avisos").orderBy("criadoEm","desc").limit(1).get();
+    if(snap.empty)return;
+    const doc=snap.docs[0];
+    const d=doc.data();
+    if(d.publico&&d.publico!=="todos"&&d.publico!=="motoboys")return;
+    const ultimoVisto=localStorage.getItem("ejm_ultimo_aviso_visto");
+    if(ultimoVisto===doc.id)return;
+    mostrarAvisoImportante(doc.id,d.titulo,d.mensagem);
+  }catch(e){}
+}
+function mostrarAvisoImportante(id,titulo,mensagem){
+  const div=document.createElement("div");
+  div.innerHTML=`<div id="modal-aviso-importante" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;">
+    <div style="width:100%;max-width:380px;background:linear-gradient(150deg,var(--card),var(--card2));border:1px solid var(--dourado);border-radius:22px;padding:26px 22px;text-align:center;animation:entradaAviso3D 0.5s cubic-bezier(0.2,0.8,0.3,1);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+      <div style="font-size:44px;margin-bottom:12px;">📢</div>
+      <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:10px;">${titulo}</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.5;margin-bottom:22px;">${mensagem}</div>
+      <button onclick="fecharAvisoImportante('${id}')" style="width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;">Ok, entendi</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+function fecharAvisoImportante(id){
+  localStorage.setItem("ejm_ultimo_aviso_visto",id);
+  const el=document.getElementById("modal-aviso-importante");
+  if(el)el.remove();
+}
 async function vincularOneSignal(){
   if(!window.OneSignal||!user||!user.id)return;
   try{
@@ -1637,7 +1669,7 @@ function _iniciarApp(){
   let s=null;
   try{s=localStorage.getItem("ejm_user");}catch(e){}
   if(s){
-    try{user=JSON.parse(s);irPara("home");vincularOneSignal();restaurarStatusOnline();}
+    try{user=JSON.parse(s);irPara("home");vincularOneSignal();restaurarStatusOnline();conferirAvisoImportante();}
     catch(e){mostrarTela("tela-login");}
   }else mostrarTela("tela-login");
 }
@@ -1743,7 +1775,7 @@ async function cadastrar(){
       criadoEm:new Date().toISOString()};
     await db.collection("ej_motoboys").doc(id).set(dados);
     user=dados;localStorage.setItem("ejm_user",JSON.stringify(user));
-    loading(false);irPara("home");vincularOneSignal();
+    loading(false);irPara("home");vincularOneSignal();conferirAvisoImportante();
   }catch(e){loading(false);toast("Erro: "+e.message);}
 }
 async function entrar(){
@@ -1764,7 +1796,7 @@ async function entrar(){
       loading(false);toast("Senha incorreta.");return;
     }
     user=dados;localStorage.setItem("ejm_user",JSON.stringify(user));
-    loading(false);irPara("home");vincularOneSignal();
+    loading(false);irPara("home");vincularOneSignal();conferirAvisoImportante();
   }catch(e){loading(false);toast("Erro: "+e.message);}
 }
 function sair(){
@@ -2356,6 +2388,7 @@ async function mostrarPedido(entrega){
   if(entrega.valorMotoboy&&entrega.valorMotoboy>0){
     taxaRow.style.display="block";
     g("ped-taxa-valor").textContent="R$ "+entrega.valorMotoboy.toFixed(2).replace(".",",");
+    g("ped-taxa-km").textContent=entrega.distanciaKm?parseFloat(entrega.distanciaKm).toFixed(1)+" km até o cliente":"";
   }else{
     taxaRow.style.display="none";
   }
@@ -2643,6 +2676,13 @@ function focarEntrega(pedidoObj){
 
 // ── NOTIFICAÇÃO DE NOVAS MENSAGENS (mesmo com chat fechado) ──
 let unsubNotifChatMot=null,_chatMotAberto=false;
+let _naoLidasChatMot=0;
+function atualizarBadgeChatMot(){
+  const el=document.getElementById("chat-badge-mot");
+  if(!el)return;
+  if(_naoLidasChatMot>0){el.style.display="flex";el.textContent=_naoLidasChatMot>9?"9+":_naoLidasChatMot;}
+  else el.style.display="none";
+}
 function escutarNotifChatMot(cId){
   if(unsubNotifChatMot)unsubNotifChatMot();
   let primeira=true;
@@ -2656,6 +2696,8 @@ function escutarNotifChatMot(cId){
           try{getAC();}catch(e){}
           somMsgChatMot();
           notif("💬 Nova mensagem",m.texto||"O passageiro enviou uma mensagem.");
+          _naoLidasChatMot++;
+          atualizarBadgeChatMot();
         }
       }
     });
@@ -2814,6 +2856,7 @@ function atualizarRotaParaDestino(){
     marcDestinoMot=L.marker([entregaAtiva.destinoLat,entregaAtiva.destinoLng]).addTo(mapaEntregaMot);
     mapaEntregaMot.setView([entregaAtiva.destinoLat,entregaAtiva.destinoLng],14);
   }
+  desenharRotaMapaMot();
 }
 
 // Verifica se a posição atual do GPS está dentro do raio de tolerância de um ponto alvo
@@ -3184,7 +3227,7 @@ function escutarEntregaAtivaMot(id){
 }
 
 // ── MAPA DA CORRIDA ──
-let mapaEntregaMot=null,marcDestinoMot=null,marcPosMot=null;
+let mapaEntregaMot=null,marcDestinoMot=null,marcPosMot=null,_rotaLinhaMot=null,_rotaCacheKeyMot=null;
 function iniciarMapaEntregaMot(){
   if(!mapaEntregaMot){
     mapaEntregaMot=L.map("mapa-corrida-mot",{zoomControl:true,attributionControl:false});
@@ -3201,6 +3244,37 @@ function iniciarMapaEntregaMot(){
   if(entregaAtiva?.destinoLat&&entregaAtiva?.destinoLng){
     marcDestinoMot=L.marker([entregaAtiva.destinoLat,entregaAtiva.destinoLng]).addTo(mapaEntregaMot);
   }
+  desenharRotaMapaMot();
+}
+async function desenharRotaMapaMot(){
+  if(!posicaoAtual||!entregaAtiva)return;
+  // Enquanto não confirmou o pagamento (ainda no restaurante), a rota desenhada é até o RESTAURANTE; depois, até o CLIENTE.
+  const destLat=statusAtual==="no_carro"?entregaAtiva.destinoLat:entregaAtiva.origemLat;
+  const destLng=statusAtual==="no_carro"?entregaAtiva.destinoLng:entregaAtiva.origemLng;
+  if(!destLat||!destLng)return;
+  const chave=posicaoAtual[0].toFixed(3)+","+posicaoAtual[1].toFixed(3)+"-"+destLat+","+destLng;
+  if(chave===_rotaCacheKeyMot)return;
+  _rotaCacheKeyMot=chave;
+  try{
+    const url=`https://router.project-osrm.org/route/v1/driving/${posicaoAtual[1]},${posicaoAtual[0]};${destLng},${destLat}?overview=full&geometries=geojson`;
+    const res=await fetch(url);const data=await res.json();
+    if(!data.routes||!data.routes[0])return;
+    const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+    const km=(data.routes[0].distance/1000).toFixed(1);
+    if(_rotaLinhaMot)mapaEntregaMot.removeLayer(_rotaLinhaMot);
+    _rotaLinhaMot=L.polyline(coords,{color:"#fbbf24",weight:4,opacity:0.85}).addTo(mapaEntregaMot);
+    mapaEntregaMot.fitBounds(_rotaLinhaMot.getBounds(),{padding:[30,30]});
+    let labelEl=document.getElementById("mapa-rota-distancia-mot");
+    if(!labelEl){
+      const wrap=document.getElementById("mapa-corrida-mot");
+      const div=document.createElement("div");
+      div.id="mapa-rota-distancia-mot";
+      div.style.cssText="position:absolute;top:10px;left:10px;z-index:999;background:rgba(10,10,26,0.9);border:1px solid var(--border);border-radius:11px;padding:6px 12px;font-size:12px;font-weight:800;color:var(--dourado);";
+      wrap.appendChild(div);
+      labelEl=div;
+    }
+    labelEl.textContent="🛣️ "+km+" km";
+  }catch(e){}
 }
 
 // ── CHAT (motoboy) ──
@@ -3225,6 +3299,8 @@ function iniciarChatMot(cId){
 function abrirChatMot(){
   if(!entregaAtiva)return;
   _chatMotAberto=true;
+  _naoLidasChatMot=0;
+  atualizarBadgeChatMot();
   document.getElementById("modal-chat-mot").classList.add("show");
   iniciarChatMot(entregaAtiva.id);
 }
