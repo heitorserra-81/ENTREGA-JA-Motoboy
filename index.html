@@ -1250,9 +1250,14 @@ input[type=file]{display:none;}
 
     <div class="pedido-obs" id="ped-obs" style="display:none;"></div>
 
+    <div id="ped-taxa-row" style="display:none;background:rgba(34,197,94,0.1);border:1px solid var(--verde);border-radius:13px;padding:11px 14px;margin-bottom:9px;text-align:center;">
+      <div style="font-size:10px;color:var(--verde);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">💰 Sua taxa de entrega</div>
+      <div id="ped-taxa-valor" style="font-size:20px;font-weight:900;color:var(--verde);">R$ --</div>
+    </div>
+
     <!-- Valor + crédito -->
     <div class="pedido-valor-row">
-      <div class="pedido-valor-item"><div class="pedido-valor-num destaque" id="ped-valor">--</div><div class="pedido-valor-label">Valor estimado</div></div>
+      <div class="pedido-valor-item"><div class="pedido-valor-num" id="ped-valor">--</div><div class="pedido-valor-label">Valor do pedido (a cobrar do cliente)</div></div>
       <div class="pedido-valor-item"><div class="pedido-valor-num" id="ped-credito-custo">--</div><div class="pedido-valor-label">Custo em créditos</div></div>
     </div>
 
@@ -1592,8 +1597,24 @@ async function vincularOneSignal(){
   if(!window.OneSignal||!user||!user.id)return;
   try{
     await OneSignal.login(user.id);
-    await OneSignal.Notifications.requestPermission();
+    // No Safari/iPhone, pedir permissão só funciona se for reação direta a um toque —
+    // se já não tiver permissão nem recusa registrada, mostra um botão pra pessoa tocar.
+    if(typeof Notification!=="undefined"&&Notification.permission==="default"){
+      mostrarBotaoAtivarNotif();
+    }
   }catch(e){}
+}
+function mostrarBotaoAtivarNotif(){
+  if(document.getElementById("btn-ativar-notif"))return;
+  const div=document.createElement("div");
+  div.innerHTML=`<button id="btn-ativar-notif" onclick="ativarNotifAgora()" style="position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);left:16px;right:16px;z-index:99997;padding:14px;border-radius:16px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,0.4);">🔔 Toque aqui para ativar notificações</button>`;
+  document.body.appendChild(div.firstElementChild);
+}
+function ativarNotifAgora(){
+  // Chamada direta, sem nenhum "await" antes — precisa ser reação imediata ao toque pro Safari aceitar.
+  if(window.OneSignal&&OneSignal.Notifications)OneSignal.Notifications.requestPermission();
+  const btn=document.getElementById("btn-ativar-notif");
+  if(btn)btn.remove();
 }
 function _iniciarApp(){
   if(_appIniciado)return;_appIniciado=true;
@@ -2302,9 +2323,18 @@ async function mostrarPedido(entrega){
     obsEl.textContent="📦 "+entrega.obs;obsEl.style.display="block";
   }else obsEl.style.display="none";
 
-  // Valor total do pedido (subtotal + taxa de entrega, se houver)
+  // Valor total do pedido (subtotal + taxa de entrega, se houver) — isso é o que o cliente paga, NÃO o que o motoboy ganha
   const valorTotal=entrega.valorTotal||entrega.valorPedido;
   g("ped-valor").textContent=valorTotal?("R$ "+valorTotal.toFixed(2).replace(".",",")):"Não informado";
+
+  // Taxa de entrega: é isso que o motoboy realmente ganha por essa corrida (quando o restaurante define uma)
+  const taxaRow=g("ped-taxa-row");
+  if(entrega.taxaEntrega&&entrega.taxaEntrega>0){
+    taxaRow.style.display="block";
+    g("ped-taxa-valor").textContent="R$ "+entrega.taxaEntrega.toFixed(2).replace(".",",");
+  }else{
+    taxaRow.style.display="none";
+  }
 
   // Nível do restaurante (por nº de pedidos feitos)
   let dadosRest=null;
