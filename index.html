@@ -29,6 +29,7 @@
 html,body{height:100%;font-family:-apple-system,sans-serif;color:var(--text);overflow:hidden;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;background:#080f1e;}
 input,textarea{-webkit-user-select:text!important;user-select:text!important;}
 @keyframes gira{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+@keyframes luzReluzenteMot{0%,100%{transform:translateX(-60%);}50%{transform:translateX(60%);}}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
@@ -485,7 +486,7 @@ input[type=file]{display:none;}
 .btn-mapa-mini{position:absolute;top:10px;right:10px;z-index:999;background:rgba(10,16,32,0.85);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--dourado);cursor:pointer;}
 .entrega-painel{background:var(--bg);border-radius:24px 24px 0 0;margin-top:-18px;position:relative;z-index:2;padding:18px 16px 24px;}
 .entrega-status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.entrega-status-txt{font-size:15px;font-weight:800;color:#fff;}
+.entrega-status-txt{font-size:18px;font-weight:900;color:#fff;}
 .status-chip{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:var(--verde);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
 .passageiro-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;}
 .pass-foto-entrega{width:50px;height:50px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;}
@@ -589,7 +590,7 @@ input[type=file]{display:none;}
 .config-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:13px 15px;margin:0 16px 9px;}
 .config-toggle-nome{font-size:13px;font-weight:700;color:#fff;}
 .config-toggle-desc{font-size:11px;color:var(--muted);margin-top:1px;}
-.btn-etapa-unica{width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#1a1a1a;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:14px;box-shadow:0 6px 18px rgba(245,158,11,0.4);transition:background 0.3s,box-shadow 0.3s;}
+.btn-etapa-unica{width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;color:#fff;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:14px;box-shadow:0 6px 18px rgba(37,99,235,0.4);transition:background 0.3s,box-shadow 0.3s;}
 .btn-etapa-unica.etapa-embarque{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 6px 18px rgba(59,130,246,0.4);}
 .btn-etapa-unica.etapa-concluir{background:linear-gradient(135deg,#22c55e,#4ade80);box-shadow:0 6px 18px rgba(34,197,94,0.4);color:#fff;}
 .motivo-cancel-btn{width:100%;padding:14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;}
@@ -756,9 +757,12 @@ input[type=file]{display:none;}
     <button class="btn-mapa-mini" onclick="abrirMapaFull()">⛶ Ampliar</button>
   </div>
   <div class="corrida-painel">
-    <div class="corrida-status-row">
-      <div class="entrega-status-txt" id="entrega-status-txt">A caminho do passageiro</div>
-      <div class="status-chip">Em entrega</div>
+    <div style="display:flex;align-items:center;gap:12px;background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;">
+      <div id="status-icone-circulo" style="width:48px;height:48px;border-radius:50%;background:rgba(59,130,246,0.15);border:2px solid #3b82f6;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏍️</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">Etapa atual</div>
+        <div class="entrega-status-txt" id="entrega-status-txt">Indo buscar no restaurante</div>
+      </div>
     </div>
 
     <div id="fila-badge" style="display:none;margin-bottom:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:13px;padding:11px 14px;align-items:center;justify-content:space-between;cursor:pointer;" onclick="abrirFilaEntregas()">
@@ -787,7 +791,6 @@ input[type=file]{display:none;}
 
     <div class="corrida-acoes">
       <button class="btn-nav-grande" onclick="abrirNavegacao()">🧭 Navegar até o destino</button>
-      <button class="btn-zap-pequeno" onclick="abrirChatMot()">💬 Chat</button>
     </div>
 
     <!-- BOTÃO ÚNICO DE PROGRESSO (muda de ação sozinho, como Uber/99) -->
@@ -799,11 +802,13 @@ input[type=file]{display:none;}
     </div>
 
     <div class="valor-input-wrap">
-      <div class="valor-input-label">Valor cobrado <span style="font-size:10px;color:var(--verde);margin-left:6px;">✏️ editável</span></div>
-      <div class="valor-input-row"><div class="valor-prefix">R$</div><input type="number" class="valor-input" id="valor-corrida" placeholder="0,00" step="0.50" min="0"/></div>
+      <div class="valor-input-label">💰 Valor combinado desta entrega</div>
+      <div style="font-size:26px;font-weight:900;color:var(--dourado);text-align:center;padding:10px;" id="valor-corrida-display">R$ --</div>
+      <input type="hidden" id="valor-corrida"/>
     </div>
 
     <button class="btn-cancelar-corrida" onclick="cancelarEntregaMotoboy()">Cancelar entrega</button>
+    <button onclick="abrirChatMot()" style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬</button>
   </div>
 </div>
 
@@ -1254,12 +1259,15 @@ input[type=file]{display:none;}
 
     <div class="pedido-obs" id="ped-obs" style="display:none;"></div>
 
-    <div id="ped-taxa-row" style="display:none;background:rgba(34,197,94,0.1);border:1px solid var(--verde);border-radius:13px;padding:11px 14px;margin-bottom:9px;text-align:center;">
-      <div style="font-size:10px;color:var(--verde);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">💰 Você vai receber por essa entrega</div>
-      <div id="ped-taxa-valor" style="font-size:20px;font-weight:900;color:var(--verde);">R$ --</div>
+    <div id="ped-taxa-row" style="display:none;position:relative;overflow:hidden;background:linear-gradient(135deg,#3d2e0a,#5c4310);border:2px solid var(--dourado);border-radius:16px;padding:16px;margin-bottom:9px;text-align:center;">
+      <div style="position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:linear-gradient(45deg,transparent 42%,rgba(255,255,255,0.35) 50%,transparent 58%);animation:luzReluzenteMot 2.6s linear infinite;pointer-events:none;"></div>
+      <div style="position:relative;z-index:1;">
+        <div style="font-size:11px;color:var(--dourado);font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">💰 Você vai receber por essa entrega</div>
+        <div id="ped-taxa-valor" style="font-size:30px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
+      </div>
     </div>
 
-    <!-- Valor + crédito -->
+    <!-- Valor do pedido (informativo) -->
     <div class="pedido-valor-row">
       <div class="pedido-valor-item"><div class="pedido-valor-num" id="ped-valor">--</div><div class="pedido-valor-label">Valor do pedido (a cobrar do cliente)</div></div>
       <div class="pedido-valor-item"><div class="pedido-valor-num" id="ped-credito-custo">--</div><div class="pedido-valor-label">Custo em créditos</div></div>
@@ -2030,12 +2038,13 @@ function fmtData(ts){if(!ts)return"--";const d=ts.toDate?ts.toDate():new Date(ts
 // ── ÁUDIO (necessário pra desbloquear no iPhone) ──
 let _ac=null;
 function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==="suspended")_ac.resume();return _ac;}
-function nota(f,s,d,v=.7){try{const c=getAC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(f,c.currentTime+s);g.gain.setValueAtTime(0,c.currentTime+s);g.gain.linearRampToValueAtTime(v,c.currentTime+s+.01);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+s+d);o.start(c.currentTime+s);o.stop(c.currentTime+s+d+.05);}catch(e){}}
+function nota(f,s,d,v=.7){try{const c=getAC(),o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();o.type="sine";o2.type="sine";o.connect(g);o2.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(f,c.currentTime+s);o2.frequency.setValueAtTime(f*2,c.currentTime+s);g.gain.setValueAtTime(0,c.currentTime+s);g.gain.linearRampToValueAtTime(v,c.currentTime+s+.01);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+s+d);o.start(c.currentTime+s);o2.start(c.currentTime+s);o.stop(c.currentTime+s+d+.05);o2.stop(c.currentTime+s+d+.05);}catch(e){}}
 function falar(txt){try{if(!("speechSynthesis"in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="pt-BR";u.rate=1;u.pitch=1;const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith("pt"));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
 function somNovoPedido(){
   if(!getConfigPref("som",true))return;
-  nota(659,0,.12,.85);nota(880,.14,.12,.85);nota(659,.28,.12,.85);nota(880,.42,.4,.8);
-  setTimeout(()=>falar("Entrega Já! Você tem um novo pedido de entrega!"),500);
+  // Sininho estilo "chegou corrida", em arpejo ascendente, com harmônico (som mais redondo/bonito)
+  nota(523,0,.18,.55);nota(659,.15,.18,.55);nota(784,.3,.18,.6);nota(1046,.46,.55,.65);
+  setTimeout(()=>falar("Entrega Já! Você tem um novo pedido de entrega!"),700);
 }
 function somEntregaConcluida(){
   nota(523,0,.12,.7);nota(659,.13,.12,.7);nota(784,.26,.4,.7);
@@ -2396,7 +2405,7 @@ async function mostrarPedido(entrega){
 
 // ── TIMER DO PEDIDO ──
 function iniciarTimerPedido(){
-  _pedSeg=15;
+  _pedSeg=35;
   const ring=document.getElementById("ped-sheet")?.querySelector(".ped-timer-ring");
   atualizarTimerVisual();
   if(timerPedido)clearInterval(timerPedido);
@@ -2411,7 +2420,7 @@ function atualizarTimerVisual(){
   if(num)num.textContent=_pedSeg;
   const ring=document.querySelector(".ped-timer-ring");
   if(ring){
-    const pct=(_pedSeg/15)*360;
+    const pct=(_pedSeg/35)*360;
     ring.style.background=`conic-gradient(var(--dourado) ${pct}deg,var(--card2) ${pct}deg)`;
   }
 }
@@ -2513,6 +2522,12 @@ async function devolverCredito(entregaId,valor){
 
 
 // ── ATUALIZAR aceitarEntrega pra entrar na tela de entrega (estende a versão da Fatia 3) ──
+function atualizarEstagioVisual(texto,icone){
+  const el=document.getElementById("entrega-status-txt");
+  if(el)el.textContent=texto;
+  const ic=document.getElementById("status-icone-circulo");
+  if(ic)ic.textContent=icone;
+}
 async function entrarTelaEntrega(){
   if(!entregaAtiva)return;
   const g=id=>document.getElementById(id);
@@ -2539,17 +2554,18 @@ async function entrarTelaEntrega(){
 
   // Valor que o motoboy vai receber: já vem combinado pelo restaurante, pré-preenchido — só ajusta se precisar
   if(g("valor-corrida"))g("valor-corrida").value=entregaAtiva.valorMotoboy?entregaAtiva.valorMotoboy.toFixed(2):"";
+  if(g("valor-corrida-display"))g("valor-corrida-display").textContent=entregaAtiva.valorMotoboy?"R$ "+entregaAtiva.valorMotoboy.toFixed(2).replace(".",","):"R$ --";
 
   // Restaura a etapa certa: se esta entrega já teve o pagamento confirmado antes
   // (ex: motoboy trocou de foco na fila de paradas múltiplas), retoma direto rumo ao cliente.
   if(entregaAtiva.statusEtapa==="no_carro"){
     statusAtual="no_carro";
-    g("entrega-status-txt").textContent="A caminho do cliente";
+    atualizarEstagioVisual("Indo até o cliente","🏁");
     const btn=g("btn-etapa-unica");
     if(btn){btn.textContent="🏁 Concluir entrega";btn.className="btn-etapa-unica etapa-concluir";}
   }else{
     statusAtual="a_caminho";
-    g("entrega-status-txt").textContent="A caminho do restaurante";
+    atualizarEstagioVisual("Indo buscar no restaurante","🏍️");
     const btn=g("btn-etapa-unica");
     if(btn){btn.textContent="📍 Cheguei ao restaurante";btn.className="btn-etapa-unica";}
   }
@@ -2644,7 +2660,7 @@ async function avancarEtapa(){
     if(!res){if(btn)btn.disabled=false;return;}
     statusAtual="cheguei";
     if(entregaAtiva)entregaAtiva.statusEtapa="cheguei";
-    document.getElementById("entrega-status-txt").textContent="Chegou no restaurante!";
+    atualizarEstagioVisual("Retirando a encomenda","📦");
     try{
       const upd={statusEtapa:"cheguei",status:"motoboy_chegou"};
       if(res&&res.forcado)upd.divergenciaChegada={motivo:res.motivo,distanciaM:res.distanciaM,em:new Date().toISOString()};
@@ -2696,7 +2712,7 @@ function abrirModalConfirmaPgto(){
 async function confirmarPagamentoRecebido(){
   document.getElementById("modal-confirma-pgto").classList.remove("show");
   statusAtual="no_carro";
-  document.getElementById("entrega-status-txt").textContent="A caminho do cliente";
+  atualizarEstagioVisual("Indo até o cliente","🏁");
   const btn=document.getElementById("btn-etapa-unica");
   if(btn){btn.textContent="🏁 Concluir entrega";btn.className="btn-etapa-unica etapa-concluir";}
   atualizarRotaParaDestino();
