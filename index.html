@@ -1628,6 +1628,9 @@ function ativarNotifAgora(){
   const btn=document.getElementById("btn-ativar-notif");
   if(btn)btn.remove();
 }
+// ── BADGE NO ÍCONE DO APP (contador vermelho, funciona no iPhone com app instalado) ──
+function setBadgeApp(n){try{if("setAppBadge"in navigator)navigator.setAppBadge(n);}catch(e){}}
+function limparBadgeApp(){try{if("clearAppBadge"in navigator)navigator.clearAppBadge();}catch(e){}}
 function _iniciarApp(){
   if(_appIniciado)return;_appIniciado=true;
   carregarConfigRotaAuto();
@@ -2312,7 +2315,8 @@ async function aceitarComoSugestaoRota(entrega,irPrimeiro){
 async function mostrarPedido(entrega){
   pedidoAtual=entrega;
   try{getAC();}catch(e){}
-  somNovoPedido();
+  iniciarSomRepetindoPedido();
+  setBadgeApp(1);
   notif("📦 Novo pedido de entrega!",(entrega.clienteNome||"Restaurante")+" tem uma encomenda para retirar");
   const g=id=>document.getElementById(id);
 
@@ -2404,8 +2408,17 @@ async function mostrarPedido(entrega){
 
 
 // ── TIMER DO PEDIDO ──
+let _intervalSomPedido=null;
+function iniciarSomRepetindoPedido(){
+  pararSomRepetindoPedido();
+  somNovoPedido();
+  _intervalSomPedido=setInterval(()=>{somNovoPedido();},4000);
+}
+function pararSomRepetindoPedido(){
+  if(_intervalSomPedido){clearInterval(_intervalSomPedido);_intervalSomPedido=null;}
+}
 function iniciarTimerPedido(){
-  _pedSeg=35;
+  _pedSeg=60;
   const ring=document.getElementById("ped-sheet")?.querySelector(".ped-timer-ring");
   atualizarTimerVisual();
   if(timerPedido)clearInterval(timerPedido);
@@ -2420,7 +2433,7 @@ function atualizarTimerVisual(){
   if(num)num.textContent=_pedSeg;
   const ring=document.querySelector(".ped-timer-ring");
   if(ring){
-    const pct=(_pedSeg/35)*360;
+    const pct=(_pedSeg/60)*360;
     ring.style.background=`conic-gradient(var(--dourado) ${pct}deg,var(--card2) ${pct}deg)`;
   }
 }
@@ -2429,6 +2442,8 @@ function pararTimerPedido(){if(timerPedido){clearInterval(timerPedido);timerPedi
 // ── RECUSAR ──
 function recusarCorrida(){
   pararTimerPedido();
+  pararSomRepetindoPedido();
+  limparBadgeApp();
   document.getElementById("modal-pedido").classList.remove("show");
   pedidoAtual=null;
 }
@@ -2437,6 +2452,8 @@ function recusarCorrida(){
 async function aceitarCorrida(){
   if(!pedidoAtual)return;
   pararTimerPedido();
+  pararSomRepetindoPedido();
+  limparBadgeApp();
   const custoCred=pedidoAtual._custoCredito||1;
   const credAtual=user.creditos||0;
   if(credAtual<custoCred){
