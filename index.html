@@ -1573,20 +1573,14 @@ OneSignalDeferred.push(async function(OS){
   window._oneSignalPronto=true;
   if(user&&user.id)vincularOneSignal();
 });
-const ONESIGNAL_REST_KEY="os_v2_app_xejam2xarjbkherzldv5hzkzje75fphuqw4uxufatsritw3wotyhheoiv22myf5fpfzin7znplqiqyyopmecs2aqkckpfph2ctcjpqi";
+const ONESIGNAL_WORKER_URL="https://cold-grass-87eb.heitorserraneto.workers.dev";
 async function enviarNotificacaoOneSignal(externalIds,titulo,mensagem){
   if(!externalIds||externalIds.length===0)return;
   try{
-    await fetch("https://api.onesignal.com/notifications",{
+    await fetch(ONESIGNAL_WORKER_URL,{
       method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Basic "+ONESIGNAL_REST_KEY},
-      body:JSON.stringify({
-        app_id:ONESIGNAL_APP_ID,
-        include_aliases:{external_id:externalIds},
-        target_channel:"push",
-        headings:{en:titulo},
-        contents:{en:mensagem}
-      })
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({externalIds,titulo,mensagem})
     });
   }catch(e){}
 }
