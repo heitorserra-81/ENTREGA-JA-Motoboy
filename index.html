@@ -496,6 +496,10 @@ input[type=file]{display:none;}
 .pass-obs-entrega{font-size:11px;color:var(--dourado);margin-top:3px;}
 .entrega-acoes{display:flex;gap:9px;margin-bottom:14px;}
 .btn-nav,.btn-zap{flex:1;padding:12px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.corrida-acoes{display:flex;flex-direction:column;gap:9px;margin-bottom:10px;}
+.btn-nav-grande{width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(251,191,36,0.3);}
+.btn-nav-grande:active{transform:scale(0.98);}
+.btn-zap-pequeno{width:100%;padding:11px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 #etapas-entrega{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
 .etapa{flex-shrink:0;padding:9px 14px;border-radius:20px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .etapa.ativa{background:rgba(251,191,36,0.15);border-color:var(--dourado);color:var(--dourado);}
@@ -782,8 +786,8 @@ input[type=file]{display:none;}
     </div>
 
     <div class="corrida-acoes">
-      <button class="btn-nav" onclick="abrirNavegacao()">🧭 Navegar</button>
-      <button class="btn-zap" onclick="abrirChatMot()">💬 Chat</button>
+      <button class="btn-nav-grande" onclick="abrirNavegacao()">🧭 Navegar até o destino</button>
+      <button class="btn-zap-pequeno" onclick="abrirChatMot()">💬 Chat</button>
     </div>
 
     <!-- BOTÃO ÚNICO DE PROGRESSO (muda de ação sozinho, como Uber/99) -->
@@ -1251,7 +1255,7 @@ input[type=file]{display:none;}
     <div class="pedido-obs" id="ped-obs" style="display:none;"></div>
 
     <div id="ped-taxa-row" style="display:none;background:rgba(34,197,94,0.1);border:1px solid var(--verde);border-radius:13px;padding:11px 14px;margin-bottom:9px;text-align:center;">
-      <div style="font-size:10px;color:var(--verde);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">💰 Sua taxa de entrega</div>
+      <div style="font-size:10px;color:var(--verde);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">💰 Você vai receber por essa entrega</div>
       <div id="ped-taxa-valor" style="font-size:20px;font-weight:900;color:var(--verde);">R$ --</div>
     </div>
 
@@ -2087,7 +2091,12 @@ function calcularValorPorDistancia(km){
   return 65;
 }
 function calcularCreditoPorDistancia(km){
-  // Teto de 3 créditos por corrida, mesmo em distâncias longas (Campinas, Mogi Guaçu etc)
+  if(FAIXAS_PRECO_MOT&&FAIXAS_PRECO_MOT.length>0){
+    const ordenadas=[...FAIXAS_PRECO_MOT].sort((a,b)=>a.ate-b.ate);
+    for(const f of ordenadas)if(km<=f.ate)return f.creditoMotoboy;
+    return ordenadas[ordenadas.length-1].creditoMotoboy;
+  }
+  // Teto de 3 créditos por corrida, mesmo em distâncias longas (Campinas, Mogi Guaçu etc) — fallback se a config ainda não carregou
   const tabela=[{ate:5,creditos:1},{ate:15,creditos:2},{ate:999,creditos:3}];
   for(const t of tabela){if(km<=t.ate)return t.creditos;}
   return 3;
@@ -2129,6 +2138,7 @@ async function _distanciaRotaKm(lat1,lng1,lat2,lng2){
   return dKmMot(lat1,lng1,lat2,lng2)*1.3;
 }
 let CONFIG_ROTA_AUTO={ativa:false,desvioMaxKm:2};
+let FAIXAS_PRECO_MOT=null;
 async function carregarConfigRotaAuto(){
   try{
     const snap=await db.collection("ej_config").doc("geral").get();
@@ -2136,6 +2146,7 @@ async function carregarConfigRotaAuto(){
       const d=snap.data();
       CONFIG_ROTA_AUTO.ativa=d.deteccaoRotaAuto===true;
       CONFIG_ROTA_AUTO.desvioMaxKm=d.desvioMaxKm!==undefined?d.desvioMaxKm:2;
+      if(d.faixasPreco&&d.faixasPreco.length>0)FAIXAS_PRECO_MOT=d.faixasPreco;
     }
   }catch(e){}
 }
@@ -2327,11 +2338,11 @@ async function mostrarPedido(entrega){
   const valorTotal=entrega.valorTotal||entrega.valorPedido;
   g("ped-valor").textContent=valorTotal?("R$ "+valorTotal.toFixed(2).replace(".",",")):"Não informado";
 
-  // Taxa de entrega: é isso que o motoboy realmente ganha por essa corrida (quando o restaurante define uma)
+  // Valor combinado: é isso que o motoboy realmente ganha por essa corrida, definido pelo restaurante
   const taxaRow=g("ped-taxa-row");
-  if(entrega.taxaEntrega&&entrega.taxaEntrega>0){
+  if(entrega.valorMotoboy&&entrega.valorMotoboy>0){
     taxaRow.style.display="block";
-    g("ped-taxa-valor").textContent="R$ "+entrega.taxaEntrega.toFixed(2).replace(".",",");
+    g("ped-taxa-valor").textContent="R$ "+entrega.valorMotoboy.toFixed(2).replace(".",",");
   }else{
     taxaRow.style.display="none";
   }
@@ -2518,12 +2529,16 @@ async function entrarTelaEntrega(){
 
   const pgtoIcones={Dinheiro:"💵",Pix:"📱",Débito:"💳",Crédito:"💳"};
   let txtPgto=(pgtoIcones[entregaAtiva.formaPgto]||"💰")+" "+(entregaAtiva.formaPgto||"Não informado");
-  if(entregaAtiva.formaPgto==="Dinheiro"&&entregaAtiva.trocoPara)txtPgto+=" · Troco p/ "+entregaAtiva.trocoPara;
+  if(entregaAtiva.formaPgto==="Dinheiro"&&entregaAtiva.trocoPara){
+    const totalPed=entregaAtiva.valorTotal||entregaAtiva.valorPedido||0;
+    const pagaCom=parseFloat(entregaAtiva.trocoPara)||0;
+    const trocoCalc=Math.max(0,pagaCom-totalPed);
+    txtPgto+=" · Troco: R$ "+trocoCalc.toFixed(2).replace(".",",");
+  }
   g("corrida-pgto-info").textContent=txtPgto;
 
-  // Valor total já vem definido pelo restaurante (subtotal + taxa de entrega, se houver)
-  const valorTotal=entregaAtiva.valorTotal||entregaAtiva.valorPedido;
-  if(g("valor-entrega"))g("valor-entrega").value=valorTotal?valorTotal.toFixed(2):"";
+  // Valor que o motoboy vai receber: já vem combinado pelo restaurante, pré-preenchido — só ajusta se precisar
+  if(g("valor-corrida"))g("valor-corrida").value=entregaAtiva.valorMotoboy?entregaAtiva.valorMotoboy.toFixed(2):"";
 
   // Restaura a etapa certa: se esta entrega já teve o pagamento confirmado antes
   // (ex: motoboy trocou de foco na fila de paradas múltiplas), retoma direto rumo ao cliente.
@@ -2900,8 +2915,11 @@ function criarModalNotinhaMot(){
             <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:#1a1a1a;"><span>Total a receber</span><span id="nm-total">R$ 0,00</span></div>
           </div>
           <div style="background:#f7f7f7;border-radius:10px;padding:10px 12px;margin-bottom:10px;" id="nm-troco-row">
-            <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">💵 Levar troco para</div>
+            <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">💵 Cliente vai pagar com</div>
             <div id="nm-troco" style="font-size:15px;color:#1a1a1a;font-weight:900;">--</div>
+            <div style="border-top:1px dashed rgba(0,0,0,0.2);margin:8px 0;"></div>
+            <div style="font-size:10px;color:#c0392b;font-weight:700;text-transform:uppercase;margin-bottom:3px;">🔴 Troco a devolver</div>
+            <div id="nm-troco-calc" style="font-size:19px;color:#c0392b;font-weight:900;">--</div>
           </div>
           <div style="background:#f7f7f7;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
             <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Pagamento</div>
@@ -2949,7 +2967,10 @@ function abrirNotinhaMot(){
   const trocoRow=document.getElementById("nm-troco-row");
   if(d.formaPgto==="Dinheiro"&&d.trocoPara){
     trocoRow.style.display="block";
-    document.getElementById("nm-troco").textContent="R$ "+d.trocoPara;
+    const pagaCom=parseFloat(d.trocoPara)||0;
+    const trocoCalculado=Math.max(0,pagaCom-parseFloat(total));
+    document.getElementById("nm-troco").textContent="R$ "+pagaCom.toFixed(2).replace(".",",");
+    document.getElementById("nm-troco-calc").textContent="R$ "+trocoCalculado.toFixed(2).replace(".",",");
   }else trocoRow.style.display="none";
 
   const clienteRow=document.getElementById("nm-cliente-row");
@@ -3184,6 +3205,9 @@ async function enviarMsgMot(){
     await db.collection("ej_pedidos").doc(entregaAtiva.id).collection("chat").add({
       texto:txt,de:"motoboy",nome:user?.nome||"Motoboy",ts:firebase.firestore.FieldValue.serverTimestamp()
     });
+    if(entregaAtiva.clienteId&&!entregaAtiva.clienteId.startsWith("anon_")){
+      enviarNotificacaoOneSignal([entregaAtiva.clienteId],"💬 Mensagem do motoboy",txt);
+    }
   }catch(e){toast("Erro ao enviar: "+e.message);}
 }
 
