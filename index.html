@@ -26,7 +26,13 @@
   --verde:#22c55e;--danger:#ef4444;
   --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--satmin:max(env(safe-area-inset-top,0px),12px);
 }
-html,body{height:100%;font-family:-apple-system,sans-serif;color:var(--text);overflow:hidden;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;background:#080f1e;}
+body.claro{
+  --bg:#f7f3ea;--card:#ffffff;--card2:#f1ece0;--azul2:#e3ecfb;--azul3:#d3e0f7;
+  --dourado:#d97706;--dourado2:#b45309;--dourado3:#92400e;
+  --border:rgba(180,83,9,0.25);--text:#1f2430;--muted:#6b7280;
+  --verde:#16a34a;--danger:#dc2626;
+}
+html,body{height:100%;font-family:-apple-system,sans-serif;color:var(--text);overflow:hidden;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;background:var(--bg);transition:background 0.3s;}
 input,textarea{-webkit-user-select:text!important;user-select:text!important;}
 @keyframes gira{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
 @keyframes entradaAviso3D{0%{opacity:0;transform:perspective(800px) rotateX(35deg) scale(0.85) translateY(30px);}100%{opacity:1;transform:perspective(800px) rotateX(0deg) scale(1) translateY(0);}}
@@ -694,6 +700,7 @@ input[type=file]{display:none;}
       </div>
       <div style="flex:1;"></div>
       <img src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" style="width:66px;height:66px;border-radius:18px;object-fit:cover;position:absolute;left:0;right:0;margin:0 auto;margin-top:0px;box-shadow:0 6px 20px rgba(251,191,36,0.45);"/>
+      <button onclick="alternarTema()" style="background:var(--card2);border:1px solid var(--border);border-radius:12px;width:34px;height:34px;font-size:15px;cursor:pointer;flex-shrink:0;margin-right:8px;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;" id="btn-tema">🌙</button>
       <button class="btn-ham" onclick="abrirMenu()" style="flex-shrink:0;position:relative;z-index:1;">☰</button>
     </div>
     <div class="toggle-wrap">
@@ -1994,6 +2001,21 @@ setInterval(()=>{
   }
 },30000);
 
+// ── MODO CLARO/ESCURO ──
+function alternarTema(){
+  const claro=document.body.classList.toggle("claro");
+  localStorage.setItem("ejm_tema",claro?"claro":"escuro");
+  document.getElementById("btn-tema").textContent=claro?"☀️":"🌙";
+}
+function aplicarTemaSalvo(){
+  const salvo=localStorage.getItem("ejm_tema");
+  if(salvo==="claro"){
+    document.body.classList.add("claro");
+    const btn=document.getElementById("btn-tema");
+    if(btn)btn.textContent="☀️";
+  }
+}
+aplicarTemaSalvo();
 function iniciarGPS(){
   if(gpsInterval)clearInterval(gpsInterval);
   gpsInterval=setInterval(()=>{
