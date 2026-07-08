@@ -55,7 +55,7 @@ input,textarea{-webkit-user-select:text!important;user-select:text!important;}
 #tela-splash{align-items:center;justify-content:center;gap:18px;padding-top:max(40px,var(--sat));}
 .splash-logo{width:130px;height:130px;border-radius:32px;overflow:hidden;box-shadow:0 0 50px rgba(251,191,36,0.35);animation:float 3s ease-in-out infinite;}
 .splash-logo img{width:100%;height:100%;object-fit:cover;}
-.splash-title{font-size:30px;font-weight:900;color:#fff;text-align:center;}
+.splash-title{font-size:30px;font-weight:900;color:var(--text);text-align:center;}
 .splash-title span{color:var(--dourado);}
 .splash-sub{font-size:13px;color:var(--muted);}
 .splash-bar{width:44px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
@@ -66,7 +66,7 @@ input,textarea{-webkit-user-select:text!important;user-select:text!important;}
 .login-header{padding:16px 22px 20px;text-align:center;}
 .login-logo{width:80px;height:80px;border-radius:20px;overflow:hidden;margin:0 auto 12px;box-shadow:0 6px 24px rgba(251,191,36,0.25);}
 .login-logo img{width:100%;height:100%;object-fit:cover;}
-.login-header h1{font-size:22px;font-weight:900;color:#fff;margin-bottom:3px;}
+.login-header h1{font-size:22px;font-weight:900;color:var(--text);margin-bottom:3px;}
 .login-header p{font-size:12px;color:var(--muted);}
 .login-body{padding:0 22px;display:flex;flex-direction:column;gap:11px;}
 .modo-tabs{display:flex;background:var(--card);border-radius:14px;padding:3px;border:1px solid var(--border);}
@@ -81,7 +81,7 @@ input,textarea{-webkit-user-select:text!important;user-select:text!important;}
 .emerg-desc{font-size:11px;color:var(--muted);margin-bottom:10px;}
 .sobre-row{display:flex;align-items:center;gap:11px;padding:10px 13px;background:var(--card2);border:1px solid var(--border);border-radius:12px;}
 .sobre-row span{font-size:20px;}
-.sobre-lb{font-size:13px;font-weight:700;color:#fff;}
+.sobre-lb{font-size:13px;font-weight:700;color:var(--text);}
 .sobre-vl{font-size:11px;color:var(--muted);margin-top:1px;}
 .termos-texto{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:6px;}
 .termos-texto h4{font-size:13px;font-weight:800;color:var(--dourado);margin:14px 0 5px;}
@@ -109,8 +109,8 @@ input[type=file]{display:none;}
 .avatar{width:48px;height:48px;border-radius:50%;background:var(--card2);border:2px solid var(--dourado);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-size:14px;font-weight:700;color:var(--dourado);}
 .avatar img{width:100%;height:100%;object-fit:cover;}
 .header-info{flex:1;}
-.header-saudacao{font-size:11px;color:rgba(255,255,255,0.6);}
-.header-nome{font-size:16px;font-weight:800;color:#fff;}
+.header-saudacao{font-size:11px;color:var(--muted);}
+.header-nome{font-size:16px;font-weight:800;color:var(--text);}
 .btn-ham{background:rgba(251,191,36,0.08);border:1px solid var(--border);border-radius:13px;color:var(--dourado);font-size:22px;cursor:pointer;padding:9px 13px;flex-shrink:0;}
 
 /* ATALHOS SCROLL */
@@ -128,7 +128,7 @@ input[type=file]{display:none;}
 
 /* CARD DESTINO */
 .dest-card{margin:12px 14px 10px;background:rgba(15,26,46,0.55);border:1px solid var(--border);border-radius:20px;padding:14px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
-.dest-titulo{font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;}
+.dest-titulo{font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px;}
 .chips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;margin-bottom:8px;}
 .chips::-webkit-scrollbar{display:none;}
 .chip{flex-shrink:0;padding:5px 13px;border-radius:18px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;}
@@ -151,7 +151,7 @@ input[type=file]{display:none;}
 .campo-obs{width:100%;padding:10px 13px;background:var(--card2);border:1px solid var(--border);border-radius:13px;color:var(--text);font-size:13px;font-family:inherit;outline:none;-webkit-appearance:none;margin-bottom:7px;-webkit-user-select:text;user-select:text;}
 .campo-obs::placeholder{color:var(--muted);}
 .pgto-sec{margin-bottom:8px;}
-.pgto-titulo{font-size:13px;font-weight:800;color:#fff;margin-bottom:8px;}
+.pgto-titulo{font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;}
 .pgto-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
 .pgto-btn{padding:11px 8px;border-radius:12px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;}
 .pgto-btn.ativo{background:rgba(251,191,36,0.12);border-color:var(--dourado);color:var(--dourado);}
@@ -172,7 +172,7 @@ input[type=file]{display:none;}
   width:100%;padding:16px 20px;border-radius:17px;
   background:linear-gradient(135deg,#1e40af,#2563eb,#1d4ed8);
   border:none;
-  color:#ffffff;
+  color:var(--text);
   font-size:18px;font-weight:900;
   cursor:pointer;font-family:inherit;
   position:relative;z-index:2;overflow:hidden;
@@ -209,7 +209,7 @@ input[type=file]{display:none;}
 #tela-buscando{align-items:center;justify-content:center;gap:14px;padding:24px;padding-top:max(60px,calc(var(--sat)+40px));}
 .busc-logo{width:84px;height:84px;border-radius:20px;overflow:hidden;animation:float 2s ease-in-out infinite;}
 .busc-logo img{width:100%;height:100%;object-fit:cover;}
-.busc-titulo{font-size:20px;font-weight:900;color:#fff;text-align:center;}
+.busc-titulo{font-size:20px;font-weight:900;color:var(--text);text-align:center;}
 .busc-sub{font-size:13px;color:var(--muted);text-align:center;}
 .busc-spinner{width:48px;height:48px;border:3px solid rgba(251,191,36,0.12);border-top-color:var(--dourado);border-radius:50%;animation:spin 0.9s linear infinite;}
 .busc-num{font-size:34px;font-weight:900;color:var(--dourado);}
@@ -231,7 +231,7 @@ input[type=file]{display:none;}
 .mot-card{display:flex;align-items:center;gap:11px;padding:11px;background:var(--card2);border-radius:14px;border:1px solid var(--border);margin-bottom:9px;cursor:pointer;}
 .mot-foto{width:48px;height:48px;border-radius:50%;background:var(--bg);border:2px solid var(--dourado);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:18px;}
 .mot-foto img{width:100%;height:100%;object-fit:cover;}
-.mot-nome{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;}
+.mot-nome{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
 .mot-veic{font-size:11px;color:var(--muted);}
 .mot-placa{font-size:11px;font-weight:700;color:var(--dourado);}
 .entrega-valor{font-size:22px;font-weight:900;color:var(--dourado);text-align:center;margin-bottom:9px;}
@@ -244,7 +244,7 @@ input[type=file]{display:none;}
 #modal-chat.show{display:flex;}
 .chat-sheet{background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border);width:100%;height:68vh;display:flex;flex-direction:column;}
 .chat-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.chat-tit{flex:1;font-size:14px;font-weight:700;color:#fff;}
+.chat-tit{flex:1;font-size:14px;font-weight:700;color:var(--text);}
 .chat-msgs{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:7px;}
 .msg{max-width:78%;padding:8px 13px;border-radius:14px;font-size:13px;line-height:1.4;}
 .msg.minha{align-self:flex-end;background:var(--azul2);color:var(--dourado);border-bottom-right-radius:3px;}
@@ -258,13 +258,13 @@ input[type=file]{display:none;}
 /* PERFIL */
 #tela-perfil{padding-bottom:72px;}
 .perf-hdr{background:linear-gradient(180deg,rgba(26,42,74,0.95),transparent);padding:14px 18px 18px;padding-top:calc(env(safe-area-inset-top,0px) + 14px);}
-.perf-hdr h2{font-size:20px;font-weight:800;color:#fff;}
+.perf-hdr h2{font-size:20px;font-weight:800;color:var(--text);}
 .perf-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
 .perf-user{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border);cursor:pointer;}
 .perf-av{width:64px;height:64px;border-radius:50%;background:var(--card2);border:3px solid var(--dourado);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--dourado);position:relative;flex-shrink:0;}
 .perf-av img{width:100%;height:100%;object-fit:cover;}
 .perf-edit{position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--dourado);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:2px solid var(--card);}
-.perf-nome{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;}
+.perf-nome{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;}
 .perf-fone{font-size:12px;color:var(--muted);}
 .perf-badge{display:inline-flex;margin-top:4px;background:rgba(251,191,36,0.08);border:1px solid var(--border);border-radius:7px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--dourado);}
 /* PERFIL NOVO */
@@ -283,7 +283,7 @@ input[type=file]{display:none;}
 .perf-av-big{position:relative;z-index:1;width:96px;height:96px;border-radius:50%;background:var(--card2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 4px 14px rgba(0,0,0,0.5);}
 .perf-av-big img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .perf-av-outer .perf-edit{position:absolute;bottom:-2px;right:-2px;width:32px;height:32px;border-radius:50%;background:var(--dourado);border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.4);}
-.perf-nome-big{font-size:22px;font-weight:900;color:#fff;margin-top:12px;text-shadow:0 2px 8px rgba(0,0,0,0.6);}
+.perf-nome-big{font-size:22px;font-weight:900;color:var(--text);margin-top:12px;text-shadow:0 2px 8px rgba(0,0,0,0.6);}
 .perf-nivel{margin-top:8px;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:5px 15px;font-size:12px;font-weight:700;color:#ffe9b0;}
 .perf-stats-row{display:flex;gap:10px;margin:0 16px 16px;}
 .perf-stat-wrap{flex:1;position:relative;border-radius:16px;padding:2px;overflow:hidden;}
@@ -298,10 +298,10 @@ input[type=file]{display:none;}
 .perf-info-ic{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
 .perf-info-txt{flex:1;min-width:0;}
 .perf-info-lb{font-size:11px;color:var(--muted);margin-bottom:3px;}
-.perf-info-vl{font-size:15px;color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.perf-info-vl{font-size:15px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .perf-emerg{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);}
 .perf-acoes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 16px;}
-.perf-acao{display:flex;align-items:center;gap:9px;padding:15px 13px;background:var(--card);border:1px solid var(--border);border-radius:14px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;}
+.perf-acao{display:flex;align-items:center;gap:9px;padding:15px 13px;background:var(--card);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;}
 .perf-acao span{font-size:18px;}
 .perf-acao:active{background:var(--card2);}
 .perf-hist{margin:0 16px;display:flex;flex-direction:column;gap:8px;}
@@ -319,7 +319,7 @@ input[type=file]{display:none;}
 #modal-mapa-dest.show{display:flex;}
 #mapa-dest-div{flex:1;position:relative;}
 .dest-hdr{background:var(--card);border-bottom:1px solid var(--border);padding:13px 18px;padding-top:max(13px,calc(var(--sat)+8px));display:flex;align-items:center;gap:11px;}
-.dest-hdr-tit{flex:1;font-size:13px;font-weight:700;color:#fff;}
+.dest-hdr-tit{flex:1;font-size:13px;font-weight:700;color:var(--text);}
 .btn-fechar-dest{padding:7px 13px;border-radius:11px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
 .dest-footer{background:var(--card);border-top:1px solid var(--border);padding:11px 16px;padding-bottom:max(11px,var(--sab));}
 .dest-end-txt{font-size:12px;color:var(--muted);margin-bottom:8px;min-height:16px;}
@@ -353,7 +353,7 @@ input[type=file]{display:none;}
 .menu-hdr{padding:calc(env(safe-area-inset-top,0px) + 46px) 18px 18px;background:linear-gradient(180deg,var(--azul2),var(--card));border-bottom:1px solid var(--border);text-align:center;}
 .menu-logo{width:80px;height:80px;border-radius:22px;overflow:hidden;margin:0 auto 12px;box-shadow:0 6px 20px rgba(251,191,36,0.3);}
 .menu-logo img{width:100%;height:100%;object-fit:cover;}
-.menu-app{font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;}
+.menu-app{font-size:18px;font-weight:900;color:var(--text);margin-bottom:4px;}
 .menu-dev-por{font-size:10px;color:var(--muted);margin-bottom:5px;}
 .menu-ret{position:relative;display:inline-block;border-radius:12px;padding:2px;overflow:hidden;}
 .menu-ret-luz{position:absolute;top:50%;left:50%;width:200%;height:200%;background:conic-gradient(#ef4444,#3b82f6,var(--dourado),#22c55e,#ef4444);animation:gira 2s linear infinite;}
@@ -366,7 +366,7 @@ input[type=file]{display:none;}
 
 /* CONFIG */
 .config-hdr{padding:max(18px,calc(var(--sat)+14px)) 16px 12px;background:linear-gradient(180deg,rgba(26,42,74,0.95),transparent);display:flex;align-items:center;gap:11px;}
-.config-tit{font-size:17px;font-weight:800;color:#fff;}
+.config-tit{font-size:17px;font-weight:800;color:var(--text);}
 .config-sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:12px 16px 6px;}
 .config-item{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid rgba(251,191,36,0.04);}
 .config-ic{font-size:22px;width:38px;text-align:center;}
@@ -394,27 +394,27 @@ input[type=file]{display:none;}
 .crop-canvas{width:260px;height:260px;display:block;}
 
 /* ESTRELAS */
-.estrela{font-size:36px;color:rgba(255,255,255,0.12);cursor:pointer;transition:color 0.1s;}
+.estrela{font-size:36px;color:var(--muted);cursor:pointer;transition:color 0.1s;}
 .estrela.on{color:var(--dourado);}
 
 /* PWA */
 #pwa-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9997;padding:11px 16px;padding-bottom:max(11px,var(--sab));background:rgba(15,26,46,0.97);border-top:1px solid var(--border);backdrop-filter:blur(10px);}
 #pwa-banner.show{display:block;animation:slideUp 0.4s ease;}
 .pwa-inner{display:flex;align-items:center;gap:11px;}
-.pwa-logo{width:42px;height:42px;border-radius:11px;overflow:hidden;flex-shrink:0;}.pwa-txt{flex:1;display:flex;flex-direction:column;}.pwa-txt strong{font-size:13px;color:#fff;}.pwa-txt span{font-size:11px;color:var(--muted);}
+.pwa-logo{width:42px;height:42px;border-radius:11px;overflow:hidden;flex-shrink:0;}.pwa-txt{flex:1;display:flex;flex-direction:column;}.pwa-txt strong{font-size:13px;color:var(--text);}.pwa-txt span{font-size:11px;color:var(--muted);}
 .pwa-logo img{width:100%;height:100%;object-fit:cover;}
-.pwa-txt strong{display:block;font-size:13px;font-weight:700;color:#fff;}
+.pwa-txt strong{display:block;font-size:13px;font-weight:700;color:var(--text);}
 .pwa-txt span{font-size:11px;color:var(--muted);}
 .pwa-btns{display:flex;gap:7px;align-items:center;margin-left:auto;}
 .btn-inst{padding:7px 13px;border-radius:18px;background:var(--azul2);border:1px solid var(--border);color:var(--dourado);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
 .btn-x{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.07);border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 #ios-guide{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9997;padding:18px 16px;padding-bottom:max(18px,var(--sab));background:rgba(15,26,46,0.97);border-top:1px solid var(--border);}
 #ios-guide.show{display:block;animation:slideUp 0.4s ease;}
-.ios-tit{font-size:14px;font-weight:700;color:#fff;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;}
+.ios-tit{font-size:14px;font-weight:700;color:var(--text);margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;}
 .ios-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
-.ios-step{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:rgba(255,255,255,0.62);line-height:1.5;}
+.ios-step{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--muted);line-height:1.5;}
 .ios-n{width:19px;height:19px;border-radius:50%;background:rgba(251,191,36,0.1);color:var(--dourado);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ios-step em{font-style:normal;color:#fff;font-weight:600;}
+.ios-step em{font-style:normal;color:var(--text);font-weight:600;}
 .chip-ios{background:rgba(251,191,36,0.08);border-radius:5px;padding:1px 6px;font-size:10px;color:var(--dourado);font-weight:600;}
 
 /* TOAST / LOADING */
@@ -425,7 +425,7 @@ input[type=file]{display:none;}
 .ld-spin{width:44px;height:44px;border:3px solid rgba(251,191,36,0.12);border-top-color:var(--dourado);border-radius:50%;animation:spin 0.8s linear infinite;}
 /* TOGGLE ONLINE */
 .toggle-wrap{display:flex;align-items:center;justify-content:space-between;margin:14px 16px 12px;padding:16px 18px;background:var(--card);border:1px solid var(--border);border-radius:18px;}
-.toggle-info strong{display:block;font-size:14px;color:#fff;}
+.toggle-info strong{display:block;font-size:14px;color:var(--text);}
 .toggle-info span{font-size:11px;color:var(--muted);}
 .toggle-btn{position:relative;width:54px;height:30px;border-radius:15px;background:var(--card2);border:2px solid var(--border);cursor:pointer;transition:background 0.3s;flex-shrink:0;}
 .toggle-btn::before{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform 0.3s,background 0.3s;}
@@ -445,7 +445,7 @@ input[type=file]{display:none;}
 .ganhos-titulo{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;}
 .ganhos-row{display:flex;gap:10px;}
 .ganhos-item{flex:1;text-align:center;}
-.ganhos-val{font-size:18px;font-weight:900;color:#fff;}
+.ganhos-val{font-size:18px;font-weight:900;color:var(--text);}
 .ganhos-val.destaque{color:var(--dourado);font-size:20px;}
 .ganhos-label{font-size:10px;color:var(--muted);margin-top:3px;}
 /* MAPA */
@@ -483,23 +483,23 @@ input[type=file]{display:none;}
 .pedido-obs{background:rgba(251,191,36,0.06);border:1px dashed var(--border);border-radius:11px;padding:9px 12px;font-size:12px;color:var(--text);margin-bottom:10px;}
 .pedido-valor-row{display:flex;gap:10px;margin-bottom:14px;}
 .pedido-valor-item{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:11px;text-align:center;}
-.pedido-valor-num{font-size:16px;font-weight:900;color:#fff;}
+.pedido-valor-num{font-size:16px;font-weight:900;color:var(--text);}
 .pedido-valor-num.destaque{color:var(--dourado);font-size:18px;}
 .pedido-valor-label{font-size:10px;color:var(--muted);margin-top:3px;}
 .pedido-btns{display:flex;gap:10px;}
 .btn-recusar{flex:1;padding:14px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
-.btn-aceitar{flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(34,197,94,0.35);}
+.btn-aceitar{flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:var(--text);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(34,197,94,0.35);}
 /* TELA ENTREGA MOTOBOY */
 .btn-mapa-mini{position:absolute;top:10px;right:10px;z-index:999;background:rgba(10,16,32,0.85);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--dourado);cursor:pointer;}
 .entrega-painel{background:var(--bg);border-radius:24px 24px 0 0;margin-top:-18px;position:relative;z-index:2;padding:18px 16px 24px;}
 .entrega-status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.entrega-status-txt{font-size:18px;font-weight:900;color:#fff;}
+.entrega-status-txt{font-size:18px;font-weight:900;color:var(--text);}
 .status-chip{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:var(--verde);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
 .passageiro-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;}
 .pass-foto-entrega{width:50px;height:50px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;}
 .pass-foto-entrega img{width:100%;height:100%;object-fit:cover;}
 .pass-info-entrega{flex:1;min-width:0;}
-.pass-nome-entrega{font-size:14px;font-weight:800;color:#fff;}
+.pass-nome-entrega{font-size:14px;font-weight:800;color:var(--text);}
 .pass-destino-entrega{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .pass-obs-entrega{font-size:11px;color:var(--dourado);margin-top:3px;}
 .entrega-acoes{display:flex;gap:9px;margin-bottom:14px;}
@@ -517,8 +517,8 @@ input[type=file]{display:none;}
 .valor-input-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;}
 .valor-input-row{display:flex;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:0 14px;}
 .valor-prefix{font-size:16px;font-weight:800;color:var(--dourado);margin-right:8px;}
-.valor-input{flex:1;background:none;border:none;outline:none;color:#fff;font-size:20px;font-weight:800;padding:13px 0;font-family:inherit;}
-.btn-concluir{width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;box-shadow:0 4px 14px rgba(34,197,94,0.3);}
+.valor-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:20px;font-weight:800;padding:13px 0;font-family:inherit;}
+.btn-concluir{width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:var(--text);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;box-shadow:0 4px 14px rgba(34,197,94,0.3);}
 .btn-cancelar-entrega{width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 /* AVALIAÇÃO MOTOBOY */
 .estrela-mot{font-size:38px;color:var(--card2);cursor:pointer;transition:color 0.15s;}
@@ -537,7 +537,7 @@ input[type=file]{display:none;}
 .ganhos-total-label{font-size:11px;color:var(--muted);margin-top:3px;}
 .ganhos-stats{display:flex;gap:10px;}
 .ganhos-stat{flex:1;text-align:center;background:var(--card2);border-radius:13px;padding:11px 6px;}
-.ganhos-stat-val{font-size:16px;font-weight:900;color:#fff;}
+.ganhos-stat-val{font-size:16px;font-weight:900;color:var(--text);}
 .ganhos-stat-label{font-size:10px;color:var(--muted);margin-top:3px;}
 /* GRÁFICO */
 .grafico-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;}
@@ -585,7 +585,7 @@ input[type=file]{display:none;}
 .config-card-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:13px;margin:0 16px 9px;}
 .config-card-icon{font-size:22px;width:32px;text-align:center;flex-shrink:0;}
 .config-card-info{flex:1;min-width:0;}
-.config-card-nome{font-size:13px;font-weight:700;color:#fff;}
+.config-card-nome{font-size:13px;font-weight:700;color:var(--text);}
 .config-card-desc{font-size:11px;color:var(--muted);margin-top:1px;}
 .config-toggle{position:relative;width:46px;height:26px;border-radius:13px;background:var(--card2);border:2px solid var(--border);cursor:pointer;flex-shrink:0;transition:background 0.25s;}
 .config-toggle::before{content:"";position:absolute;top:1px;left:1px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform 0.25s,background 0.25s;}
@@ -595,11 +595,11 @@ input[type=file]{display:none;}
 .config-tam-btn{flex:1;padding:6px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
 .config-tam-btn.ativo{background:rgba(251,191,36,0.15);border-color:var(--dourado);color:var(--dourado);}
 .config-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:13px 15px;margin:0 16px 9px;}
-.config-toggle-nome{font-size:13px;font-weight:700;color:#fff;}
+.config-toggle-nome{font-size:13px;font-weight:700;color:var(--text);}
 .config-toggle-desc{font-size:11px;color:var(--muted);margin-top:1px;}
-.btn-etapa-unica{width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;color:#fff;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:14px;box-shadow:0 6px 18px rgba(37,99,235,0.4);transition:background 0.3s,box-shadow 0.3s;}
+.btn-etapa-unica{width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;color:var(--text);font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:14px;box-shadow:0 6px 18px rgba(37,99,235,0.4);transition:background 0.3s,box-shadow 0.3s;}
 .btn-etapa-unica.etapa-embarque{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 6px 18px rgba(59,130,246,0.4);}
-.btn-etapa-unica.etapa-concluir{background:linear-gradient(135deg,#22c55e,#4ade80);box-shadow:0 6px 18px rgba(34,197,94,0.4);color:#fff;}
+.btn-etapa-unica.etapa-concluir{background:linear-gradient(135deg,#22c55e,#4ade80);box-shadow:0 6px 18px rgba(34,197,94,0.4);color:var(--text);}
 .motivo-cancel-btn{width:100%;padding:14px;border-radius:14px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;}
 .motivo-cancel-btn.selecionado{background:rgba(239,68,68,0.1);border-color:#ef4444;color:#ef4444;}
 .modal-din{display:none!important;}
@@ -715,7 +715,7 @@ input[type=file]{display:none;}
       <div id="clima-icone" style="font-size:40px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(251,191,36,0.4));">☀️</div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:baseline;gap:8px;">
-          <div id="clima-hora" style="font-size:26px;font-weight:900;color:#fff;">--:--</div>
+          <div id="clima-hora" style="font-size:26px;font-weight:900;color:var(--text);">--:--</div>
           <div id="clima-temp" style="font-size:16px;font-weight:800;color:var(--dourado);">--°</div>
         </div>
         <div id="clima-desc" style="font-size:12px;color:var(--muted);margin-top:1px;">Carregando clima...</div>
@@ -753,7 +753,7 @@ input[type=file]{display:none;}
 <!-- MODAL MAPA AMPLIADO -->
 <div id="modal-mapa-full" class="modal-mapa-full">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 16px);">
-    <div style="font-size:15px;font-weight:800;color:#fff;">Sua posição</div>
+    <div style="font-size:15px;font-weight:800;color:var(--text);">Sua posição</div>
     <button onclick="fecharMapaFull()" style="background:var(--card2);border:1px solid var(--border);color:var(--dourado);width:34px;height:34px;border-radius:10px;font-size:16px;cursor:pointer;">✕</button>
   </div>
   <div id="mapa-full-div" style="flex:1;"></div>
@@ -816,7 +816,7 @@ input[type=file]{display:none;}
     </div>
 
     <button class="btn-cancelar-corrida" onclick="cancelarEntregaMotoboy()">Cancelar entrega</button>
-    <button onclick="abrirChatMot()" style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬<div id="chat-badge-mot" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg);">0</div></button>
+    <button onclick="abrirChatMot()" style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬<div id="chat-badge-mot" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:var(--text);font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg);">0</div></button>
   </div>
 </div>
 
@@ -825,7 +825,7 @@ input[type=file]{display:none;}
   <div class="modal-sheet" style="height:75vh;display:flex;flex-direction:column;padding-bottom:0;">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 12px;"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <div style="font-size:15px;font-weight:800;color:#fff;">💬 Chat com passageiro</div>
+      <div style="font-size:15px;font-weight:800;color:var(--text);">💬 Chat com passageiro</div>
       <button onclick="fecharChatMot()" style="background:var(--card2);border:1px solid var(--border);color:var(--dourado);width:32px;height:32px;border-radius:9px;font-size:15px;cursor:pointer;">✕</button>
     </div>
     <div class="chat-msgs" id="chat-msgs-mot" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
@@ -840,7 +840,7 @@ input[type=file]{display:none;}
 <div class="modal-base" id="modal-aval-mot">
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
-    <div style="text-align:center;margin-bottom:6px;font-size:17px;font-weight:900;color:#fff;">Como foi com <span id="aval-mot-nome">o passageiro</span>?</div>
+    <div style="text-align:center;margin-bottom:6px;font-size:17px;font-weight:900;color:var(--text);">Como foi com <span id="aval-mot-nome">o passageiro</span>?</div>
     <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:18px;">Sua avaliação é obrigatória para continuar usando o app</div>
     <div style="display:flex;justify-content:center;gap:8px;margin-bottom:18px;">
       <span class="estrela-mot" data-n="1" onclick="selEstrelaMot(1)">★</span>
@@ -859,7 +859,7 @@ input[type=file]{display:none;}
 <div class="modal-base" id="modal-termos">
   <div class="modal-sheet" style="max-height:90vh;">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
-    <div style="font-size:17px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;">Termos de Uso</div>
+    <div style="font-size:17px;font-weight:900;color:var(--text);text-align:center;margin-bottom:4px;">Termos de Uso</div>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;">Entrega Já · Política de Responsabilidade — Motoboy</div>
     <div class="termos-texto">
       <h4>1. Sobre a plataforma</h4>
@@ -898,7 +898,7 @@ input[type=file]{display:none;}
 <div class="modal-base" id="modal-cred-mot">
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
-    <div style="font-size:17px;font-weight:800;color:#fff;margin-bottom:5px;">💳 Comprar Créditos</div>
+    <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px;">💳 Comprar Créditos</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Créditos são necessários para receber pedidos. Saldo máximo: R$ 200.</div>
 
     <div style="margin-bottom:13px;">
@@ -914,12 +914,12 @@ input[type=file]{display:none;}
 
     <div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:13px;">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Chave Pix</div>
-      <div style="font-size:15px;font-weight:700;color:#fff;">19982480386</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);">19982480386</div>
       <div style="font-size:11px;color:var(--muted);margin-top:3px;">WhatsApp · Heitor Serra Neto</div>
     </div>
     <div style="display:flex;gap:9px;margin-bottom:13px;">
       <button onclick="copiarPixMot()" style="flex:1;padding:11px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">📋 Copiar chave</button>
-      <button onclick="avisarPagamentoMot()" style="flex:1;padding:11px;border-radius:13px;background:#25d366;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">WhatsApp</button>
+      <button onclick="avisarPagamentoMot()" style="flex:1;padding:11px;border-radius:13px;background:#25d366;border:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">WhatsApp</button>
     </div>
     <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:13px;">Após o Pix, avise no WhatsApp com o comprovante. O crédito é liberado manualmente pelo administrador.</div>
     <button class="btn-cancel" onclick="document.getElementById('modal-cred-mot').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Fechar</button>
@@ -930,7 +930,7 @@ input[type=file]{display:none;}
 <div class="modal-base" id="modal-fila-entregas">
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;"></div>
-    <div style="font-size:17px;font-weight:900;color:#fff;margin-bottom:4px;">📦 Suas entregas</div>
+    <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:4px;">📦 Suas entregas</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Toque em uma entrega para focar nela. A que não estiver em foco continua guardada, com seu crédito já descontado.</div>
     <div id="lista-fila-entregas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:9px;"></div>
     <button class="btn-cancel" onclick="document.getElementById('modal-fila-entregas').classList.remove('show')">Fechar</button>
@@ -942,7 +942,7 @@ input[type=file]{display:none;}
   <div class="modal-sheet" style="max-height:85vh;display:flex;flex-direction:column;">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <div style="font-size:17px;font-weight:900;color:#fff;">🕐 Histórico de entregas</div>
+      <div style="font-size:17px;font-weight:900;color:var(--text);">🕐 Histórico de entregas</div>
       <button onclick="document.getElementById('modal-hist-mot').classList.remove('show')" style="background:var(--card2);border:1px solid var(--border);color:var(--dourado);width:32px;height:32px;border-radius:9px;font-size:15px;cursor:pointer;">✕</button>
     </div>
     <div id="lista-hist-mot" style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;"><div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</div></div>
@@ -955,7 +955,7 @@ input[type=file]{display:none;}
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
     <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px;">
       <img src="https://raw.githubusercontent.com/heitorserra-81/ENTREGA-JA-Restaurante/refs/heads/main/IMG_1104.png" style="width:78px;height:78px;border-radius:18px;object-fit:cover;box-shadow:0 6px 20px rgba(251,191,36,0.3);"/>
-      <div style="font-size:22px;font-weight:900;color:#fff;margin-top:10px;letter-spacing:0.5px;">Entrega Já</div>
+      <div style="font-size:22px;font-weight:900;color:var(--text);margin-top:10px;letter-spacing:0.5px;">Entrega Já</div>
       <div style="font-size:12px;color:var(--muted);margin-top:3px;">Área do Motoboy · Versão 1.0</div>
       <div style="font-size:12px;color:var(--muted);margin-top:2px;">Desenvolvido por <b style="color:var(--dourado);">Heitor Serra Neto</b></div>
     </div>
@@ -976,7 +976,7 @@ input[type=file]{display:none;}
 <div class="modal-base" id="modal-recuperar">
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
-    <div style="font-size:18px;font-weight:900;color:#fff;text-align:center;margin-bottom:8px;">🔐 Recuperar senha</div>
+    <div style="font-size:18px;font-weight:900;color:var(--text);text-align:center;margin-bottom:8px;">🔐 Recuperar senha</div>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px;">Informe seu WhatsApp e responda a pergunta de segurança</div>
     <div id="rec-passo1">
       <div style="margin-bottom:11px;"><div class="campo-label">WhatsApp</div><input class="campo-input" id="rec-fone" type="tel" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)"/></div>
@@ -985,7 +985,7 @@ input[type=file]{display:none;}
     <div id="rec-passo2" style="display:none;">
       <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:13px;padding:13px;margin-bottom:11px;">
         <div style="font-size:11px;color:#60a5fa;font-weight:700;margin-bottom:5px;">PERGUNTA DE SEGURANÇA</div>
-        <div id="rec-pergunta" style="font-size:14px;color:#fff;font-weight:600;">--</div>
+        <div id="rec-pergunta" style="font-size:14px;color:var(--text);font-weight:600;">--</div>
       </div>
       <div style="margin-bottom:11px;"><div class="campo-label">Sua resposta</div><input class="campo-input" id="rec-resposta" type="text" placeholder="Resposta"/></div>
       <div style="margin-bottom:11px;"><div class="campo-label">Nova senha</div><input class="campo-input" id="rec-nova" type="password" placeholder="Crie a nova senha"/></div>
@@ -1031,7 +1031,7 @@ input[type=file]{display:none;}
   <!-- META -->
   <div class="meta-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <div style="font-size:13px;font-weight:800;color:#fff;">🎯 Meta</div>
+      <div style="font-size:13px;font-weight:800;color:var(--text);">🎯 Meta</div>
       <div class="meta-periodos">
         <button class="meta-per ativo" data-per="dia" onclick="trocarPeriodoMeta('dia')">Dia</button>
         <button class="meta-per" data-per="semana" onclick="trocarPeriodoMeta('semana')">Semana</button>
@@ -1085,7 +1085,7 @@ input[type=file]{display:none;}
 <div class="modal-base" id="modal-meta">
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
-    <div style="font-size:17px;font-weight:900;color:#fff;text-align:center;margin-bottom:18px;">🎯 Definir meta de ganhos</div>
+    <div style="font-size:17px;font-weight:900;color:var(--text);text-align:center;margin-bottom:18px;">🎯 Definir meta de ganhos</div>
     <div style="margin-bottom:14px;"><div class="campo-label">Período</div>
       <select class="campo-input" id="meta-periodo-sel">
         <option value="dia">Diária</option>
@@ -1118,7 +1118,7 @@ input[type=file]{display:none;}
         <div class="perf-av-ring" id="perf-av-ring">
           <div class="perf-av-big" id="perf-av"><span id="perf-initial">🚗</span></div>
         </div>
-        <div class="perf-edit" onclick="event.stopPropagation();document.getElementById('inp-foto-perf').click()">✏️</div>
+        <div class="perf-edit" onclick="event.stopPropagation();abrirOpcoesFotoPerfil()">✏️</div>
       </div>
       <input type="file" id="inp-foto-perf" accept="image/*" onchange="atualizarFotoPerfilMot(this)"/>
       <div class="perf-nome-big" id="perf-nome">--</div>
@@ -1153,14 +1153,14 @@ input[type=file]{display:none;}
   </div>
 
   <button class="btn-sair" onclick="sair()">Sair da conta</button>
-  <div style="text-align:center;margin:16px 0 30px;font-size:10px;color:rgba(255,255,255,0.15);">Entrega Já · Desenvolvido por Heitor Serra Neto</div>
+  <div style="text-align:center;margin:16px 0 30px;font-size:10px;color:var(--muted);">Entrega Já · Desenvolvido por Heitor Serra Neto</div>
 </div>
 
 <!-- MODAL EDITAR PERFIL (motoboy) -->
 <div class="modal-base" id="modal-editar-mot">
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
-    <div style="font-size:18px;font-weight:900;color:#fff;text-align:center;margin-bottom:18px;">Editar Perfil</div>
+    <div style="font-size:18px;font-weight:900;color:var(--text);text-align:center;margin-bottom:18px;">Editar Perfil</div>
     <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:14px;">
       <div><div class="campo-label">Nome completo</div><input id="ed-nome-mot" class="campo-input" type="text" placeholder="Seu nome"/></div>
       <div><div class="campo-label">WhatsApp</div><input id="ed-fone-mot" class="campo-input" type="tel" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)"/></div>
@@ -1235,7 +1235,7 @@ input[type=file]{display:none;}
           <div class="ped-av-big" id="ped-foto"><span>👤</span></div>
         </div>
       </div>
-      <div style="font-size:19px;font-weight:900;color:#fff;margin-top:10px;" id="ped-nome">--</div>
+      <div style="font-size:19px;font-weight:900;color:var(--text);margin-top:10px;" id="ped-nome">--</div>
       <div style="display:flex;gap:7px;align-items:center;margin-top:5px;">
         <div class="ped-badge" id="ped-nivel">🥉 Bronze</div>
         <div class="ped-badge" id="ped-idade">-- anos</div>
@@ -1249,7 +1249,7 @@ input[type=file]{display:none;}
       <div style="position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:linear-gradient(45deg,transparent 42%,rgba(255,255,255,0.35) 50%,transparent 58%);animation:luzReluzenteMot 2.6s linear infinite;pointer-events:none;"></div>
       <div style="position:relative;z-index:1;">
         <div style="font-size:12px;color:var(--dourado);font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">💰 Você vai receber por essa entrega</div>
-        <div id="ped-taxa-valor" style="font-size:34px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
+        <div id="ped-taxa-valor" style="font-size:34px;font-weight:900;color:var(--text);text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
         <div id="ped-taxa-km" style="font-size:13px;color:var(--dourado);font-weight:700;margin-top:4px;">-- km</div>
       </div>
     </div>
@@ -1291,10 +1291,14 @@ input[type=file]{display:none;}
 
 <!-- CROP FOTO -->
 <div class="crop-overlay" id="crop-overlay">
-  <div style="color:#fff;font-size:15px;font-weight:700;">Ajustar foto</div>
+  <div style="color:var(--text);font-size:15px;font-weight:700;">Ajustar foto</div>
   <div style="color:var(--muted);font-size:12px;margin-top:-8px;">Arraste e use dois dedos para zoom</div>
   <div class="crop-container" id="crop-container">
     <canvas class="crop-canvas" id="crop-canvas" width="260" height="260"></canvas>
+  </div>
+  <div style="display:flex;gap:9px;background:rgba(255,255,255,0.06);border-radius:13px;padding:4px;">
+    <button id="crop-btn-redondo" onclick="setCropShape('redondo')" style="padding:8px 16px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit;font-size:12px;background:var(--dourado);color:#1a1a1a;">⚪ Redondo</button>
+    <button id="crop-btn-quadrado" onclick="setCropShape('quadrado')" style="padding:8px 16px;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit;font-size:12px;background:transparent;color:var(--muted);">⬜ Quadrado</button>
   </div>
   <div style="display:flex;gap:11px;">
     <button onclick="cancelarCrop()" style="padding:11px 22px;border-radius:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;font-size:13px;background:rgba(255,255,255,0.07);color:var(--muted);">Cancelar</button>
@@ -1324,7 +1328,7 @@ input[type=file]{display:none;}
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
     <div style="font-size:32px;text-align:center;margin-bottom:10px;">📍</div>
-    <div style="font-size:16px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px;" id="gps-fora-titulo">Você ainda não chegou</div>
+    <div style="font-size:16px;font-weight:800;color:var(--text);text-align:center;margin-bottom:8px;" id="gps-fora-titulo">Você ainda não chegou</div>
     <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.5;" id="gps-fora-desc">Você está a 000m de distância.</div>
     <button id="gps-fora-btn-continuar" class="btn-p" style="width:100%;margin-bottom:9px;">Continuar buscando</button>
     <button id="gps-fora-btn-forcar" style="width:100%;padding:13px;border-radius:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Confirmar mesmo assim</button>
@@ -1335,7 +1339,7 @@ input[type=file]{display:none;}
 <div class="modal-base" id="modal-gps-motivo">
   <div class="modal-sheet">
     <div style="width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 16px;"></div>
-    <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">Por que está confirmando fora do local?</div>
+    <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;">Por que está confirmando fora do local?</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Isso fica registrado para revisão. Seja honesto — ex: "passageiro pediu para descer antes", "combinamos mudar o destino".</div>
     <textarea id="gps-motivo-texto" placeholder="Digite o motivo..." style="width:100%;min-height:90px;background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;margin-bottom:16px;"></textarea>
     <button id="gps-motivo-btn-confirmar" class="btn-p" style="width:100%;margin-bottom:9px;">Confirmar</button>
@@ -1350,7 +1354,7 @@ input[type=file]{display:none;}
     <div style="background:var(--card);border:1px solid var(--border);border-radius:22px;padding:24px;">
       <div style="text-align:center;margin-bottom:16px;">
         <div style="font-size:32px;margin-bottom:8px;">📦</div>
-        <div style="font-size:17px;font-weight:800;color:#fff;">Pronto para retirada</div>
+        <div style="font-size:17px;font-weight:800;color:var(--text);">Pronto para retirada</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px;" id="retirada-restaurante-nome">--</div>
       </div>
       <div style="background:var(--card2);border-radius:14px;padding:14px;margin-bottom:14px;">
@@ -1369,7 +1373,7 @@ input[type=file]{display:none;}
     <div style="background:var(--card);border:1px solid var(--border);border-radius:22px;padding:24px;">
       <div style="text-align:center;margin-bottom:18px;">
         <div style="font-size:32px;margin-bottom:8px;">💰</div>
-        <div style="font-size:17px;font-weight:800;color:#fff;">Confirme para liberar sua rota</div>
+        <div style="font-size:17px;font-weight:800;color:var(--text);">Confirme para liberar sua rota</div>
         <div style="font-size:13px;color:var(--muted);margin-top:6px;">Você já recebeu o valor desta entrega do restaurante?</div>
       </div>
       <button onclick="confirmarPagamentoRecebido()" class="btn-p" style="width:100%;margin-bottom:10px;">✅ Sim, recebi</button>
@@ -1384,7 +1388,7 @@ input[type=file]{display:none;}
     <div style="background:var(--card);border:1px solid var(--border);border-radius:22px;padding:24px;">
       <div style="text-align:center;margin-bottom:16px;">
         <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
-        <div style="font-size:16px;font-weight:800;color:#fff;">Deseja cancelar esta entrega?</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);">Deseja cancelar esta entrega?</div>
         <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;">Cancelamentos por falta de pagamento geram multa ao restaurante e ficam registrados. Use esse recurso apenas quando o pagamento realmente não foi realizado — isso ajuda a manter os melhores restaurantes na plataforma, tanto quanto os melhores motoboys.</div>
       </div>
       <button onclick="abrirMotivoCancelamentoPgto()" style="width:100%;padding:14px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;">Sim, cancelar entrega</button>
@@ -1396,7 +1400,7 @@ input[type=file]{display:none;}
 <!-- MODAL: MOTIVO DO CANCELAMENTO POR NÃO PAGAMENTO -->
 <div id="modal-motivo-cancel-pgto" class="modal-din" style="position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.94);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;">
   <div style="background:var(--card);border-radius:24px 24px 0 0;border-top:1px solid var(--border);padding:22px;padding-bottom:max(30px,calc(env(safe-area-inset-bottom,0px)+22px));width:100%;">
-    <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:14px;">Qual foi o motivo?</div>
+    <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px;">Qual foi o motivo?</div>
     <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px;">
       <button onclick="selecionarMotivoCancelPgto('Restaurante não realizou o pagamento')" class="motivo-cancel-btn">Restaurante não realizou o pagamento</button>
       <button onclick="selecionarMotivoCancelPgto('Não consegui contato com o restaurante')" class="motivo-cancel-btn">Não consegui contato com o restaurante</button>
@@ -1509,7 +1513,7 @@ function processarFoto(inp,prevId,txtId){
       cropBaseX=(cw-img.naturalWidth*cropBaseScale)/2;
       cropBaseY=(ch-img.naturalHeight*cropBaseScale)/2;
       cropScale=1;cropTX=0;cropTY=0;
-      desenharCrop();
+      setCropShape("redondo");
       document.getElementById("crop-overlay").style.display="flex";
     };
     img.src=e.target.result;
@@ -1517,13 +1521,25 @@ function processarFoto(inp,prevId,txtId){
   r.readAsDataURL(f);
   inp.value="";
 }
+let cropShape="redondo";
+function setCropShape(forma){
+  cropShape=forma;
+  document.getElementById("crop-btn-redondo").style.background=forma==="redondo"?"var(--dourado)":"transparent";
+  document.getElementById("crop-btn-redondo").style.color=forma==="redondo"?"#1a1a1a":"var(--muted)";
+  document.getElementById("crop-btn-quadrado").style.background=forma==="quadrado"?"var(--dourado)":"transparent";
+  document.getElementById("crop-btn-quadrado").style.color=forma==="quadrado"?"#1a1a1a":"var(--muted)";
+  desenharCrop();
+}
 function desenharCrop(){
   if(!cropImg)return;
   const cv=document.getElementById("crop-canvas"),ctx=cv.getContext("2d");
   ctx.clearRect(0,0,260,260);
   const sc=cropBaseScale*cropScale;
   ctx.save();
-  ctx.beginPath();ctx.arc(130,130,130,0,Math.PI*2);ctx.clip();
+  ctx.beginPath();
+  if(cropShape==="quadrado")ctx.rect(5,5,250,250);
+  else ctx.arc(130,130,130,0,Math.PI*2);
+  ctx.clip();
   ctx.drawImage(cropImg,cropBaseX+cropTX,cropBaseY+cropTY,cropImg.naturalWidth*sc,cropImg.naturalHeight*sc);
   ctx.restore();
 }
@@ -1549,12 +1565,41 @@ async function uploadFotoSupabase(canvas,pastaArquivo){
   const{data}=sb.storage.from("entrega-ja-bucket").getPublicUrl(caminho);
   return data.publicUrl;
 }
+function abrirOpcoesFotoPerfil(){
+  if(!document.getElementById("modal-opcoes-foto"))criarModalOpcoesFoto();
+  document.getElementById("modal-opcoes-foto").classList.add("show");
+}
+function criarModalOpcoesFoto(){
+  const div=document.createElement("div");
+  div.innerHTML=`<div id="modal-opcoes-foto" class="modal-base" style="background:rgba(0,0,0,0.8);justify-content:center;backdrop-filter:blur(6px);">
+    <div style="background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border);padding:22px;padding-bottom:max(36px,calc(var(--sab)+22px));width:100%;">
+      <div style="width:38px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 18px;"></div>
+      <button onclick="document.getElementById('modal-opcoes-foto').classList.remove('show');document.getElementById('inp-foto-perf').click()" style="width:100%;padding:15px;border-radius:14px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">📷 Trocar foto</button>
+      <button onclick="excluirFotoPerfil()" style="width:100%;padding:15px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">🗑️ Excluir foto</button>
+      <button onclick="document.getElementById('modal-opcoes-foto').classList.remove('show')" style="width:100%;padding:14px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;font-family:inherit;">Cancelar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+async function excluirFotoPerfil(){
+  document.getElementById("modal-opcoes-foto").classList.remove("show");
+  loading(true);
+  try{
+    await db.collection("ej_motoboys").doc(user.id).update({foto:null});
+    user.foto=null;localStorage.setItem("ejm_user",JSON.stringify(user));
+    atualizarPerfil();atualizarHome();
+    loading(false);toast("Foto removida.");
+  }catch(e){loading(false);toast("Erro: "+e.message);}
+}
 async function confirmarCrop(){
   if(!cropImg)return;
   const cv=document.getElementById("crop-canvas"),out=document.createElement("canvas");
   out.width=200;out.height=200;
   const ctx=out.getContext("2d");
-  ctx.save();ctx.beginPath();ctx.arc(100,100,100,0,Math.PI*2);ctx.clip();
+  ctx.save();ctx.beginPath();
+  if(cropShape==="quadrado")ctx.rect(0,0,200,200);
+  else ctx.arc(100,100,100,0,Math.PI*2);
+  ctx.clip();
   ctx.drawImage(cv,0,0,260,260,0,0,200,200);
   ctx.restore();
   document.getElementById("crop-overlay").style.display="none";cropImg=null;
@@ -1632,7 +1677,7 @@ function mostrarAvisoImportante(id,titulo,mensagem){
   div.innerHTML=`<div id="modal-aviso-importante" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;">
     <div style="width:100%;max-width:380px;background:linear-gradient(150deg,var(--card),var(--card2));border:1px solid var(--dourado);border-radius:22px;padding:26px 22px;text-align:center;animation:entradaAviso3D 0.5s cubic-bezier(0.2,0.8,0.3,1);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
       <div style="font-size:44px;margin-bottom:12px;">📢</div>
-      <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:10px;">${titulo}</div>
+      <div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:10px;">${titulo}</div>
       <div style="font-size:14px;color:var(--text);line-height:1.5;margin-bottom:22px;">${mensagem}</div>
       <button onclick="fecharAvisoImportante('${id}')" style="width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;">Ok, entendi</button>
     </div>
@@ -1820,7 +1865,7 @@ function criarModalSemCredito(){
   div.innerHTML=`<div class="modal-base" id="modal-sem-credito">
     <div class="modal-sheet">
       <div style="text-align:center;font-size:40px;margin-bottom:10px;">😅</div>
-      <div style="font-size:16px;font-weight:900;color:#fff;text-align:center;margin-bottom:6px;">Créditos insuficientes</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);text-align:center;margin-bottom:6px;">Créditos insuficientes</div>
       <div id="sc-texto" style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5;"></div>
       <button onclick="pedirRecargaCreditos();document.getElementById('modal-sem-credito').classList.remove('show')" style="width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;">💬 Recarregar pelo WhatsApp</button>
       <button onclick="document.getElementById('modal-sem-credito').classList.remove('show')" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Entendi</button>
@@ -2320,7 +2365,7 @@ function criarModalSugestaoRota(){
   div.innerHTML=`<div class="modal-base" id="modal-sugestao-rota">
     <div class="modal-sheet">
       <div style="text-align:center;font-size:38px;margin-bottom:8px;">🎯</div>
-      <div style="font-size:16px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;">Pedido no seu caminho!</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);text-align:center;margin-bottom:4px;">Pedido no seu caminho!</div>
       <div id="sr-nome" style="font-size:13px;font-weight:700;color:var(--dourado);text-align:center;margin-bottom:10px;">--</div>
       <div id="sr-detalhe" style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5;"></div>
       <button id="sr-btn-primeiro" style="width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:9px;">🎯 Aceitar e ir lá primeiro</button>
@@ -2670,7 +2715,7 @@ function abrirFilaEntregas(){
     const etapaLabel=p.statusEtapa==="no_carro"?"🚗 A caminho do cliente":"🏪 A caminho do restaurante";
     return`<div style="background:${p._emFoco?"rgba(251,191,36,0.08)":"var(--card2)"};border:1px solid ${p._emFoco?"var(--dourado)":"var(--border)"};border-radius:14px;padding:13px;${p._emFoco?"":"cursor:pointer;"}" ${p._emFoco?"":`onclick="focarEntregaDaFila('${p.id}')"`}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-        <div style="font-size:13px;font-weight:800;color:#fff;">${p.clienteNome||"Restaurante"}</div>
+        <div style="font-size:13px;font-weight:800;color:var(--text);">${p.clienteNome||"Restaurante"}</div>
         ${p._emFoco?'<div style="font-size:10px;font-weight:700;color:var(--dourado);background:rgba(251,191,36,0.15);padding:2px 9px;border-radius:10px;">EM FOCO</div>':'<div style="font-size:10px;font-weight:700;color:#60a5fa;">Tocar p/ focar</div>'}
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:3px;">${etapaLabel}</div>
@@ -3126,7 +3171,7 @@ function criarModalFotoComprovante(){
   div.innerHTML=`<div class="modal-base" id="modal-foto-comprovante">
     <div class="modal-sheet">
       <div style="text-align:center;font-size:36px;margin-bottom:8px;">📸</div>
-      <div style="font-size:16px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;">Foto da entrega</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);text-align:center;margin-bottom:4px;">Foto da entrega</div>
       <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.5;">Tire uma foto de onde deixou a encomenda — serve como prova caso o cliente diga que não recebeu.</div>
       <div id="fc-preview" onclick="document.getElementById('fc-input').click()" style="width:100%;height:180px;border-radius:16px;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--muted);margin-bottom:14px;overflow:hidden;cursor:pointer;">📷</div>
       <input type="file" id="fc-input" accept="image/*" capture="environment" style="display:none;" onchange="processarFotoComprovante(this)"/>
@@ -3451,7 +3496,7 @@ async function carregarGanhos(){
       elRankRest.innerHTML=rankingRest.length?rankingRest.map(([nome,d],i)=>`
         <div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:11px;margin-bottom:7px;">
           <div style="font-size:16px;">${i===0?"👑":"🏪"}</div>
-          <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;">${nome}</div><div style="font-size:10px;color:var(--muted);">${d.qtd} entrega${d.qtd!==1?"s":""}</div></div>
+          <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--text);">${nome}</div><div style="font-size:10px;color:var(--muted);">${d.qtd} entrega${d.qtd!==1?"s":""}</div></div>
           <div style="font-size:12px;font-weight:800;color:var(--dourado);">R$ ${d.valor.toFixed(2).replace(".",",")}</div>
         </div>`).join(""):"<div style='text-align:center;padding:14px;color:var(--muted);font-size:12px;'>Sem dados ainda</div>";
     }
@@ -3669,7 +3714,7 @@ function atualizarFotoPerfilMot(inp){
       cropBaseX=(cw-img.naturalWidth*cropBaseScale)/2;
       cropBaseY=(ch-img.naturalHeight*cropBaseScale)/2;
       cropScale=1;cropTX=0;cropTY=0;
-      desenharCrop();
+      setCropShape("redondo");
       document.getElementById("crop-overlay").style.display="flex";
     };
     img.src=e.target.result;
