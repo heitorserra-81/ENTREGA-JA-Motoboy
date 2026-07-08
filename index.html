@@ -1640,9 +1640,13 @@ let _appIniciado=false;
 const ONESIGNAL_APP_ID="b912066a-e08a-42a3-9239-58ebd3e55949";
 window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async function(OS){
-  await OS.init({appId:ONESIGNAL_APP_ID,safari_web_id:"web.onesignal.auto.487bfeae-71a3-407e-85d8-1b40bd783a80",serviceWorkerPath:"ENTREGA-JA-Motoboy/OneSignalSDKWorker.js",serviceWorkerParam:{scope:"/ENTREGA-JA-Motoboy/"}});
-  window._oneSignalPronto=true;
-  if(user&&user.id)vincularOneSignal();
+  try{
+    await OS.init({appId:ONESIGNAL_APP_ID,safari_web_id:"web.onesignal.auto.487bfeae-71a3-407e-85d8-1b40bd783a80",serviceWorkerPath:"ENTREGA-JA-Motoboy/OneSignalSDKWorker.js",serviceWorkerParam:{scope:"/ENTREGA-JA-Motoboy/"}});
+    window._oneSignalPronto=true;
+    if(user&&user.id)vincularOneSignal();
+  }catch(e){
+    alert("DEBUG ERRO na inicialização do OneSignal: "+e.message);
+  }
 });
 const ONESIGNAL_WORKER_URL="https://plain-dream-1851.heitorserraneto.workers.dev";
 async function enviarNotificacaoOneSignal(externalIds,titulo,mensagem){
@@ -1708,14 +1712,23 @@ function mostrarBotaoAtivarNotif(){
 }
 function ativarNotifAgora(){
   // Chamada direta à API nativa do navegador — precisa ser reação imediata ao toque, sem passar pelo SDK do OneSignal antes.
-  if(typeof Notification!=="undefined"&&Notification.requestPermission){
-    Notification.requestPermission().then(perm=>{
-      if(perm==="granted"&&window.OneSignal&&OneSignal.Notifications){
-        // Permissão do iPhone já concedida — agora só avisa o OneSignal pra ele completar o registro dele
-        OneSignal.Notifications.requestPermission();
-      }
-    });
+  if(typeof Notification==="undefined"||!Notification.requestPermission){
+    alert("DEBUG: Notification API não existe nesse navegador.");
+    return;
   }
+  Notification.requestPermission().then(perm=>{
+    alert("DEBUG passo 1: permissão do iPhone = "+perm);
+    if(perm!=="granted")return;
+    if(!window.OneSignal||!OneSignal.Notifications){
+      alert("DEBUG: OneSignal não carregou (window.OneSignal indisponível).");
+      return;
+    }
+    OneSignal.Notifications.requestPermission()
+      .then(r=>{alert("DEBUG passo 2: OneSignal.requestPermission concluído. Resultado: "+JSON.stringify(r));})
+      .catch(e=>{alert("DEBUG ERRO no passo 2 (OneSignal.requestPermission): "+e.message);});
+  }).catch(e=>{
+    alert("DEBUG ERRO no passo 1 (Notification.requestPermission): "+e.message);
+  });
   const btn=document.getElementById("btn-ativar-notif");
   if(btn)btn.remove();
 }
