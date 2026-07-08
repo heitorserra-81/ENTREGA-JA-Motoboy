@@ -1713,21 +1713,13 @@ function mostrarBotaoAtivarNotif(){
 function ativarNotifAgora(){
   // Chamada direta à API nativa do navegador — precisa ser reação imediata ao toque, sem passar pelo SDK do OneSignal antes.
   if(typeof Notification==="undefined"||!Notification.requestPermission){
-    alert("DEBUG: Notification API não existe nesse navegador.");
     return;
   }
   Notification.requestPermission().then(perm=>{
-    alert("DEBUG passo 1: permissão do iPhone = "+perm);
-    if(perm!=="granted")return;
-    if(!window.OneSignal||!OneSignal.Notifications){
-      alert("DEBUG: OneSignal não carregou (window.OneSignal indisponível).");
-      return;
+    if(perm==="granted"){
+      // O SDK do OneSignal não percebe a permissão nova até a página recarregar do zero — então recarrega sozinho.
+      location.reload();
     }
-    OneSignal.Notifications.requestPermission()
-      .then(r=>{alert("DEBUG passo 2: OneSignal.requestPermission concluído. Resultado: "+JSON.stringify(r));})
-      .catch(e=>{alert("DEBUG ERRO no passo 2 (OneSignal.requestPermission): "+e.message);});
-  }).catch(e=>{
-    alert("DEBUG ERRO no passo 1 (Notification.requestPermission): "+e.message);
   });
   const btn=document.getElementById("btn-ativar-notif");
   if(btn)btn.remove();
