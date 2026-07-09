@@ -486,7 +486,7 @@ input[type=file]{display:none;}
 .pedido-valor-num{font-size:16px;font-weight:900;color:var(--text);}
 .pedido-valor-num.destaque{color:var(--dourado);font-size:18px;}
 .pedido-valor-label{font-size:10px;color:var(--muted);margin-top:3px;}
-.pedido-btns{display:flex;gap:10px;}
+.pedido-btns{display:flex;gap:10px;position:sticky;bottom:0;background:var(--card);padding-top:12px;padding-bottom:4px;box-shadow:0 -8px 16px -8px rgba(0,0,0,0.25);}
 .btn-recusar{flex:1;padding:14px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
 .btn-aceitar{flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(34,197,94,0.35);}
 /* TELA ENTREGA MOTOBOY */
@@ -506,6 +506,7 @@ input[type=file]{display:none;}
 .btn-nav,.btn-zap{flex:1;padding:12px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 .corrida-acoes{display:flex;flex-direction:column;gap:9px;margin-bottom:10px;}
 .btn-nav-grande{width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(251,191,36,0.3);}
+body.claro .btn-nav-grande{color:#fff;}
 .btn-nav-grande:active{transform:scale(0.98);}
 .btn-zap-pequeno{width:100%;padding:11px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 #etapas-entrega{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
@@ -513,7 +514,8 @@ input[type=file]{display:none;}
 .etapa.ativa{background:rgba(251,191,36,0.15);border-color:var(--dourado);color:var(--dourado);}
 #contador-espera{display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:10px 14px;margin-bottom:12px;text-align:center;}
 #contador-espera-num{font-size:26px;font-weight:900;color:var(--dourado);}
-.valor-input-wrap{margin-bottom:12px;}
+.valor-input-wrap{margin-bottom:12px;background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:6px 14px;max-width:220px;margin-left:auto;margin-right:auto;}
+.btn-cancelar-corrida{width:100%;padding:16px;margin-top:6px;border-radius:18px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 16px rgba(239,68,68,0.35);}
 .valor-input-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;}
 .valor-input-row{display:flex;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:0 14px;}
 .valor-prefix{font-size:16px;font-weight:800;color:var(--dourado);margin-right:8px;}
@@ -816,7 +818,7 @@ input[type=file]{display:none;}
     </div>
 
     <button class="btn-cancelar-corrida" onclick="cancelarEntregaMotoboy()">Cancelar entrega</button>
-    <button onclick="abrirChatMot()" style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬<div id="chat-badge-mot" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:var(--text);font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg);">0</div></button>
+    <button onclick="abrirChatMot()" style="position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬<div id="chat-badge-mot" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:var(--text);font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg);">0</div></button>
   </div>
 </div>
 
@@ -1249,7 +1251,7 @@ input[type=file]{display:none;}
       <div style="position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:linear-gradient(45deg,transparent 42%,rgba(255,255,255,0.35) 50%,transparent 58%);animation:luzReluzenteMot 2.6s linear infinite;pointer-events:none;"></div>
       <div style="position:relative;z-index:1;">
         <div style="font-size:12px;color:var(--dourado);font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">💰 Você vai receber por essa entrega</div>
-        <div id="ped-taxa-valor" style="font-size:34px;font-weight:900;color:var(--text);text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
+        <div id="ped-taxa-valor" style="font-size:34px;font-weight:900;color:#fdf6e3;text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
         <div id="ped-taxa-km" style="font-size:13px;color:var(--dourado);font-weight:700;margin-top:4px;">-- km</div>
       </div>
     </div>
@@ -1735,9 +1737,26 @@ function _iniciarApp(){
   let s=null;
   try{s=localStorage.getItem("ejm_user");}catch(e){}
   if(s){
-    try{user=JSON.parse(s);irPara("home");vincularOneSignal();restaurarStatusOnline();conferirAvisoImportante();}
+    try{user=JSON.parse(s);irPara("home");vincularOneSignal();restaurarStatusOnline();conferirAvisoImportante();restaurarEntregaEmAndamento();}
     catch(e){mostrarTela("tela-login");}
   }else mostrarTela("tela-login");
+}
+// Se o motoboy fechou o app no meio de uma entrega (comum acontecer na rua), essa função
+// confere no banco se ele tem alguma entrega em andamento e, se tiver, restaura a tela de
+// corrida direto (mapa, endereço, tudo) em vez de deixar ele preso na home sem contexto.
+async function restaurarEntregaEmAndamento(){
+  if(!user||!user.id)return;
+  try{
+    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).limit(20).get();
+    const ativos=snap.docs.map(d=>({...d.data(),id:d.id})).filter(d=>["aceita","motoboy_chegou"].includes(d.status));
+    if(ativos.length===0)return;
+    // Se houver mais de uma (paradas múltiplas), pega a mais recente como foco e o resto na fila
+    ativos.sort((a,b)=>(b.criadoEm?.toMillis?.()||0)-(a.criadoEm?.toMillis?.()||0));
+    entregaAtiva=ativos[0];
+    filaEntregas=ativos.slice(1);
+    entrarTelaEntrega();
+    toast("Entrega em andamento restaurada. 📦");
+  }catch(e){}
 }
 // Ao reabrir o app, confere no banco se o motoboy estava online e restaura o estado de verdade
 // (antes disso, o app sempre voltava mostrando "offline" na tela mesmo quando o banco dizia online).
@@ -2452,9 +2471,9 @@ async function mostrarPedido(entrega){
   }
   g("ped-favorito").style.display=(entrega.motoboyFavoritoId===user.id)?"inline-block":"none";
 
-  // Card enxuto: sem foto, só texto (economiza cota do Firestore e carrega mais rápido)
+  // Mostra a foto real do restaurante quando disponível (já vem junto no pedido, sem custo extra)
   const av=g("ped-foto");
-  if(av)av.innerHTML="<span>🏪</span>";
+  if(av)av.innerHTML=entrega.clienteFoto?`<img src="${entrega.clienteFoto}" style="width:100%;height:100%;object-fit:cover;"/>`:"<span>🏪</span>";
 
   // Itens do pedido (detalhados ou texto livre)
   const obsEl=g("ped-obs");
@@ -3845,8 +3864,8 @@ function getConfigCards(){
     const s=localStorage.getItem("ejm_cards");
     if(s)return JSON.parse(s);
   }catch(e){}
-  // padrão inicial: alguns cards úteis já ligados, o resto o motoboy escolhe
-  const def=CARDS_DISPONIVEIS.map((c,i)=>({id:c.id,ativo:["ganhos_hoje","entregas_hoje","avaliacao","meta_dia"].includes(c.id),tam:1,ordem:i}));
+  // padrão inicial: só os 3 mais úteis já ligados, em formato terço (lado a lado)
+  const def=CARDS_DISPONIVEIS.map((c,i)=>({id:c.id,ativo:["ganhos_hoje","entregas_hoje","meta_dia"].includes(c.id),tam:3,ordem:i}));
   localStorage.setItem("ejm_cards",JSON.stringify(def));
   return def;
 }
