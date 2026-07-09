@@ -1437,8 +1437,8 @@ let fotoFinalCad=null,cropImg=null,cropScale=1,cropTX=0,cropTY=0,cropBaseScale=1
   const N=52,pts=[];
   for(let i=0;i<N;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.6+.7});
   function draw(){
-    const corFundo=getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()||"#080f1e";
-    const corDourado=getComputedStyle(document.documentElement).getPropertyValue("--dourado").trim()||"#fbbf24";
+    const corFundo=getComputedStyle(document.body).getPropertyValue("--bg").trim()||"#080f1e";
+    const corDourado=getComputedStyle(document.body).getPropertyValue("--dourado").trim()||"#fbbf24";
     ctx.fillStyle=corFundo;ctx.fillRect(0,0,cv.width,cv.height);
     for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
       const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
@@ -1954,7 +1954,7 @@ function abrirSobre(){document.getElementById("modal-sobre").classList.add("show
 let online=false,posicaoAtual=null,gpsInterval=null,mapaHome=null,mapaFull=null,marcadorPosicao=null;
 // ── NOTIF ──
 async function pedirNotif(){try{if("Notification"in window)await Notification.requestPermission();}catch(e){}}
-function notif(t,b){if(typeof Notification!=="undefined"&&Notification.permission==="granted")try{new Notification(t,{body:b,tag:"cjm",vibrate:[200,100,200]});}catch(e){}}
+function notif(t,b){if(typeof Notification!=="undefined"&&Notification.permission==="granted")try{new Notification(t,{body:b,tag:"cjm-"+Date.now(),vibrate:[200,100,200]});}catch(e){}}
 const CREDITO_MAX=200; // teto rígido configurável no painel admin futuramente
 
 function alternarOnline(){
@@ -2154,6 +2154,11 @@ function fmtData(ts){if(!ts)return"--";const d=ts.toDate?ts.toDate():new Date(ts
 // ── ÁUDIO (necessário pra desbloquear no iPhone) ──
 let _ac=null;
 function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==="suspended")_ac.resume();return _ac;}
+// iOS suspende o motor de áudio sozinho quando o app fica em segundo plano — reativa a
+// cada toque na tela pra evitar que o som de notificação fique mudo depois da 1ª vez.
+document.addEventListener("touchstart",()=>{try{getAC();}catch(e){}},{passive:true});
+document.addEventListener("click",()=>{try{getAC();}catch(e){}},{passive:true});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")try{getAC();}catch(e){}});
 function nota(f,s,d,v=.7){try{const c=getAC(),o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();o.type="sine";o2.type="sine";o.connect(g);o2.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(f,c.currentTime+s);o2.frequency.setValueAtTime(f*2,c.currentTime+s);g.gain.setValueAtTime(0,c.currentTime+s);g.gain.linearRampToValueAtTime(v,c.currentTime+s+.01);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+s+d);o.start(c.currentTime+s);o2.start(c.currentTime+s);o.stop(c.currentTime+s+d+.05);o2.stop(c.currentTime+s+d+.05);}catch(e){}}
 function falar(txt){try{if(!("speechSynthesis"in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="pt-BR";u.rate=1;u.pitch=1;const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith("pt"));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
 function somNovoPedido(){
