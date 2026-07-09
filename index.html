@@ -486,7 +486,7 @@ input[type=file]{display:none;}
 .pedido-valor-num{font-size:16px;font-weight:900;color:var(--text);}
 .pedido-valor-num.destaque{color:var(--dourado);font-size:18px;}
 .pedido-valor-label{font-size:10px;color:var(--muted);margin-top:3px;}
-.pedido-btns{display:flex;gap:10px;position:sticky;bottom:0;background:var(--card);padding-top:12px;padding-bottom:4px;box-shadow:0 -8px 16px -8px rgba(0,0,0,0.25);}
+.pedido-btns{display:flex;gap:10px;}
 .btn-recusar{flex:1;padding:14px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
 .btn-aceitar{flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(34,197,94,0.35);}
 /* TELA ENTREGA MOTOBOY */
@@ -506,7 +506,6 @@ input[type=file]{display:none;}
 .btn-nav,.btn-zap{flex:1;padding:12px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 .corrida-acoes{display:flex;flex-direction:column;gap:9px;margin-bottom:10px;}
 .btn-nav-grande{width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,var(--dourado2),var(--dourado));border:none;color:#1a1a1a;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(251,191,36,0.3);}
-body.claro .btn-nav-grande{color:#fff;}
 .btn-nav-grande:active{transform:scale(0.98);}
 .btn-zap-pequeno{width:100%;padding:11px;border-radius:13px;background:var(--card2);border:1px solid var(--border);color:var(--dourado);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 #etapas-entrega{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
@@ -514,8 +513,7 @@ body.claro .btn-nav-grande{color:#fff;}
 .etapa.ativa{background:rgba(251,191,36,0.15);border-color:var(--dourado);color:var(--dourado);}
 #contador-espera{display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:10px 14px;margin-bottom:12px;text-align:center;}
 #contador-espera-num{font-size:26px;font-weight:900;color:var(--dourado);}
-.valor-input-wrap{margin-bottom:12px;background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:6px 14px;max-width:220px;margin-left:auto;margin-right:auto;}
-.btn-cancelar-corrida{width:100%;padding:16px;margin-top:6px;border-radius:18px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 16px rgba(239,68,68,0.35);}
+.valor-input-wrap{margin-bottom:12px;}
 .valor-input-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;}
 .valor-input-row{display:flex;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:0 14px;}
 .valor-prefix{font-size:16px;font-weight:800;color:var(--dourado);margin-right:8px;}
@@ -656,15 +654,13 @@ body.claro .btn-nav-grande{color:#fff;}
           </div>
         </div>
         <div><div class="campo-label">Tipo de veículo</div>
-          <select class="campo-input" id="cad-veiculo" onchange="togglePlacaCad()">
+          <select class="campo-input" id="cad-veiculo">
             <option value="carro">Carro</option>
             <option value="moto">Moto</option>
             <option value="van">Van</option>
-            <option value="moto_elet">Moto elétrica</option>
-            <option value="bicicleta">Bicicleta</option>
           </select>
         </div>
-        <div id="cad-placa-wrap"><div class="campo-label">Placa</div><input class="campo-input" id="cad-placa" type="text" placeholder="ABC-1234" maxlength="8" oninput="mascaraPlaca(this)"/></div>
+        <div><div class="campo-label">Placa</div><input class="campo-input" id="cad-placa" type="text" placeholder="ABC-1234" style="text-transform:uppercase;"/></div>
         <div>
           <div class="campo-label">Foto de perfil</div>
           <div class="foto-btn" onclick="document.getElementById('inp-foto-cad').click()">
@@ -820,7 +816,7 @@ body.claro .btn-nav-grande{color:#fff;}
     </div>
 
     <button class="btn-cancelar-corrida" onclick="cancelarEntregaMotoboy()">Cancelar entrega</button>
-    <button onclick="abrirChatMot()" style="position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬<div id="chat-badge-mot" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:var(--text);font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg);">0</div></button>
+    <button onclick="abrirChatMot()" style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);right:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.5);font-size:24px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;">💬<div id="chat-badge-mot" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:var(--text);font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg);">0</div></button>
   </div>
 </div>
 
@@ -1170,15 +1166,13 @@ body.claro .btn-nav-grande{color:#fff;}
       <div><div class="campo-label">WhatsApp</div><input id="ed-fone-mot" class="campo-input" type="tel" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)"/></div>
       <div><div class="campo-label">CPF</div><input id="ed-cpf-mot" class="campo-input" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)"/></div>
       <div><div class="campo-label">Tipo de veículo</div>
-        <select class="campo-input" id="ed-veiculo-mot" onchange="togglePlacaEd()">
+        <select class="campo-input" id="ed-veiculo-mot">
           <option value="carro">Carro</option>
           <option value="moto">Moto</option>
           <option value="van">Van</option>
-          <option value="moto_elet">Moto elétrica</option>
-          <option value="bicicleta">Bicicleta</option>
         </select>
       </div>
-      <div id="ed-placa-wrap"><div class="campo-label">Placa</div><input id="ed-placa-mot" class="campo-input" type="text" maxlength="8" placeholder="ABC-1234" oninput="mascaraPlaca(this)"/></div>
+      <div><div class="campo-label">Placa</div><input id="ed-placa-mot" class="campo-input" type="text" style="text-transform:uppercase;" placeholder="ABC-1234"/></div>
     </div>
     <button class="btn-p" onclick="salvarPerfilMot()" style="width:100%;margin-bottom:9px;">Salvar alterações</button>
     <button class="btn-cancel" onclick="document.getElementById('modal-editar-mot').classList.remove('show')" style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Cancelar</button>
@@ -1255,7 +1249,7 @@ body.claro .btn-nav-grande{color:#fff;}
       <div style="position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:linear-gradient(45deg,transparent 42%,rgba(255,255,255,0.35) 50%,transparent 58%);animation:luzReluzenteMot 2.6s linear infinite;pointer-events:none;"></div>
       <div style="position:relative;z-index:1;">
         <div style="font-size:12px;color:var(--dourado);font-weight:900;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">💰 Você vai receber por essa entrega</div>
-        <div id="ped-taxa-valor" style="font-size:34px;font-weight:900;color:#fdf6e3;text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
+        <div id="ped-taxa-valor" style="font-size:34px;font-weight:900;color:var(--text);text-shadow:0 2px 8px rgba(0,0,0,0.4);">R$ --</div>
         <div id="ped-taxa-km" style="font-size:13px;color:var(--dourado);font-weight:700;margin-top:4px;">-- km</div>
       </div>
     </div>
@@ -1443,8 +1437,8 @@ let fotoFinalCad=null,cropImg=null,cropScale=1,cropTX=0,cropTY=0,cropBaseScale=1
   const N=52,pts=[];
   for(let i=0;i<N;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.6+.7});
   function draw(){
-    const corFundo=getComputedStyle(document.body).getPropertyValue("--bg").trim()||"#080f1e";
-    const corDourado=getComputedStyle(document.body).getPropertyValue("--dourado").trim()||"#fbbf24";
+    const corFundo=getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()||"#080f1e";
+    const corDourado=getComputedStyle(document.documentElement).getPropertyValue("--dourado").trim()||"#fbbf24";
     ctx.fillStyle=corFundo;ctx.fillRect(0,0,cv.width,cv.height);
     for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
       const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
@@ -1646,14 +1640,35 @@ function logoFallback(img){img.style.display="none";const p=img.parentElement;p.
 let _appIniciado=false;
 // ── ONESIGNAL (notificacoes push mesmo com app fechado) ──
 const ONESIGNAL_APP_ID="b912066a-e08a-42a3-9239-58ebd3e55949";
+
+// Captura tudo que o console imprime (inclusive os logs "trace" do OneSignal), sem precisar de Mac
+let _logsCapturados=[];
+const _consoleOriginal={log:console.log,warn:console.warn,error:console.error};
+["log","warn","error"].forEach(nivel=>{
+  console[nivel]=function(...args){
+    try{_logsCapturados.push("["+nivel+"] "+args.map(a=>typeof a==="object"?JSON.stringify(a):String(a)).join(" "));}catch(e){}
+    _consoleOriginal[nivel].apply(console,args);
+  };
+});
+function mostrarLogCapturado(tituloErro){
+  const caixa=document.createElement("div");
+  caixa.innerHTML=`<div style="position:fixed;inset:0;z-index:999999;background:#0a0a0a;padding:16px;padding-top:calc(env(safe-area-inset-top,0px) + 16px);overflow-y:auto;">
+    <div style="color:#ef4444;font-weight:900;font-size:15px;margin-bottom:10px;">${tituloErro}</div>
+    <div style="color:#fff;font-size:10px;margin-bottom:10px;">Toque e segure o texto abaixo pra selecionar tudo e copiar:</div>
+    <textarea readonly style="width:100%;height:70vh;background:#111;color:#0f0;font-family:monospace;font-size:10px;padding:10px;border-radius:8px;border:1px solid #333;" onclick="this.select()">${_logsCapturados.join("\n")}</textarea>
+    <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;margin-top:10px;padding:14px;background:#dc2626;color:#fff;border:none;border-radius:12px;font-weight:800;">Fechar</button>
+  </div>`;
+  document.body.appendChild(caixa.firstElementChild);
+}
 window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async function(OS){
   try{
+    if(OS.Debug&&OS.Debug.setLogLevel)OS.Debug.setLogLevel("trace");
     await OS.init({appId:ONESIGNAL_APP_ID,safari_web_id:"web.onesignal.auto.487bfeae-71a3-407e-85d8-1b40bd783a80",serviceWorkerPath:"ENTREGA-JA-Motoboy/OneSignalSDKWorker.js",serviceWorkerParam:{scope:"/ENTREGA-JA-Motoboy/"}});
     window._oneSignalPronto=true;
     if(user&&user.id)vincularOneSignal();
   }catch(e){
-    alert("DEBUG ERRO na inicialização do OneSignal: "+e.message);
+    mostrarLogCapturado("ERRO na inicialização do OneSignal: "+e.message);
   }
 });
 const ONESIGNAL_WORKER_URL="https://plain-dream-1851.heitorserraneto.workers.dev";
@@ -1741,26 +1756,9 @@ function _iniciarApp(){
   let s=null;
   try{s=localStorage.getItem("ejm_user");}catch(e){}
   if(s){
-    try{user=JSON.parse(s);irPara("home");vincularOneSignal();restaurarStatusOnline();conferirAvisoImportante();restaurarEntregaEmAndamento();}
+    try{user=JSON.parse(s);irPara("home");vincularOneSignal();restaurarStatusOnline();conferirAvisoImportante();}
     catch(e){mostrarTela("tela-login");}
   }else mostrarTela("tela-login");
-}
-// Se o motoboy fechou o app no meio de uma entrega (comum acontecer na rua), essa função
-// confere no banco se ele tem alguma entrega em andamento e, se tiver, restaura a tela de
-// corrida direto (mapa, endereço, tudo) em vez de deixar ele preso na home sem contexto.
-async function restaurarEntregaEmAndamento(){
-  if(!user||!user.id)return;
-  try{
-    const snap=await db.collection("ej_pedidos").where("motoboy.id","==",user.id).limit(20).get();
-    const ativos=snap.docs.map(d=>({...d.data(),id:d.id})).filter(d=>["aceita","motoboy_chegou"].includes(d.status));
-    if(ativos.length===0)return;
-    // Se houver mais de uma (paradas múltiplas), pega a mais recente como foco e o resto na fila
-    ativos.sort((a,b)=>(b.criadoEm?.toMillis?.()||0)-(a.criadoEm?.toMillis?.()||0));
-    entregaAtiva=ativos[0];
-    filaEntregas=ativos.slice(1);
-    entrarTelaEntrega();
-    toast("Entrega em andamento restaurada. 📦");
-  }catch(e){}
 }
 // Ao reabrir o app, confere no banco se o motoboy estava online e restaura o estado de verdade
 // (antes disso, o app sempre voltava mostrando "offline" na tela mesmo quando o banco dizia online).
@@ -1816,17 +1814,6 @@ function mascaraCPF(el){
   v=v.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2");
   el.value=v;
 }
-// ── PLACA (aceita formato antigo ABC-1234 e Mercosul ABC1D23) ──
-function mascaraPlaca(el){
-  let v=el.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,7);
-  if(v.length>3)v=v.slice(0,3)+"-"+v.slice(3);
-  el.value=v;
-}
-function togglePlacaCad(){
-  const veiculo=document.getElementById("cad-veiculo").value;
-  const wrap=document.getElementById("cad-placa-wrap");
-  if(wrap)wrap.style.display=veiculo==="bicicleta"?"none":"block";
-}
 function validarCPF(cpf){
   cpf=(cpf||"").replace(/\D/g,"");
   if(cpf.length!==11||/^(\d)\1{10}$/.test(cpf))return false;
@@ -1857,7 +1844,7 @@ async function cadastrar(){
   if(senha.length<4){toast("Crie uma senha de pelo menos 4 dígitos");return;}
   if(!pergunta){toast("Escolha uma pergunta de segurança");return;}
   if(!resposta){toast("Responda a pergunta de segurança");return;}
-  if(veiculo!=="bicicleta"&&!placa){toast("Informe a placa do veículo");return;}
+  if(!placa){toast("Informe a placa do veículo");return;}
   if(!document.getElementById("cad-termos")?.checked){toast("Você precisa aceitar os Termos de Uso");return;}
   loading(true);
   try{
@@ -1988,7 +1975,7 @@ function abrirSobre(){document.getElementById("modal-sobre").classList.add("show
 let online=false,posicaoAtual=null,gpsInterval=null,mapaHome=null,mapaFull=null,marcadorPosicao=null;
 // ── NOTIF ──
 async function pedirNotif(){try{if("Notification"in window)await Notification.requestPermission();}catch(e){}}
-function notif(t,b){if(typeof Notification!=="undefined"&&Notification.permission==="granted")try{new Notification(t,{body:b,tag:"cjm-"+Date.now(),vibrate:[200,100,200]});}catch(e){}}
+function notif(t,b){if(typeof Notification!=="undefined"&&Notification.permission==="granted")try{new Notification(t,{body:b,tag:"cjm",vibrate:[200,100,200]});}catch(e){}}
 const CREDITO_MAX=200; // teto rígido configurável no painel admin futuramente
 
 function alternarOnline(){
@@ -2188,11 +2175,6 @@ function fmtData(ts){if(!ts)return"--";const d=ts.toDate?ts.toDate():new Date(ts
 // ── ÁUDIO (necessário pra desbloquear no iPhone) ──
 let _ac=null;
 function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==="suspended")_ac.resume();return _ac;}
-// iOS suspende o motor de áudio sozinho quando o app fica em segundo plano — reativa a
-// cada toque na tela pra evitar que o som de notificação fique mudo depois da 1ª vez.
-document.addEventListener("touchstart",()=>{try{getAC();}catch(e){}},{passive:true});
-document.addEventListener("click",()=>{try{getAC();}catch(e){}},{passive:true});
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")try{getAC();}catch(e){}});
 function nota(f,s,d,v=.7){try{const c=getAC(),o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();o.type="sine";o2.type="sine";o.connect(g);o2.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(f,c.currentTime+s);o2.frequency.setValueAtTime(f*2,c.currentTime+s);g.gain.setValueAtTime(0,c.currentTime+s);g.gain.linearRampToValueAtTime(v,c.currentTime+s+.01);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+s+d);o.start(c.currentTime+s);o2.start(c.currentTime+s);o.stop(c.currentTime+s+d+.05);o2.stop(c.currentTime+s+d+.05);}catch(e){}}
 function falar(txt){try{if(!("speechSynthesis"in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="pt-BR";u.rate=1;u.pitch=1;const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith("pt"));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
 function somNovoPedido(){
@@ -2486,9 +2468,9 @@ async function mostrarPedido(entrega){
   }
   g("ped-favorito").style.display=(entrega.motoboyFavoritoId===user.id)?"inline-block":"none";
 
-  // Mostra a foto real do restaurante quando disponível (já vem junto no pedido, sem custo extra)
+  // Card enxuto: sem foto, só texto (economiza cota do Firestore e carrega mais rápido)
   const av=g("ped-foto");
-  if(av)av.innerHTML=entrega.clienteFoto?`<img src="${entrega.clienteFoto}" style="width:100%;height:100%;object-fit:cover;"/>`:"<span>🏪</span>";
+  if(av)av.innerHTML="<span>🏪</span>";
 
   // Itens do pedido (detalhados ou texto livre)
   const obsEl=g("ped-obs");
@@ -3358,19 +3340,11 @@ function iniciarMapaEntregaMot(){
   if(marcDestinoMot){mapaEntregaMot.removeLayer(marcDestinoMot);marcDestinoMot=null;}
   if(posicaoAtual){
     mapaEntregaMot.setView(posicaoAtual,14);
-    // O motoboy é sempre representado como moto no mapa (nunca carro)
-    const svgMoto=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 30" width="32" height="30"><circle cx="6" cy="23" r="5" fill="#080f1e" stroke="#fbbf24" stroke-width="1.5"/><circle cx="26" cy="23" r="5" fill="#080f1e" stroke="#fbbf24" stroke-width="1.5"/><path d="M6 23 L13 13 L20 13 L26 23" stroke="#fbbf24" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 13 L16 6 L20 6" stroke="#fbbf24" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="20" cy="6" r="2.2" fill="#fbbf24"/><rect x="9" y="16" width="7" height="4" rx="1.5" fill="#f59e0b"/></svg>`;
-    marcPosMot=L.marker(posicaoAtual,{icon:L.divIcon({html:`<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));">${svgMoto}</div>`,className:"",iconSize:[32,30],iconAnchor:[16,26]})}).addTo(mapaEntregaMot);
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 42" width="34" height="42"><circle cx="17" cy="9" r="8" fill="#fbbf24" stroke="#fff" stroke-width="2"/><path d="M3 40 Q3 25 17 23 Q31 25 31 40Z" fill="#fbbf24" stroke="#fff" stroke-width="2"/></svg>`;
+    marcPosMot=L.marker(posicaoAtual,{icon:L.divIcon({html:`<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));">${svg}</div>`,className:"",iconSize:[34,42],iconAnchor:[17,40]})}).addTo(mapaEntregaMot);
   }
-  // Enquanto indo buscar, mostra o RESTAURANTE no mapa; depois de retirar, mostra a PESSOA (cliente)
-  const indoBuscar=statusAtual!=="no_carro";
-  const destLat=indoBuscar?entregaAtiva?.origemLat:entregaAtiva?.destinoLat;
-  const destLng=indoBuscar?entregaAtiva?.origemLng:entregaAtiva?.destinoLng;
-  if(destLat&&destLng){
-    const iconDestino=indoBuscar
-      ? `<div style="width:36px;height:36px;border-radius:50%;background:#fbbf24;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:18px;">🏪</div>`
-      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 34" width="24" height="34"><circle cx="12" cy="7" r="6" fill="#fbbf24" stroke="#fff" stroke-width="2"/><path d="M12 15 L12 25 M12 18 L5 23 M12 18 L19 23 M12 25 L7 33 M12 25 L17 33" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/></svg>`;
-    marcDestinoMot=L.marker([destLat,destLng],{icon:L.divIcon({html:`<div style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));">${iconDestino}</div>`,className:"",iconSize:indoBuscar?[36,36]:[24,34],iconAnchor:indoBuscar?[18,18]:[12,33]})}).addTo(mapaEntregaMot);
+  if(entregaAtiva?.destinoLat&&entregaAtiva?.destinoLng){
+    marcDestinoMot=L.marker([entregaAtiva.destinoLat,entregaAtiva.destinoLng]).addTo(mapaEntregaMot);
   }
   desenharRotaMapaMot();
 }
@@ -3714,7 +3688,7 @@ function atualizarPerfil(){
   if(g("pi-nome"))g("pi-nome").textContent=user.nome||"--";
   if(g("pi-fone"))g("pi-fone").textContent=user.fone?formatarTelefoneExibicao(user.fone):"--";
   if(g("pi-cpf"))g("pi-cpf").textContent=user.cpf||"Não informado";
-  const vMap={carro:"🚗 Carro",moto:"🏍️ Moto",van:"🚐 Van",moto_elet:"⚡ Moto elétrica",bicicleta:"🚲 Bicicleta"};
+  const vMap={carro:"🚗 Carro",moto:"🏍️ Moto",van:"🚐 Van"};
   if(g("pi-veiculo"))g("pi-veiculo").textContent=vMap[user.veiculo]||user.veiculo||"--";
   if(g("pi-placa"))g("pi-placa").textContent=user.placa||"--";
 
@@ -3742,12 +3716,6 @@ function abrirEditarPerfilMot(){
   document.getElementById("ed-cpf-mot").value=user.cpf||"";
   document.getElementById("ed-veiculo-mot").value=user.veiculo||"carro";
   document.getElementById("ed-placa-mot").value=user.placa||"";
-  togglePlacaEd();
-}
-function togglePlacaEd(){
-  const veiculo=document.getElementById("ed-veiculo-mot").value;
-  const wrap=document.getElementById("ed-placa-wrap");
-  if(wrap)wrap.style.display=veiculo==="bicicleta"?"none":"block";
 }
 async function salvarPerfilMot(){
   const nome=document.getElementById("ed-nome-mot").value.trim();
@@ -3893,8 +3861,8 @@ function getConfigCards(){
     const s=localStorage.getItem("ejm_cards");
     if(s)return JSON.parse(s);
   }catch(e){}
-  // padrão inicial: só os 3 mais úteis já ligados, em formato terço (lado a lado)
-  const def=CARDS_DISPONIVEIS.map((c,i)=>({id:c.id,ativo:["ganhos_hoje","entregas_hoje","meta_dia"].includes(c.id),tam:3,ordem:i}));
+  // padrão inicial: alguns cards úteis já ligados, o resto o motoboy escolhe
+  const def=CARDS_DISPONIVEIS.map((c,i)=>({id:c.id,ativo:["ganhos_hoje","entregas_hoje","avaliacao","meta_dia"].includes(c.id),tam:1,ordem:i}));
   localStorage.setItem("ejm_cards",JSON.stringify(def));
   return def;
 }
